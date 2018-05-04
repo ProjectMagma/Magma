@@ -6,14 +6,12 @@ namespace Magma.Network
 {
     public struct IPAddress
     {
-        private struct V4Address
+        public struct V4Address
         {
         }
 
-        private struct V6Address
+        public struct V6Address
         {
         }
     }
-
-
 }
