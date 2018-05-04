@@ -1,0 +1,11 @@
+sudo apt-get update
+sudo apt-get install linux-source
+git clone https://github.com/luigirizzo/netmap.git
+cd netmap
+cd LINUX
+./configure
+make
+sudo make install
+sudo modprobe netmap
+sudo lsmod | grep net
+./build-apps/pkt-gen/pkt-gen -i eth0 -f tx -l 60
