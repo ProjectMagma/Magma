@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Magma.Network
+namespace Magma.Network.Header
 {
-    public class Arp
+    public ref struct IPv6
     {
-
     }
 }
