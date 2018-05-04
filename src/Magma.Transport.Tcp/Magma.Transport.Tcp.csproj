@@ -5,4 +5,8 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Magma.Network\Magma.Network.csproj" />
+  </ItemGroup>
+
 </Project>
