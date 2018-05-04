@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Magma.Network.Header
 {
-    public ref struct IPv6
+    public struct IPv6Fragment
     {
     }
 }
