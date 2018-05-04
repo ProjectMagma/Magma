@@ -8,4 +8,4 @@ make
 sudo make install
 sudo modprobe netmap
 sudo lsmod | grep net
-./build-apps/pkt-gen/pkt-gen -i eth0 -f tx -l 60
+sudo ./build-apps/pkt-gen/pkt-gen -i eth0 -f tx -l 60
