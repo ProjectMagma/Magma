@@ -23,7 +23,7 @@ namespace Magma.NetMap.Interop
         public ushort last_rx_ring;
         public ushort cur_rx_ring;
         public nmreq req;   /* also contains the nr_name = ifname */
-                            //struct nm_pkthdr hdr;
+        public nm_pkthdr hdr;
 
         /*
          * The memory contains netmap_if, rings and then buffers.
