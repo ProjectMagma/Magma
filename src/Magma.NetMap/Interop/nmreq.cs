@@ -8,7 +8,7 @@ namespace Magma.NetMap.Interop
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct nmreq
     {
-        public fixed byte nr_name[64];
+        public fixed byte nr_name[16];
         public uint nr_version;    /* API version */
         public uint nr_offset; /* nifp offset in the shared region */
         public uint nr_memsize;    /* size of the shared region */
@@ -27,6 +27,5 @@ namespace Magma.NetMap.Interop
                                //#define NR_REG_MASK		0xf /* to extract NR_REG_* mode from nr_flags */
                                /* various modes, extends nr_ringid */
         public uint spare1;
-        public uint spare2;
     };
 }
