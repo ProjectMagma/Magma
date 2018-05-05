@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Magma.NetMap.Interop
 {
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct nmreq
     {
         public fixed byte nr_name[64];

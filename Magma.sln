@@ -29,6 +29,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Magma.NetMap", "src\Magma.N
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Magma.NetMap.Facts", "test\Magma.NetMap.Facts\Magma.NetMap.Facts.csproj", "{8CF7D378-2BDC-4CC0-8659-F43B49A9249C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Magma.NetMap.Host", "samples\Magma.NetMap.Host\Magma.NetMap.Host.csproj", "{D148C3A3-5355-4D4E-B213-C86B6731F0B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,6 +69,10 @@ Global
 		{8CF7D378-2BDC-4CC0-8659-F43B49A9249C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8CF7D378-2BDC-4CC0-8659-F43B49A9249C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8CF7D378-2BDC-4CC0-8659-F43B49A9249C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D148C3A3-5355-4D4E-B213-C86B6731F0B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D148C3A3-5355-4D4E-B213-C86B6731F0B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D148C3A3-5355-4D4E-B213-C86B6731F0B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D148C3A3-5355-4D4E-B213-C86B6731F0B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

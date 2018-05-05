@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Magma.NetMap
 {
+    [StructLayout(LayoutKind.Sequential)]
     internal unsafe struct nmreq_header
     {
         public ushort version;

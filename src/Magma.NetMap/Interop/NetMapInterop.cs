@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Magma.NetMap.Interop
 {
-    class NetMapInterop
+    public class NetMapInterop
     {
         const ushort NETMAP_RING_MASK = 0x0fff;	/* the ring number */
         const ushort NETMAP_API = 12;
@@ -23,7 +23,9 @@ namespace Magma.NetMap.Interop
             O_ACCMODE = 0x0003,		/* mask for above modes */
         }
 
-        private unsafe nm_desc nm_open(string ifname, nmreq req, ulong flags, void* arg)
+        enum p_state { P_START, P_RNGSFXOK, P_GETNUM, P_FLAGS, P_FLAGSOK, P_MEMID };
+
+        public static unsafe nm_desc nm_open(string ifname, nmreq req, ulong flags, void* arg)
         {
             nr_mode nr_reg;
 
@@ -34,16 +36,13 @@ namespace Magma.NetMap.Interop
             var fd = Unix.Open("/dev/netmap", (int)OpenFlags.O_RDWR);
             if (fd < 0) throw new InvalidOperationException("Need to handle properly (release memory etc)");
 
-
-            //if (req)
-
-            //    d->req = *req;
-
-            //if (!(new_flags & NM_OPEN_IFNAME))
-            //{
-            //    if (nm_parse(ifname, d, errmsg) < 0)
-            //        goto fail;
-            //}
+            d.req.nr_flags = (uint)nr_mode.NR_REG_ALL_NIC;
+            d.req.nr_arg1 = 0;
+            var textbytes = System.Text.Encoding.ASCII.GetBytes(ifname + "\0");
+            fixed(void* txtPtr = textbytes)
+            {
+                Buffer.MemoryCopy(txtPtr, d.req.nr_name, textbytes.Length, textbytes.Length);
+            }
             
             d.req.nr_version = NETMAP_API;
             d.req.nr_ringid &= NETMAP_RING_MASK;
