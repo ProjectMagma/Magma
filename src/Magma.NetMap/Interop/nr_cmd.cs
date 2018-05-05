@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Magma.NetMap.Interop
 {
-    enum nr_cmd : ushort
+    public enum nr_cmd : ushort
     {
         NETMAP_BDG_ATTACH = 1,  /* attach the NIC */
         NETMAP_BDG_DETACH = 2,  /* detach the NIC */

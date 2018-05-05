@@ -4,14 +4,16 @@ using System.Text;
 
 namespace Magma.NetMap.Interop
 {
-    internal unsafe struct nm_desc
+    public unsafe struct nm_desc
     {
+        const int NM_ERRBUF_SIZE = 512;
+
         public IntPtr self; /* point to self if netmap. */
         public int fd;
-        void* mem;
-        uint memsize;
-        int done_mmap;  /* set if mem is the result of mmap */
-                        //struct netmap_if * const nifp;
+        public void* mem;
+        public uint memsize;
+        public int done_mmap;  /* set if mem is the result of mmap */
+        public IntPtr nifp;
         public ushort first_tx_ring;
         public ushort last_tx_ring;
         public ushort cur_tx_ring;
@@ -43,7 +45,7 @@ namespace Magma.NetMap.Interop
         int if_reqcap;
         int if_curcap;
 
-        struct nm_stat st;
-	char msg[NM_ERRBUF_SIZE];
+        nm_stat st;
+	    fixed byte msg[NM_ERRBUF_SIZE];
     };
 }

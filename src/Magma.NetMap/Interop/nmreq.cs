@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Magma.NetMap.Interop
 {
-    internal unsafe struct nmreq
+    public unsafe struct nmreq
     {
         public fixed byte nr_name[64];
         public uint nr_version;    /* API version */

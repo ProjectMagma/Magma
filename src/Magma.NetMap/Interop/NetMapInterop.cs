@@ -10,6 +10,10 @@ namespace Magma.NetMap.Interop
     {
         const ushort NETMAP_RING_MASK = 0x0fff;	/* the ring number */
         const ushort NETMAP_API = 12;
+        const ushort NETMAP_NO_TX_POLL = 0x1000;	/* no automatic txsync on poll */
+        const ushort NETMAP_DO_RX_POLL = 0x8000;
+        const uint NIOCREGIF = 0xC03C6992;
+        const ushort NR_REG_MASK = 0xf; /* to extract NR_REG_* mode from nr_flags */
 
         private enum OpenFlags : int
         {
@@ -40,19 +44,19 @@ namespace Magma.NetMap.Interop
             //    if (nm_parse(ifname, d, errmsg) < 0)
             //        goto fail;
             //}
-
+            
             d.req.nr_version = NETMAP_API;
             d.req.nr_ringid &= NETMAP_RING_MASK;
 
             /* add the *XPOLL flags */
-            d.req.nr_ringid |= flags & (NETMAP_NO_TX_POLL | NETMAP_DO_RX_POLL);
+            d.req.nr_ringid |= (ushort)(flags & (NETMAP_NO_TX_POLL | NETMAP_DO_RX_POLL));
 
             if (Unix.IOCtl(d.fd, NIOCREGIF, &d.req) != 0)
             {
                 throw new InvalidOperationException("Some failure to get the port, need better error handling");
             }
 
-            nr_reg = d.req.nr_flags & NR_REG_MASK;
+            nr_reg = (nr_mode)(d.req.nr_flags & NR_REG_MASK);
 
             if (nr_reg == nr_mode.NR_REG_SW)
             { /* host stack */
