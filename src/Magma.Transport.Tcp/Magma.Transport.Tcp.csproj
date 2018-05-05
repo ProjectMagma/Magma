@@ -6,6 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.1.0-preview2-final" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions" Version="2.1.0-preview2-final" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="2.1.0-preview2-final" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Magma.Network\Magma.Network.csproj" />
   </ItemGroup>
 
