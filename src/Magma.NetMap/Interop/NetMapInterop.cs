@@ -30,6 +30,7 @@ namespace Magma.NetMap.Interop
             nr_mode nr_reg;
 
             var ptrToDescription = Marshal.AllocHGlobal(Unsafe.SizeOf<nm_desc>());
+            
             var d = Unsafe.AsRef<nm_desc>(ptrToDescription.ToPointer());
             d.self = ptrToDescription;
 
@@ -50,12 +51,12 @@ namespace Magma.NetMap.Interop
             /* add the *XPOLL flags */
             d.req.nr_ringid |= (ushort)(flags & (NETMAP_NO_TX_POLL | NETMAP_DO_RX_POLL));
             Console.WriteLine($"Ring id was {d.req.nr_ringid}");
-            d.req.nr_ringid = 0;
-            d.req.nr_version = 12;
             d.req.nr_flags = 0x8001;
-
+            d.req.nr_cmd = 0;
+            
             if (Unix.IOCtl(d.fd, NIOCREGIF, &d.req) != 0)
             {
+                Console.WriteLine($"Error with the IO CTL error code was {Marshal.GetLastWin32Error()}");
                 throw new InvalidOperationException("Some failure to get the port, need better error handling");
             }
 
