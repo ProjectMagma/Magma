@@ -49,6 +49,10 @@ namespace Magma.NetMap.Interop
 
             /* add the *XPOLL flags */
             d.req.nr_ringid |= (ushort)(flags & (NETMAP_NO_TX_POLL | NETMAP_DO_RX_POLL));
+            Console.WriteLine($"Ring id was {d.req.nr_ringid}");
+            d.req.nr_ringid = 0;
+            d.req.nr_version = 12;
+            d.req.nr_flags = 0x8001;
 
             if (Unix.IOCtl(d.fd, NIOCREGIF, &d.req) != 0)
             {
