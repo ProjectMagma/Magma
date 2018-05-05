@@ -44,7 +44,13 @@ namespace Magma.NetMap.Interop
                 Console.WriteLine($"Error with the IO CTL error code was {Marshal.GetLastWin32Error()}");
                 throw new InvalidOperationException("Some failure to get the port, need better error handling");
             }
+            Console.WriteLine($"memsize = {request.nr_memsize}");
+            Console.WriteLine($"tx rings = {request.nr_tx_rings}");
+            Console.WriteLine($"rx rings = {request.nr_rx_rings}");
+            Console.WriteLine($"tx slots = {request.nr_tx_slots}");
+            Console.WriteLine($"rx slots = {request.nr_rx_slots}");
             Console.WriteLine("It Worked!!!");
+            
         }
 
         public static unsafe nm_desc nm_open(string ifname, nmreq req, ulong flags, void* arg)
