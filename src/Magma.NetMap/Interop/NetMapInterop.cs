@@ -25,6 +25,28 @@ namespace Magma.NetMap.Interop
 
         enum p_state { P_START, P_RNGSFXOK, P_GETNUM, P_FLAGS, P_FLAGSOK, P_MEMID };
 
+        public static unsafe void OpenNetMap(string ifname)
+        {
+            var request = new nmreq();
+            request.nr_cmd = 0;
+            request.nr_flags = 0x8001;
+            request.nr_ringid = 0;
+            request.nr_version = 12;
+            var textbytes = System.Text.Encoding.ASCII.GetBytes(ifname + "\0");
+            fixed (void* txtPtr = textbytes)
+            {
+                Buffer.MemoryCopy(txtPtr, request.nr_name, textbytes.Length, textbytes.Length);
+            }
+            var fd = Unix.Open("/dev/netmap", (int)OpenFlags.O_RDWR);
+            if (fd < 0) throw new InvalidOperationException("Need to handle properly (release memory etc)");
+            if (Unix.IOCtl(fd, NIOCREGIF, &request) != 0)
+            {
+                Console.WriteLine($"Error with the IO CTL error code was {Marshal.GetLastWin32Error()}");
+                throw new InvalidOperationException("Some failure to get the port, need better error handling");
+            }
+            Console.WriteLine("It Worked!!!");
+        }
+
         public static unsafe nm_desc nm_open(string ifname, nmreq req, ulong flags, void* arg)
         {
             nr_mode nr_reg;

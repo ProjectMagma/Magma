@@ -7,7 +7,7 @@ namespace Magma.NetMap.Host
     {
         static unsafe void Main(string[] args)
         {
-            var desc = NetMap.Interop.NetMapInterop.nm_open("eth0", default(nmreq), 0, null);
+            NetMap.Interop.NetMapInterop.OpenNetMap("eth0");
             Console.WriteLine("Hello World!");
         }
     }
