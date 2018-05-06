@@ -17,7 +17,7 @@ namespace Magma.NetMap
         private readonly int _ringId;
         private readonly Thread _worker;
         private readonly Netmap_slot* _rxRing;
-        private readonly long _bufferStart;
+        private readonly byte* _bufferStart;
 
         internal NetMapReceiveRing(byte* memoryRegion, ulong rxQueueOffset)
         {
@@ -29,7 +29,7 @@ namespace Magma.NetMap
             //if (ringInfo.dir != netmap_ringdirection.rx) throw new InvalidOperationException("Need better error message");
             _bufferSize = (int)ringInfo.nr_buf_size;
             _numberOfSlots = (int)ringInfo.num_slots;
-            _bufferStart = _queueOffset + ringInfo.buf_ofs;
+            _bufferStart = _memoryRegion + _queueOffset + ringInfo.buf_ofs;
             _ringId = ringInfo.ringid & (ushort)nr_ringid.NETMAP_RING_MASK;
 
             _rxRing = (Netmap_slot*)((long)(_memoryRegion + rxQueueOffset + Unsafe.SizeOf<Netmap_ring>() + 127 + 128) & (~0xFF));
@@ -38,12 +38,46 @@ namespace Magma.NetMap
 
             PrintSlotInfo(0);
             PrintSlotInfo(1);
+
+            _worker = new Thread(new ThreadStart(ThreadLoop));
         }
+
+        private void ThreadLoop()
+        {
+            while (true)
+            {
+                Thread.Sleep(1000);
+
+                var ring = RxRingInfo[0];
+                while (!IsRingEmpty())
+                {
+                    var i = ring.cur;
+                    var slot = _rxRing[i];
+                    var buffer = GetBuffer(slot.buf_idx);
+                    Console.WriteLine($"Received packet on ring {_ringId} data was {BitConverter.ToString(buffer.ToArray())}");
+                    ring.head = ring.cur = RingNext(i);
+                }
+            }
+        }
+
+        private uint RingNext(uint i) => (i + 1 == _numberOfSlots) ? 0 : i + 1;
 
         private void PrintSlotInfo(int index)
         {
             var slot = _rxRing[index];
             Console.WriteLine($"Slot {index} bufferIndex {slot.buf_idx} flags {slot.flags} length {slot.len} pointer {slot.ptr}");
+        }
+
+        private Span<byte> GetBuffer(uint bufferIndex)
+        {
+            var ptr = _bufferStart + (bufferIndex * _bufferSize);
+            return new Span<byte>(ptr, _bufferSize);
+        }
+
+        private bool IsRingEmpty()
+        {
+            var ring = RxRingInfo[0];
+            return (ring.cur == ring.tail);
         }
 
         private Netmap_slot CurrentSlot => _rxRing[0];
