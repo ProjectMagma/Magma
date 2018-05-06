@@ -56,6 +56,7 @@ namespace Magma.NetMap.Interop
             Console.WriteLine("Mapped the memory region correctly");
             _mappedRegion = mapResult;
 
+            Console.WriteLine($"Offset to IF Header {_result.nr_offset}");
             _netmapInterface = Unsafe.Read<netmap_if>(NetMapInterfaceAddress.ToPointer());
             Console.WriteLine($"Interface Nic RX Queues {_netmapInterface.ni_rx_rings}");
             Console.WriteLine($"Interface Nic TX Queues {_netmapInterface.ni_tx_rings}");
