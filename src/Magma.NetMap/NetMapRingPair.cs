@@ -23,7 +23,8 @@ namespace Magma.NetMap
             _memoryRegion = memoryRegion;
 
             var ringInfo = RxRingInfo[0];
-            if (ringInfo.dir != netmap_ringdirection.rx) throw new InvalidOperationException("Need better error message");
+            Console.WriteLine($"Ring direction {ringInfo.dir}");
+            //if (ringInfo.dir != netmap_ringdirection.rx) throw new InvalidOperationException("Need better error message");
             _rxBufferSize = (int)ringInfo.nr_buf_size;
             _rxSlots = (int)ringInfo.num_slots;
             _ringId = ringInfo.ringid & (ushort)nr_ringid.NETMAP_RING_MASK;
