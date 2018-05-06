@@ -24,7 +24,7 @@ namespace Magma.NetMap.Interop
             var request = new nmreq
             {
                 nr_cmd = 0,
-                nr_flags = 0x8001,
+                nr_flags = 0x8003,
                 nr_ringid = 0,
                 nr_version = NETMAP_API,
             };
