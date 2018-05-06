@@ -55,7 +55,7 @@ namespace Magma.NetMap
                     Fd = _fileDescriptor
                 };
 
-                var pollResult = Unix.poll(ref fd, 1, 1);
+                var pollResult = Unix.poll(ref fd, 1, 100);
                 if(pollResult < 0)
                 {
                     Console.WriteLine($"Poll failed on ring {_ringId} exiting polling loop");
