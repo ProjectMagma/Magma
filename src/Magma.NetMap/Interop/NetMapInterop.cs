@@ -71,7 +71,7 @@ namespace Magma.NetMap.Interop
                 span = span.Slice(sizeof(ulong));
                 Console.WriteLine($"TX Queue {i} offset is {txOffsets[i]}");
             }
-            var txHost = System.Buffers.Binary.BinaryPrimatives.ReadUInt64LittleEndian(span);
+            var txHost = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(span);
             span = span.Slice(sizeof(ulong));
             Console.WriteLine($"TX Host Queue offset is {txHost}");
             for(var i = 0; i < rxOffsets.Length;i++)
@@ -80,7 +80,7 @@ namespace Magma.NetMap.Interop
                 span = span.Slice(sizeof(ulong));
                 Console.WriteLine($"RX Queue {i} offset is {rxOffsets[i]}");
             }
-            var rxHost = System.Buffers.Binary.BinaryPrimatives.ReadUInt64LittleEndian(span);
+            var rxHost = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(span);
             Console.WriteLine($"RX Host Queue offset is {rxHost}");
             
         }
