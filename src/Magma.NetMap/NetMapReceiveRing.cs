@@ -18,9 +18,11 @@ namespace Magma.NetMap
         private readonly Thread _worker;
         private readonly Netmap_slot* _rxRing;
         private readonly byte* _bufferStart;
+        private readonly int _fileDescriptor;
 
-        internal NetMapReceiveRing(byte* memoryRegion, ulong rxQueueOffset)
+        internal NetMapReceiveRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor)
         {
+            _fileDescriptor = fileDescriptor;
             _queueOffset = (long)rxQueueOffset;
             _memoryRegion = memoryRegion;
 
@@ -46,7 +48,19 @@ namespace Magma.NetMap
         {
             while (true)
             {
-                Thread.Sleep(1000);
+                var fd = new Unix.pollFd()
+                {
+                    Events = Unix.PollEvents.POLLIN,
+                    Fd = _fileDescriptor
+                };
+
+                var pollResult = Unix.poll(ref fd, 1, 1);
+                if(pollResult < 0)
+                {
+                    Console.WriteLine($"Poll failed on ring {_ringId} exiting polling loop");
+                    return;
+                }
+                Console.WriteLine($"Poll on ring {_ringId} triggered");
 
                 var ring = RxRingInfo[0];
                 while (!IsRingEmpty())
