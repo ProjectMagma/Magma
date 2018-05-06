@@ -22,8 +22,8 @@ namespace Magma.NetMap
             _rxQueueOffset = (int) rxQueueOffset;
             _memoryRegion = memoryRegion;
 
-            if (RxRingInfo[0].dir != netmap_ringdirection.rx) throw new InvalidOperationException("Need better error message");
             var ringInfo = RxRingInfo[0];
+            if (ringInfo.dir != netmap_ringdirection.rx) throw new InvalidOperationException("Need better error message");
             _rxBufferSize = (int)ringInfo.nr_buf_size;
             _rxSlots = (int)ringInfo.num_slots;
             _ringId = ringInfo.ringid & (ushort)nr_ringid.NETMAP_RING_MASK;
