@@ -54,8 +54,8 @@ namespace Magma.NetMap.Interop
             Console.WriteLine("------------------------------------");
             Console.WriteLine("Now mapping memory");
 
-            var mapResult = Unix.MMap(IntPtr.Zero, (UIntPtr) request.nr_memsize, Unix.MemoryMappedProtections.PROT_READ | Unix.MemoryMappedProtections.PROT_WRITE, Unix.MemoryMappedFlags.MAP_SHARED, fd, (UIntPtr) 0);
-            if ((int)mapResult != 0) throw new InvalidOperationException("Failed to map the memory");
+            var mapResult = Unix.MMap(IntPtr.Zero, request.nr_memsize, Unix.MemoryMappedProtections.PROT_READ | Unix.MemoryMappedProtections.PROT_WRITE, Unix.MemoryMappedFlags.MAP_SHARED, fd,  0);
+            if ((long)mapResult < 0) throw new InvalidOperationException("Failed to map the memory");
             Console.WriteLine("Mapped the memory region correctly");
 
         }

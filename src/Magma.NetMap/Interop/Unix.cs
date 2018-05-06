@@ -31,6 +31,6 @@ namespace Magma.NetMap
         }
 
         [DllImport("libc.so.6", SetLastError = true, EntryPoint = "mmap")]
-        public static extern IntPtr MMap(IntPtr addr, UIntPtr length, MemoryMappedProtections prot, MemoryMappedFlags flags, int fd, UIntPtr offset);
+        public static extern IntPtr MMap(IntPtr addr, ulong length, MemoryMappedProtections prot, MemoryMappedFlags flags, int fd, ulong offset);
     }
 }
