@@ -70,7 +70,7 @@ namespace Magma.NetMap
             _rings = new NetMapReceiveRing[rxOffsets.Length];
             for(var i = 0; i < rxOffsets.Length;i++)
             {
-                _rings[i] = new NetMapReceiveRing((byte*)_mappedRegion.ToPointer(), rxOffsets[i], _fileDescriptor);
+                _rings[i] = new NetMapReceiveRing((byte*)_mappedRegion.ToPointer(), txOffsets[i], _fileDescriptor);
             }
         }
 
