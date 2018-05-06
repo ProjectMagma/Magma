@@ -49,8 +49,15 @@ namespace Magma.NetMap.Interop
             Console.WriteLine($"rx rings = {request.nr_rx_rings}");
             Console.WriteLine($"tx slots = {request.nr_tx_slots}");
             Console.WriteLine($"rx slots = {request.nr_rx_slots}");
-            Console.WriteLine("It Worked!!!");
-            
+
+
+            Console.WriteLine("------------------------------------");
+            Console.WriteLine("Now mapping memory");
+
+            var mapResult = Unix.MMap(IntPtr.Zero, (UIntPtr) request.nr_memsize, Unix.MemoryMappedProtections.PROT_READ | Unix.MemoryMappedProtections.PROT_WRITE, Unix.MemoryMappedFlags.MAP_SHARED, fd, (UIntPtr) 0);
+            if ((int)mapResult != 0) throw new InvalidOperationException("Failed to map the memory");
+            Console.WriteLine("Mapped the memory region correctly");
+
         }
 
         public static unsafe nm_desc nm_open(string ifname, nmreq req, ulong flags, void* arg)
