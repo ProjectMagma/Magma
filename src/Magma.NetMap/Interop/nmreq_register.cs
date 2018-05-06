@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Magma.NetMap
 {
+    [StructLayout(LayoutKind.Sequential)]
     internal struct nmreq_register
     {
         public ulong nr_offset; /* nifp offset in the shared region */
