@@ -49,7 +49,6 @@ namespace Magma.NetMap
         {
             while (true)
             {
-                Console.WriteLine("About to start polling");
                 var fd = new Unix.pollFd()
                 {
                     Events = Unix.PollEvents.POLLIN,
@@ -62,8 +61,7 @@ namespace Magma.NetMap
                     Console.WriteLine($"Poll failed on ring {_ringId} exiting polling loop");
                     return;
                 }
-                Console.WriteLine($"Poll on ring {_ringId} triggered");
-
+                
                 var ring = RxRingInfo[0];
                 while (!IsRingEmpty())
                 {
