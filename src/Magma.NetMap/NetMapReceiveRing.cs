@@ -62,14 +62,13 @@ namespace Magma.NetMap
                     return;
                 }
                 
-                var ring = RxRingInfo[0];
                 while (!IsRingEmpty())
                 {
-                    var i = ring.cur;
+                    var i = RxRingInfo[0].cur;
                     var slot = _rxRing[i];
                     var buffer = GetBuffer(slot.buf_idx);
                     Console.WriteLine($"Received packet on ring {_ringId} data was {buffer.Length}");
-                    ring.head = ring.cur = RingNext(i);
+                    RxRingInfo[0].head = RxRingInfo[0].cur = RingNext(i);
                 }
             }
         }
