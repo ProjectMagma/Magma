@@ -59,6 +59,25 @@ namespace Magma.NetMap.Interop
             _netmapInterface = Unsafe.Read<netmap_if>(NetMapInterfaceAddress.ToPointer());
             Console.WriteLine($"Interface Nic RX Queues {_netmapInterface.ni_rx_rings}");
             Console.WriteLine($"Interface Nic TX Queues {_netmapInterface.ni_tx_rings}");
+            Console.WriteLine($"Interface Start of extra buffers {_netmapInterface.ni_bufs_head}");
+
+            var txOffsets = new ulong[_netmapInterface.ni_tx_rings];
+            var rxOffsets = new ulong[_netmapInterface.ni_rx_rings];
+            var span = new Span<byte>(IntPtr.Add(NetMapInterfaceAddress, Unsafe.SizeOf<netmap_if>()).ToPointer(),(int)((_netmapInterface.ni_rx_rings + _netmapInterface.ni_tx_rings) * sizeof(IntPtr)));
+            for (var i = 0; i < txOffsets.Length;i++)
+            {
+                txOffsets[i] = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(span);
+                span = span.Slice(sizeof(ulong));
+                Console.WriteLine($"TX Queue {i} offset is {txOffsets[i]}");
+            }
+            for(var i = 0; i < rxOffsets.Length;i++)
+            {
+                rxOffsets[i] = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(span);
+                span = span.Slice(sizeof(ulong));
+                Console.WriteLine($"RX Queue {i} offset is {rxOffsets[i]}");
+            }
+
+            
         }
 
         private IntPtr NetMapInterfaceAddress => IntPtr.Add(_mappedRegion, (int)_request.nr_offset);
