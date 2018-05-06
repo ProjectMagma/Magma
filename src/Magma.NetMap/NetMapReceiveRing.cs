@@ -48,6 +48,7 @@ namespace Magma.NetMap
         {
             while (true)
             {
+                Console.WriteLine("About to start polling");
                 var fd = new Unix.pollFd()
                 {
                     Events = Unix.PollEvents.POLLIN,
