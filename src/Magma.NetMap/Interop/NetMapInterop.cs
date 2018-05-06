@@ -64,20 +64,24 @@ namespace Magma.NetMap.Interop
 
             var txOffsets = new ulong[_netmapInterface.ni_tx_rings];
             var rxOffsets = new ulong[_netmapInterface.ni_rx_rings];
-            var span = new Span<byte>(IntPtr.Add(NetMapInterfaceAddress, Unsafe.SizeOf<netmap_if>()).ToPointer(),(int)((_netmapInterface.ni_rx_rings + _netmapInterface.ni_tx_rings) * sizeof(IntPtr)));
+            var span = new Span<byte>(IntPtr.Add(NetMapInterfaceAddress, Unsafe.SizeOf<netmap_if>()).ToPointer(),(int)((_netmapInterface.ni_rx_rings + _netmapInterface.ni_tx_rings + 2) * sizeof(IntPtr)));
             for (var i = 0; i < txOffsets.Length;i++)
             {
                 txOffsets[i] = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(span);
                 span = span.Slice(sizeof(ulong));
                 Console.WriteLine($"TX Queue {i} offset is {txOffsets[i]}");
             }
+            var txHost = System.Buffers.Binary.BinaryPrimatives.ReadUInt64LittleEndian(span);
+            span = span.Slice(sizeof(ulong));
+            Console.WriteLine($"TX Host Queue offset is {txHost}");
             for(var i = 0; i < rxOffsets.Length;i++)
             {
                 rxOffsets[i] = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(span);
                 span = span.Slice(sizeof(ulong));
                 Console.WriteLine($"RX Queue {i} offset is {rxOffsets[i]}");
             }
-
+            var rxHost = System.Buffers.Binary.BinaryPrimatives.ReadUInt64LittleEndian(span);
+            Console.WriteLine($"RX Host Queue offset is {rxHost}");
             
         }
 
