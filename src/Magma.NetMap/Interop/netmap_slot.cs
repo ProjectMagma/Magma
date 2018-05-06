@@ -6,7 +6,7 @@ using System.Text;
 namespace Magma.NetMap.Interop
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct netmap_slot
+    public struct Netmap_slot
     {
         public uint buf_idx;   /* buffer index */
         public ushort len;       /* length for this slot */

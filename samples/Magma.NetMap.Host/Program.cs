@@ -11,7 +11,8 @@ namespace Magma.NetMap.Host
             netmap.Open();
             netmap.PrintPortInfo();
 
-            Console.WriteLine("Hello World!");
+            Console.WriteLine("Started reading");
+            Console.ReadLine();
         }
     }
 }

@@ -8,9 +8,9 @@ namespace Magma.NetMap
 {
     public class NetMapPort
     {
-        private NetMapRingPair[] _rings;
-        private string _interfaceName;
-        private nmreq _request;
+        private NetMapReceiveRing[] _rings;
+        private readonly string _interfaceName;
+        private NetMapRequest _request;
         private int _fileDescriptor;
         private IntPtr _mappedRegion;
         private netmap_if _netmapInterface;
@@ -24,7 +24,7 @@ namespace Magma.NetMap
 
         public unsafe void Open()
         {
-            var request = new nmreq
+            var request = new NetMapRequest
             {
                 nr_cmd = 0,
                 nr_flags = 0x8003,
@@ -67,10 +67,10 @@ namespace Magma.NetMap
             }
             var rxHost = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(span);
 
-            _rings = new NetMapRingPair[rxOffsets.Length];
+            _rings = new NetMapReceiveRing[rxOffsets.Length];
             for(var i = 0; i < rxOffsets.Length;i++)
             {
-                _rings[i] = new NetMapRingPair((byte*)_mappedRegion.ToPointer(), rxOffsets[i], txOffsets[i]);
+                _rings[i] = new NetMapReceiveRing((byte*)_mappedRegion.ToPointer(), rxOffsets[i], _fileDescriptor);
             }
         }
 

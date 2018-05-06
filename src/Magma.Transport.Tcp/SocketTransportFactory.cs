@@ -22,17 +22,14 @@ namespace Magma.Transport.Tcp
             {
                 throw new ArgumentNullException(nameof(options));
             }
-            if (applicationLifetime == null)
-            {
-                throw new ArgumentNullException(nameof(applicationLifetime));
-            }
+
             if (loggerFactory == null)
             {
                 throw new ArgumentNullException(nameof(loggerFactory));
             }
 
             _options = options.Value;
-            _appLifetime = applicationLifetime;
+            _appLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
             var logger = loggerFactory.CreateLogger("Magma.Transport.Tcp.Sockets");
             _trace = new SocketsTrace(logger);
         }
