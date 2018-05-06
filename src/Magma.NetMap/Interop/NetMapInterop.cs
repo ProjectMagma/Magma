@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Magma.NetMap.Interop
 {
-    public class NetMapInterop
+    public class NetMapInterop : IDisposable
     {
         const ushort NETMAP_RING_MASK = 0x0fff;	/* the ring number */
         const ushort NETMAP_API = 12;
@@ -15,35 +15,32 @@ namespace Magma.NetMap.Interop
         const uint NIOCREGIF = 0xC03C6992;
         const ushort NR_REG_MASK = 0xf; /* to extract NR_REG_* mode from nr_flags */
 
-        private enum OpenFlags : int
+        private nmreq _request;
+        private IntPtr _mappedRegion;
+        private netmap_if _netmapInterface;
+        
+        public unsafe void Open(string ifname)
         {
-            O_RDONLY = 0x0000,		/* open for reading only */
-            O_WRONLY = 0x0001,		/* open for writing only */
-            O_RDWR = 0x0002,		/* open for reading and writing */
-            O_ACCMODE = 0x0003,		/* mask for above modes */
-        }
-
-        enum p_state { P_START, P_RNGSFXOK, P_GETNUM, P_FLAGS, P_FLAGSOK, P_MEMID };
-
-        public static unsafe void OpenNetMap(string ifname)
-        {
-            var request = new nmreq();
-            request.nr_cmd = 0;
-            request.nr_flags = 0x8001;
-            request.nr_ringid = 0;
-            request.nr_version = 12;
-            var textbytes = System.Text.Encoding.ASCII.GetBytes(ifname + "\0");
+            var request = new nmreq
+            {
+                nr_cmd = 0,
+                nr_flags = 0x8001,
+                nr_ringid = 0,
+                nr_version = NETMAP_API,
+            };
+            var textbytes = Encoding.ASCII.GetBytes(ifname + "\0");
             fixed (void* txtPtr = textbytes)
             {
                 Buffer.MemoryCopy(txtPtr, request.nr_name, textbytes.Length, textbytes.Length);
             }
-            var fd = Unix.Open("/dev/netmap", (int)OpenFlags.O_RDWR);
+            var fd = Unix.Open("/dev/netmap", Unix.OpenFlags.O_RDWR);
             if (fd < 0) throw new InvalidOperationException("Need to handle properly (release memory etc)");
             if (Unix.IOCtl(fd, NIOCREGIF, &request) != 0)
             {
                 Console.WriteLine($"Error with the IO CTL error code was {Marshal.GetLastWin32Error()}");
                 throw new InvalidOperationException("Some failure to get the port, need better error handling");
             }
+            _request = request;
             Console.WriteLine($"memsize = {request.nr_memsize}");
             Console.WriteLine($"tx rings = {request.nr_tx_rings}");
             Console.WriteLine($"rx rings = {request.nr_rx_rings}");
@@ -54,32 +51,38 @@ namespace Magma.NetMap.Interop
             Console.WriteLine("------------------------------------");
             Console.WriteLine("Now mapping memory");
 
-            var mapResult = Unix.MMap(IntPtr.Zero, request.nr_memsize, Unix.MemoryMappedProtections.PROT_READ | Unix.MemoryMappedProtections.PROT_WRITE, Unix.MemoryMappedFlags.MAP_SHARED, fd,  0);
+            var mapResult = Unix.MMap(IntPtr.Zero, request.nr_memsize, Unix.MemoryMappedProtections.PROT_READ | Unix.MemoryMappedProtections.PROT_WRITE, Unix.MemoryMappedFlags.MAP_SHARED, fd, 0);
             if ((long)mapResult < 0) throw new InvalidOperationException("Failed to map the memory");
             Console.WriteLine("Mapped the memory region correctly");
+            _mappedRegion = mapResult;
 
+            _netmapInterface = Unsafe.Read<netmap_if>(NetMapInterfaceAddress.ToPointer());
+            Console.WriteLine($"Interface Nic RX Queues {_netmapInterface.ni_rx_rings}");
+            Console.WriteLine($"Interface Nic TX Queues {_netmapInterface.ni_tx_rings}");
         }
+
+        private IntPtr NetMapInterfaceAddress => IntPtr.Add(_mappedRegion, (int)_request.nr_offset);
 
         public static unsafe nm_desc nm_open(string ifname, nmreq req, ulong flags, void* arg)
         {
             nr_mode nr_reg;
 
             var ptrToDescription = Marshal.AllocHGlobal(Unsafe.SizeOf<nm_desc>());
-            
+
             var d = Unsafe.AsRef<nm_desc>(ptrToDescription.ToPointer());
             d.self = ptrToDescription;
 
-            var fd = Unix.Open("/dev/netmap", (int)OpenFlags.O_RDWR);
+            var fd = Unix.Open("/dev/netmap", Unix.OpenFlags.O_RDWR);
             if (fd < 0) throw new InvalidOperationException("Need to handle properly (release memory etc)");
 
             d.req.nr_flags = (uint)nr_mode.NR_REG_ALL_NIC;
             d.req.nr_arg1 = 0;
-            var textbytes = System.Text.Encoding.ASCII.GetBytes(ifname + "\0");
-            fixed(void* txtPtr = textbytes)
+            var textbytes = Encoding.ASCII.GetBytes(ifname + "\0");
+            fixed (void* txtPtr = textbytes)
             {
                 Buffer.MemoryCopy(txtPtr, d.req.nr_name, textbytes.Length, textbytes.Length);
             }
-            
+
             d.req.nr_version = NETMAP_API;
             d.req.nr_ringid &= NETMAP_RING_MASK;
 
@@ -88,7 +91,7 @@ namespace Magma.NetMap.Interop
             Console.WriteLine($"Ring id was {d.req.nr_ringid}");
             d.req.nr_flags = 0x8001;
             d.req.nr_cmd = 0;
-            
+
             if (Unix.IOCtl(d.fd, NIOCREGIF, &d.req) != 0)
             {
                 Console.WriteLine($"Error with the IO CTL error code was {Marshal.GetLastWin32Error()}");
@@ -131,6 +134,11 @@ namespace Magma.NetMap.Interop
             d.cur_tx_ring = d.first_tx_ring;
             d.cur_rx_ring = d.first_rx_ring;
             return d;
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
         }
     }
 }

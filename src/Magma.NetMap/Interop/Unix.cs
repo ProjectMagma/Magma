@@ -8,10 +8,19 @@ namespace Magma.NetMap
     internal class Unix
     {
         [DllImport("libc", EntryPoint = "open")]
-        public static extern int Open([MarshalAs(UnmanagedType.LPStr)] string fileName, int flags);
+        public static extern int Open([MarshalAs(UnmanagedType.LPStr)] string fileName, OpenFlags flags);
 
         [DllImport("libc", EntryPoint = "ioctl", SetLastError = true)]
         public unsafe static extern int IOCtl(int descriptor, uint request, void* data);
+
+        [Flags]
+        public enum OpenFlags
+        {
+            O_RDONLY = 0x0000,		/* open for reading only */
+            O_WRONLY = 0x0001,		/* open for writing only */
+            O_RDWR = 0x0002,		/* open for reading and writing */
+            O_ACCMODE = 0x0003,     /* mask for above modes */
+        }
 
         [Flags]
         public enum MemoryMappedProtections
