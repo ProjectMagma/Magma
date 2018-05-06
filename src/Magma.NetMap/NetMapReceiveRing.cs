@@ -66,7 +66,7 @@ namespace Magma.NetMap
                 {
                     var i = RxRingInfo[0].cur;
                     var slot = _rxRing[i];
-                    var buffer = GetBuffer(slot.buf_idx);
+                    var buffer = GetBuffer(slot.buf_idx).Slice(0, slot.len);
                     Console.WriteLine($"Received packet on ring {_ringId} data was {buffer.Length}");
                     RxRingInfo[0].head = RxRingInfo[0].cur = RingNext(i);
                 }
