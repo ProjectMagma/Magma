@@ -31,7 +31,7 @@ namespace Magma.NetMap
             Console.WriteLine($"Ring Id {_ringId} is hardware ring {(ringInfo.ringid & (short)nr_ringid.NETMAP_HW_RING) != 0} number of slots {_rxSlots} and buffer size {_rxBufferSize}");
         }
 
-        private unsafe netmap_ring* RxRingInfo => (netmap_ring*)(_memoryRegion + _rxQueueOffset)[0];
+        private unsafe netmap_ring* RxRingInfo => (netmap_ring*)(_memoryRegion + _rxQueueOffset);
 
         public void Send(Span<byte> packet)
         {
