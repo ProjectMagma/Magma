@@ -1,4 +1,5 @@
 
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Magma.Transport.Tcp.SocketStates
@@ -53,33 +54,40 @@ namespace Magma.Transport.Tcp.SocketStates
 
     internal struct ResponderClosed
     {
-        ValueTask<ResponderListening> ListenAsync() => default;
+        public ValueTask<ResponderListening> ListenAsync() => default;
     }
 
     internal struct ResponderListening
     {
-        ValueTask<ResponderSynReceived> WaitSynAsync() => default;
+        public ValueTask<ResponderSynReceived> WaitSynAsync() => default;
     }
     internal struct ResponderSynReceived
     {
-        ValueTask<ResponderEstablished> SendSynAckAsync() => default;
+        public ValueTask SendRstAsync() => default;
+        public ValueTask<ResponderEstablished> SendSynAckAsync() => default;
     }
     internal struct ResponderEstablished
     {
-        ValueTask<ResponderCloseWait> WaitCloseAsync() => default;
+        public IPEndPoint LocalEndPoint { get; }
+        public IPEndPoint RemoteEndPoint { get; }
+        public ValueTask<ResponderCloseWait> WaitCloseAsync() => default;
     }
     internal struct ResponderCloseWait
     {
-        ValueTask<ResponderLastAck> SendFinAsync() => default;
+        public ValueTask<ResponderLastAck> SendFinAsync() => default;
     }
     internal struct ResponderLastAck
     {
-        ValueTask<ResponderClosed> WaitFinAsync() => default;
+        public ValueTask<ResponderClosed> WaitFinAsync() => default;
     }
 
     internal struct InitatorClosed { }
     internal struct InitatorSynSent { }
-    internal struct InitatorEstablished { }
+    internal struct InitatorEstablished
+    {
+        public IPEndPoint LocalEndPoint { get; }
+        public IPEndPoint RemoteEndPoint { get; }
+    }
     internal struct InitatorFinWait1 { }
     internal struct InitatorFinWait2 { }
     internal struct InitatorClosing { }
