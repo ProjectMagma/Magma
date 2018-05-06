@@ -16,6 +16,7 @@ namespace Magma.NetMap
         private int _rxSlots;
         private int _ringId;
         private Thread _worker;
+        private netmap_slot* _rxRing;
         
         internal NetMapRingPair(byte* memoryRegion, ulong rxQueueOffset, ulong txQueueOffset)
         {
@@ -29,8 +30,20 @@ namespace Magma.NetMap
             _rxSlots = (int)ringInfo.num_slots;
             _ringId = ringInfo.ringid & (ushort)nr_ringid.NETMAP_RING_MASK;
 
+            _rxRing =(netmap_slot*)( (long)(_memoryRegion + rxQueueOffset + Unsafe.SizeOf<netmap_ring>() + 15) & (~0x0F));
+
             Console.WriteLine($"Ring Id {_ringId} is hardware ring {(ringInfo.ringid & (short)nr_ringid.NETMAP_HW_RING) != 0} number of slots {_rxSlots} and buffer size {_rxBufferSize}");
+
+            PrintSlotInfo(0);
         }
+
+        private void PrintSlotInfo(int index)
+        {
+            var slot = _rxRing[index];
+            Console.WriteLine($"Slot {index} bufferIndex {slot.buf_idx} flags {slot.flags} length {slot.len} pointer {slot.ptr}");
+        }
+
+        private netmap_slot CurrentSlot => _rxRing[0];
 
         private unsafe netmap_ring* RxRingInfo => (netmap_ring*)(_memoryRegion + _rxQueueOffset);
 
