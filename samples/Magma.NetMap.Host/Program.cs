@@ -7,8 +7,9 @@ namespace Magma.NetMap.Host
     {
         static unsafe void Main(string[] args)
         {
-            var netmap = new NetMapInterop();
-            netmap.Open("eth0");
+            var netmap = new NetMapPort("eth0");
+            netmap.Open();
+            netmap.PrintPortInfo();
 
             Console.WriteLine("Hello World!");
         }
