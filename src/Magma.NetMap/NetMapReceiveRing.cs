@@ -67,10 +67,21 @@ namespace Magma.NetMap
                     var i = RxRingInfo[0].cur;
                     var slot = _rxRing[i];
                     var buffer = GetBuffer(slot.buf_idx).Slice(0, slot.len);
-                    Console.WriteLine($"Received packet on ring {_ringId} data was {buffer.Length}");
+                    if (!TryConsume(buffer))
+                    {
+                        RxRingInfo[0].flags = RxRingInfo[0].flags | (uint)netmap_slot_flags.NS_FORWARD;
+                        _rxRing[i].flags = (ushort)(_rxRing[i].flags | (ushort)netmap_slot_flags.NS_FORWARD);
+                        Console.WriteLine("Forwarded to host");
+                    }
                     RxRingInfo[0].head = RxRingInfo[0].cur = RingNext(i);
                 }
             }
+        }
+
+        private bool TryConsume(Span<byte> buffer)
+        {
+            Console.WriteLine($"Received packet on ring {_ringId} size was {buffer.Length}");
+            return false;
         }
 
         private uint RingNext(uint i) => (i + 1 == _numberOfSlots) ? 0 : i + 1;
