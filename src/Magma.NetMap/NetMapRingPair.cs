@@ -30,7 +30,7 @@ namespace Magma.NetMap
             _rxSlots = (int)ringInfo.num_slots;
             _ringId = ringInfo.ringid & (ushort)nr_ringid.NETMAP_RING_MASK;
 
-            _rxRing =(netmap_slot*)( (long)(_memoryRegion + rxQueueOffset + Unsafe.SizeOf<netmap_ring>() + 15) & (~0x0F));
+            _rxRing =(netmap_slot*)( (long)(_memoryRegion + rxQueueOffset + Unsafe.SizeOf<netmap_ring>() + 127 + 128) & (~0xFF));
 
             Console.WriteLine($"Ring Id {_ringId} is hardware ring {(ringInfo.ringid & (short)nr_ringid.NETMAP_HW_RING) != 0} number of slots {_rxSlots} and buffer size {_rxBufferSize}");
             var span = new Span<byte>((_memoryRegion + rxQueueOffset), 500);
