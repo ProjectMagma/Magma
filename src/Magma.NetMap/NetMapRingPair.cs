@@ -18,7 +18,7 @@ namespace Magma.NetMap
         private Thread _worker;
         private netmap_slot* _rxRing;
         
-        internal NetMapRingPair(byte* memoryRegion, ulong rxQueueOffset, ulong txQueueOffset)
+        internal NetMapRingPair(byte* memoryRegion, ulong txQueueOffset, ulong rxQueueOffset)
         {
             _rxQueueOffset = (int) rxQueueOffset;
             _memoryRegion = memoryRegion;
