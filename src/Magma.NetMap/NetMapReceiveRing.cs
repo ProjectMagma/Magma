@@ -42,6 +42,7 @@ namespace Magma.NetMap
             PrintSlotInfo(1);
 
             _worker = new Thread(new ThreadStart(ThreadLoop));
+            _worker.Start();
         }
 
         private void ThreadLoop()
