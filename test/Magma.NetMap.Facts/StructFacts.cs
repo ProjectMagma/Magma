@@ -8,18 +8,10 @@ namespace Magma.NetMap.Facts
     public class StructFacts
     {
         [Fact]
-        public void CheckDescriptionSizeMatchesNative()
-        {
-            var expectedSize = 752;
-            var actualSize = Unsafe.SizeOf<nm_desc>();
-            Assert.Equal(expectedSize, actualSize);
-        }
-
-        [Fact]
         public void CheckRequestSizeMatchesNative()
         {
             var expectedSize = 60;
-            var actual = Unsafe.SizeOf<nmreq>();
+            var actual = Unsafe.SizeOf<NetMapRequest>();
             Assert.Equal(expectedSize, actual);
         }
     }

@@ -6,7 +6,7 @@ using System.Text;
 namespace Magma.NetMap.Interop
 {
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct nmreq
+    public unsafe struct NetMapRequest
     {
         public fixed byte nr_name[16];
         public uint nr_version;    /* API version */

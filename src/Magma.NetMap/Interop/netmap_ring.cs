@@ -6,7 +6,7 @@ using System.Text;
 namespace Magma.NetMap.Interop
 {
     [StructLayout(LayoutKind.Sequential)]
-    struct netmap_ring
+    struct Netmap_ring
     {
         public long buf_ofs;
         public uint num_slots;   /* number of slots in the ring. */
