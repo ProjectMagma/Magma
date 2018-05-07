@@ -157,8 +157,7 @@ namespace Magma.Network.Header
                    $"| Protocol : {Protocol.ToString().PadRight(11)} |" +
                    $"| Dst IP   : {DestinationAddress.ToString().PadRight(15)} " +
                    $"| Src IP   : {SourceAddress.ToString().PadRight(15)} " +
-                   Environment.NewLine +
-                   "+---------------------------------^ [  IPv4 Frame  ] ^---------------------------------+";
+                   Environment.NewLine;
         }
     }
 }
