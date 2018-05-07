@@ -8,7 +8,9 @@ namespace Magma.NetMap
 {
     public class NetMapPort
     {
-        private NetMapReceiveRing[] _rings;
+        private NetMapReceiveRing[] _receiveRings;
+        private NetMapTransmitRing[] _transmitRings;
+        private NetMapHostTxRing _hostRing;
         private readonly string _interfaceName;
         private NetMapRequest _request;
         private int _fileDescriptor;
@@ -67,11 +69,18 @@ namespace Magma.NetMap
             }
             var rxHost = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(span);
 
-            _rings = new NetMapReceiveRing[rxOffsets.Length];
+            _receiveRings = new NetMapReceiveRing[rxOffsets.Length];
             for(var i = 0; i < rxOffsets.Length;i++)
             {
-                _rings[i] = new NetMapReceiveRing((byte*)_mappedRegion.ToPointer(), rxOffsets[i], _fileDescriptor);
+                _receiveRings[i] = new NetMapReceiveRing((byte*)_mappedRegion.ToPointer(), rxOffsets[i], _fileDescriptor);
             }
+
+            _transmitRings = new NetMapTransmitRing[txOffsets.Length];
+            for(var i = 0; i < txOffsets.Length;i++)
+            {
+                _transmitRings[i] = new NetMapTransmitRing((byte*)_mappedRegion.ToPointer(), txOffsets[i], _fileDescriptor);
+            }
+            _hostRing = new NetMapHostTxRing((byte*)_mappedRegion.ToPointer(), rxHost, _fileDescriptor, _transmitRings[0]);
         }
 
         private unsafe void MapMemory()
