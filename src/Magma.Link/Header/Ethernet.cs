@@ -31,7 +31,7 @@ namespace Magma.Network.Header
         public override string ToString()
         {
             return "+- Ethernet Frame ---------------------------------------------------------------------+" + Environment.NewLine +
-                  $"| {Ethertype.ToString().PadRight(11)} | {Source.ToString()} -> {Destination.ToString()}".PadRight(88) + "|";
+                  $"| {Ethertype.ToString().PadRight(11)} | {Source.ToString()} -> {Destination.ToString()}".PadRight(87) + "|";
         }
     }
 }
