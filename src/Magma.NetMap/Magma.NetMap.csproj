@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Magma.Link\Magma.Link.csproj" />
     <ProjectReference Include="..\Magma.Network.Abstractions\Magma.Network.Abstractions.csproj" />
   </ItemGroup>
 
