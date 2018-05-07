@@ -29,6 +29,8 @@ namespace Magma.NetMap
             _createReceiver = createReceiver;
         }
 
+        public NetMapTransmitRing[] TransmitRings => _transmitRings;
+
         private IntPtr NetMapInterfaceAddress => IntPtr.Add(_mappedRegion, (int)_request.nr_offset);
 
         public unsafe void Open()
