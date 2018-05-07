@@ -8,4 +8,10 @@ make
 sudo make install
 sudo modprobe netmap
 sudo lsmod | grep net
+
+# This will disable signing off loading etc to allow it to be all done in userspace
+# Without this it won't do passthrough from host correctly
+ethtool -K eth0 tx off rx off gso off tso off gro off lro off
+
+
 sudo ./build-apps/pkt-gen/pkt-gen -i eth0 -f tx -l 60
