@@ -30,10 +30,10 @@ namespace Magma.Network.Header
 
         public override string ToString()
         {
-            return "+-----v [Ethernet Frame] v-----+" +
-                   $"| DstMac   : {Destination.ToString().PadRight(17)} |" +
-                   $"| SrcMac   : {Source.ToString().PadRight(17)} |" +
-                   $"| EtherType: {Ethertype.ToString().PadRight(17)} |" +
+            return "+-----v [Ethernet Frame] v-----+" + Environment.NewLine +
+                   $"| DstMac   : {Destination.ToString().PadRight(17)} |" + Environment.NewLine +
+                   $"| SrcMac   : {Source.ToString().PadRight(17)} |" + Environment.NewLine +
+                   $"| EtherType: {Ethertype.ToString().PadRight(17)} |" + Environment.NewLine +
                    "+-----^ [Ethernet Frame] ^-----+";
              ;
         }
