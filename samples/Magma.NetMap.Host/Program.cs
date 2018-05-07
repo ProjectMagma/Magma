@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Magma.Internet.Ip;
 using Magma.NetMap.Interop;
 using Magma.Network;
 using Magma.Network.Abstractions;
@@ -29,6 +30,14 @@ namespace Magma.NetMap.Host
                     if (IPv4.TryConsume(ref buffer, out var ip))
                     {
                         _streamWriter.WriteLine($"{ip.ToString()}");
+
+                        if (ip.Protocol == ProtocolNumber.Tcp)
+                        {
+                            if (Tcp.TryConsume(ref buffer, out var tcp))
+                            {
+                                _streamWriter.WriteLine($"{tcp.ToString()}");
+                            }
+                        }
                     }
                 }
                 else
