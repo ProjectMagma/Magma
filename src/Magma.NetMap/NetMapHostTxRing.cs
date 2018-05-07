@@ -41,8 +41,7 @@ namespace Magma.NetMap
                     Console.WriteLine("Received data on host ring");
                     var i = RxRingInfo[0].cur;
                     var slot = _rxRing[i];
-                    var buffer = GetBuffer(slot.buf_idx).Slice(0, slot.len);
-                    _transmitRing.Send(buffer);
+                    _transmitRing.SendWithSwap(_rxRing,(int) i);
                     Console.WriteLine("Passed on host data to a tx ring");
                     RxRingInfo[0].head = RxRingInfo[0].cur = RingNext(i);
                 }
