@@ -18,6 +18,7 @@ namespace Magma.NetMap.Host
         
         public bool TryConsume(int ringId, Span<byte> buffer)
         {
+
             _streamWriter.WriteLine("------------------------");
             _streamWriter.WriteLine(BitConverter.ToString(buffer.ToArray()));
             _streamWriter.Flush();
