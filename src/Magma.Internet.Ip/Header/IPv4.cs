@@ -154,10 +154,9 @@ namespace Magma.Network.Header
         public override string ToString()
         {
             return "+---------------------------------v [  IPv4 Frame  ] v---------------------------------+" + Environment.NewLine +
-                   $"| Protocol : {Protocol.ToString().PadRight(11)} |" +
+                   $"| Protocol : {Protocol.ToString().PadRight(11)} " +
                    $"| Dst IP   : {DestinationAddress.ToString().PadRight(15)} " +
-                   $"| Src IP   : {SourceAddress.ToString().PadRight(15)} " +
-                   Environment.NewLine;
+                   $"| Src IP   : {SourceAddress.ToString().PadRight(15)} |";
         }
     }
 }

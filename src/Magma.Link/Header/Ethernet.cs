@@ -33,8 +33,7 @@ namespace Magma.Network.Header
             return "+---------------------------------v [Ethernet Frame] v---------------------------------+" + Environment.NewLine +
                    $"| EtherType: {Ethertype.ToString().PadRight(11)} " +
                    $"| DstMac   : {Destination.ToString().PadRight(15)} " +
-                   $"| SrcMac   : {Source.ToString().PadRight(15)} |" +
-                   Environment.NewLine;
+                   $"| SrcMac   : {Source.ToString().PadRight(15)} |";
         }
     }
 }
