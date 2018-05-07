@@ -80,7 +80,7 @@ namespace Magma.NetMap
             {
                 _transmitRings[i] = new NetMapTransmitRing((byte*)_mappedRegion.ToPointer(), txOffsets[i], _fileDescriptor);
             }
-            _hostRing = new NetMapHostTxRing((byte*)_mappedRegion.ToPointer(), txHost, _fileDescriptor, _transmitRings[0]);
+            _hostRing = new NetMapHostTxRing((byte*)_mappedRegion.ToPointer(), rxHost, _fileDescriptor, _transmitRings[0]);
         }
 
         private unsafe void MapMemory()
