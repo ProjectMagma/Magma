@@ -21,7 +21,7 @@ namespace Magma.NetMap.Host
         {
             if (Ethernet.TryConsume(ref buffer, out var ethernet))
             {
-                _streamWriter.WriteLine($"---> {ethernet.ToString()}");
+                _streamWriter.WriteLine($"{ethernet.ToString()}");
             }
             else
             {
