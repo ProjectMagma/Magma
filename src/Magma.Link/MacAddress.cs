@@ -11,5 +11,10 @@ namespace Magma.Link
         public ushort AddressPart1;
         public ushort AddressPart2;
         public ushort AddressPart3;
+
+        public override string ToString()
+        {
+            return "0x" + AddressPart1.ToString("x") + AddressPart2.ToString("x") + AddressPart3.ToString("x");
+        }
     }
 }
