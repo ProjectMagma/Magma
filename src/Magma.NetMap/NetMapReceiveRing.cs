@@ -1,20 +1,20 @@
 using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using Magma.NetMap.Interop;
+using Magma.Network.Abstractions;
 
 namespace Magma.NetMap
 {
-    public sealed unsafe class NetMapReceiveRing : NetMapRing
+    public sealed unsafe class NetMapReceiveRing<TPacketReceiver> : NetMapRing
+        where TPacketReceiver : IPacketReceiver
     {
         private readonly Thread _worker;
+        private TPacketReceiver _receiver;
 
-        internal NetMapReceiveRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor)
+        internal NetMapReceiveRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, TPacketReceiver receiver)
             : base(memoryRegion, rxQueueOffset, fileDescriptor)
         {
+            _receiver = receiver;
             _worker = new Thread(new ThreadStart(ThreadLoop));
             _worker.Start();
         }
@@ -41,7 +41,7 @@ namespace Magma.NetMap
                     var i = RxRingInfo[0].cur;
                     var slot = _rxRing[i];
                     var buffer = GetBuffer(slot.buf_idx).Slice(0, slot.len);
-                    if (!TryConsume(buffer))
+                    if (!_receiver.TryConsume(_ringId, buffer))
                     {
                         RxRingInfo[0].flags = RxRingInfo[0].flags | (uint)netmap_slot_flags.NS_FORWARD;
                         _rxRing[i].flags = (ushort)(_rxRing[i].flags | (ushort)netmap_slot_flags.NS_FORWARD);
@@ -50,12 +50,6 @@ namespace Magma.NetMap
                     RxRingInfo[0].head = RxRingInfo[0].cur = RingNext(i);
                 }
             }
-        }
-
-        private bool TryConsume(Span<byte> buffer)
-        {
-            Console.WriteLine($"Received packet on ring {_ringId} size was {buffer.Length}");
-            return false;
         }
 
         private void PrintSlotInfo(int index)

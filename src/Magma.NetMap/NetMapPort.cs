@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Magma.NetMap.Interop;
+using Magma.Network.Abstractions;
 
 namespace Magma.NetMap
 {
-    public class NetMapPort
+    public class NetMapPort<TPacketReceiver>
+        where TPacketReceiver : IPacketReceiver
     {
-        private NetMapReceiveRing[] _receiveRings;
+        private NetMapReceiveRing<TPacketReceiver>[] _receiveRings;
         private NetMapTransmitRing[] _transmitRings;
         private NetMapHostTxRing _hostRing;
         private readonly string _interfaceName;
@@ -16,11 +18,16 @@ namespace Magma.NetMap
         private int _fileDescriptor;
         private IntPtr _mappedRegion;
         private netmap_if _netmapInterface;
+        private Func<TPacketReceiver> _createReceiver;
 
         const ushort NETMAP_API = 12;
         const uint NIOCREGIF = 0xC03C6992;
 
-        public NetMapPort(string interfaceName) => _interfaceName = interfaceName;
+        public NetMapPort(string interfaceName, Func<TPacketReceiver> createReceiver)
+        {
+            _interfaceName = interfaceName;
+            _createReceiver = createReceiver;
+        }
 
         private IntPtr NetMapInterfaceAddress => IntPtr.Add(_mappedRegion, (int)_request.nr_offset);
 
@@ -69,10 +76,10 @@ namespace Magma.NetMap
             }
             var rxHost = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(span);
 
-            _receiveRings = new NetMapReceiveRing[rxOffsets.Length];
+            _receiveRings = new NetMapReceiveRing<TPacketReceiver>[rxOffsets.Length];
             for(var i = 0; i < rxOffsets.Length;i++)
             {
-                _receiveRings[i] = new NetMapReceiveRing((byte*)_mappedRegion.ToPointer(), rxOffsets[i], _fileDescriptor);
+                _receiveRings[i] = new NetMapReceiveRing<TPacketReceiver>((byte*)_mappedRegion.ToPointer(), rxOffsets[i], _fileDescriptor, _createReceiver());
             }
 
             _transmitRings = new NetMapTransmitRing[txOffsets.Length];
