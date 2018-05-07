@@ -3,19 +3,20 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using static Magma.Transport.Tcp.Transport.SocketConnection;
 
 namespace Magma.Transport.Tcp.Transport
 {
     public abstract class Socket : IDisposable
     {
-        public static async ValueTask<ListeningSocket> ListenAsync(IPEndPoint endPoint, int backlog, CancellationToken cancellationToken)
-        {
-            var socket = new ListeningSocket(endPoint, backlog, cancellationToken);
-            await socket.ListenAsync();
-            return socket;
-        }
+        //public static async ValueTask<ListeningSocket> ListenAsync(IPEndPoint endPoint, int backlog, CancellationToken cancellationToken)
+        //{
+        //    var socket = new ListeningSocket(endPoint, backlog, cancellationToken);
+        //    await socket.ListenAsync();
+        //    return socket;
+        //}
 
-        public static ValueTask<EstablishedSocket> ConnectAsync() => default;
+        //public static ValueTask<ConnectedSocket> ConnectAsync() => default;
 
         // IDisposable Support
         private bool disposedValue = false; // To detect redundant calls

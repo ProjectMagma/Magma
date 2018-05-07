@@ -69,7 +69,7 @@ namespace Magma.Transport.Tcp
 
             var endPoint = _endPointInformation.IPEndPoint;
 
-            var listenSocket = await Socket.ListenAsync(endPoint, backlog: 512, _appLifetime.ApplicationStopping);
+            //var listenSocket = await Socket.ListenAsync(endPoint, backlog: 512, _appLifetime.ApplicationStopping);
 
             //EnableRebinding(listenSocket);
 
@@ -94,7 +94,7 @@ namespace Magma.Transport.Tcp
             //    _endPointInformation.IPEndPoint = (IPEndPoint)listenSocket.LocalEndPoint;
             //}
 
-            _listenSocket = listenSocket;
+            //_listenSocket = listenSocket;
 
             _listenTask = Task.Run(() => RunAcceptLoopAsync());
         }

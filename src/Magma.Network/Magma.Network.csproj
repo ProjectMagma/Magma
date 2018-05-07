@@ -2,7 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Magma.Network.Abstractions\Magma.Network.Abstractions.csproj" />
+  </ItemGroup>
 
 </Project>

@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Magma.Network\Magma.Network.csproj" />
+    <ProjectReference Include="..\Magma.Common\Magma.Common.csproj" />
   </ItemGroup>
 
 </Project>
