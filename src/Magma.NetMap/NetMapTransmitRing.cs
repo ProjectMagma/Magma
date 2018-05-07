@@ -8,6 +8,8 @@ namespace Magma.NetMap
 {
     public sealed unsafe class NetMapTransmitRing : NetMapRing
     {
+        private const int SPINCOUNT = 1000;
+        private const int MAXLOOPTRY = 5;
 
         internal NetMapTransmitRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor)
             : base(memoryRegion, rxQueueOffset, fileDescriptor)
@@ -22,7 +24,7 @@ namespace Magma.NetMap
                 if (IsRingEmpty())
                 {
                     //Need to poll
-                    Thread.SpinWait(1000);
+                    Thread.SpinWait(SPINCOUNT);
                     continue;
                 }
 
@@ -47,15 +49,16 @@ namespace Magma.NetMap
             }
         }
 
-        public void Send(Span<byte> buffer)
+        public bool TrySend(Span<byte> buffer)
         {
             ref var ring = ref RingInfo[0];
-            while (true)
-            {
+            
+            for(var loop = 0; loop < MAXLOOPTRY; loop++)
+            { 
                 if(IsRingEmpty())
                 {
                     //Need to poll
-                    Thread.SpinWait(1000);
+                    Thread.SpinWait(SPINCOUNT);
                     continue;
                 }
                 Console.WriteLine($"Sending data on ring {_ringId} size is {buffer.Length}");
@@ -68,41 +71,51 @@ namespace Magma.NetMap
                 buffer.CopyTo(outBuffer);
                 slot.len = (ushort)buffer.Length;
                 ring.head = iNext;
-                return;
+                return true;
             }
+            return false;
         }
 
-        public Span<byte> GetNextBuffer()
+        public bool TryGetNextBuffer(out Span<byte> buffer)
         {
             ref var ring = ref RingInfo[0];
-            while (true)
+            for(var loop = 0; loop < MAXLOOPTRY; loop++)
             {
                 if(IsRingEmpty())
                 {
-                    Thread.SpinWait(1000);
+                    Thread.SpinWait(SPINCOUNT);
+                    continue;
                 }
                 var i = ring.cur;
                 var slot = _rxRing[i];
                 ring.cur = RingNext(ring.cur);
-                return GetBuffer(slot.buf_idx);
+                buffer = GetBuffer(slot.buf_idx);
+                return true;
             }
+            buffer = default;
+            return false;
         }
 
-        public Span<byte> SendMore(int size)
+        public bool TrySendMore(int previousSize, out Span<byte> buffer)
         {
             ref var ring = ref RingInfo[0];
-            while (true)
+            var i = ring.cur;
+            _rxRing[i - 1].len = (ushort)previousSize;
+            for(var loop = 0; loop < MAXLOOPTRY;loop++)
             {
                 if (IsRingEmpty())
                 {
-                    Thread.SpinWait(1000);
+                    Thread.SpinWait(SPINCOUNT);
+                    continue;
                 }
-                var i = ring.cur;
-                _rxRing[i-1].len = (ushort)size;
+                
                 var slot = _rxRing[i];
                 ring.cur = RingNext(ring.cur);
-                return GetBuffer(slot.buf_idx);
+                buffer = GetBuffer(slot.buf_idx);
+                return true;
             }
+            buffer = default;
+            return false;
         }
 
         public void SendBuffer(int size)
