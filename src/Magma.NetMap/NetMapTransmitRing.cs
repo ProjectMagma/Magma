@@ -24,7 +24,7 @@ namespace Magma.NetMap
                     Thread.Sleep(10);
                     continue;
                 }
-
+                Console.WriteLine($"Sending data on ring {_ringId}");
                 var i = RxRingInfo[0].cur;
                 var slot = _rxRing[i];
                 var outBuffer = GetBuffer(slot.buf_idx).Slice(0, slot.len);

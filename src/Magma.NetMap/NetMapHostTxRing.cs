@@ -38,6 +38,7 @@ namespace Magma.NetMap
 
                 while (!IsRingEmpty())
                 {
+                    Console.WriteLine("Received data on host ring");
                     var i = RxRingInfo[0].cur;
                     var slot = _rxRing[i];
                     var buffer = GetBuffer(slot.buf_idx).Slice(0, slot.len);
