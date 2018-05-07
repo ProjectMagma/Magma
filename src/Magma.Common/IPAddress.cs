@@ -9,6 +9,11 @@ namespace Magma.Network
         public struct V4Address
         {
             uint _address;
+
+            public override string ToString()
+            {
+                return $"{_address & 0xff}.{(_address >> 8) & 0xff}.{(_address >> 16) & 0xff}.{(_address >> 24) & 0xff}";
+            }
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 16)]

@@ -1,4 +1,6 @@
 
+using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Magma.Internet.Ip;
 
@@ -134,5 +136,29 @@ namespace Magma.Network.Header
         /// As with the source address, this may be changed in transit by a network address translation device.
         /// </summary>
         public V4Address DestinationAddress => _destinationIPAdress;
+
+        public static bool TryConsume(ref Span<byte> span, out IPv4 ip)
+        {
+            if (span.Length >= Unsafe.SizeOf<IPv4>())
+            {
+                ip = Unsafe.As<byte, IPv4>(ref MemoryMarshal.GetReference(span));
+                // CRC check
+                span = span.Slice(Unsafe.SizeOf<IPv4>(), span.Length - (Unsafe.SizeOf<IPv4>()));
+                return true;
+            }
+
+            ip = default;
+            return false;
+        }
+
+        public override string ToString()
+        {
+            return "+---------------------------------v [  IPv4 Frame  ] v---------------------------------+" + Environment.NewLine +
+                   $"| Protocol : {Protocol.ToString().PadRight(11)} |" +
+                   $"| Dst IP   : {DestinationAddress.ToString().PadRight(15)} " +
+                   $"| Src IP   : {SourceAddress.ToString().PadRight(15)} " +
+                   Environment.NewLine +
+                   "+---------------------------------^ [  IPv4 Frame  ] ^---------------------------------+";
+        }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Magma.NetMap.Interop;
+using Magma.Network;
 using Magma.Network.Abstractions;
 using Magma.Network.Header;
 
@@ -22,13 +23,24 @@ namespace Magma.NetMap.Host
             if (Ethernet.TryConsume(ref buffer, out var ethernet))
             {
                 _streamWriter.WriteLine($"{ethernet.ToString()}");
+
+                if (ethernet.Ethertype == EtherType.IPv4)
+                {
+                    if (IPv4.TryConsume(ref buffer, out var ip))
+                    {
+                        _streamWriter.WriteLine($"{ip.ToString()}");
+                    }
+                }
+                else
+                {
+                    _streamWriter.WriteLine($"{ ethernet.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
+                }
             }
             else
             {
-                _streamWriter.WriteLine("---> Unknown");
+                _streamWriter.WriteLine($"Unknown ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
             }
             
-            _streamWriter.WriteLine(BitConverter.ToString(buffer.ToArray()));
             _streamWriter.Flush();
             return false;
         }
