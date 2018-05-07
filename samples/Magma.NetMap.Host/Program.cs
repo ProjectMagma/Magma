@@ -40,8 +40,13 @@ namespace Magma.NetMap.Host
 
         static unsafe void Main(string[] args)
         {
-            var interfaceName = args?[0] ?? "eth0";
-            var netmap = new NetMapPort<PacketReceiver>( "eth0", () => new PacketReceiver(RingId++));
+            var interfaceName = "eth0";
+            if (args.Length >= 1)
+            {
+                interfaceName = args[0];
+            }
+
+            var netmap = new NetMapPort<PacketReceiver>(interfaceName, () => new PacketReceiver(RingId++));
             netmap.Open();
             netmap.PrintPortInfo();
 
