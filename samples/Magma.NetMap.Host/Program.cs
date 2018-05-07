@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Magma.NetMap.Interop;
 using Magma.Network.Abstractions;
+using Magma.Network.Header;
 
 namespace Magma.NetMap.Host
 {
@@ -18,8 +19,15 @@ namespace Magma.NetMap.Host
         
         public bool TryConsume(int ringId, Span<byte> buffer)
         {
-
-            _streamWriter.WriteLine("------------------------");
+            if (Ethernet.TryConsume(ref buffer, out var ethernet))
+            {
+                _streamWriter.WriteLine($"---> {ethernet.ToString()}");
+            }
+            else
+            {
+                _streamWriter.WriteLine("---> Unknown");
+            }
+            
             _streamWriter.WriteLine(BitConverter.ToString(buffer.ToArray()));
             _streamWriter.Flush();
             return false;

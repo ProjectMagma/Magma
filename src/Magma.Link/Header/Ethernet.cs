@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Magma.Link;
 
@@ -12,10 +12,25 @@ namespace Magma.Network.Header
         public MacAddress Source;
         public EtherType Ethertype;
 
-        bool TryConsume(ref Span<byte> span, out Ethernet ethernet)
+        public static bool TryConsume(ref Span<byte> span, out Ethernet ethernet)
         {
-            ethernet = default; // overlay
-            return false; // CRC check, trim span
+            const int CrcSize = 4;
+
+            if (span.Length >= Unsafe.SizeOf<Ethernet>() + CrcSize)
+            {
+                ethernet = Unsafe.As<byte, Ethernet>(ref MemoryMarshal.GetReference(span));
+                // CRC check
+                span = span.Slice(Unsafe.SizeOf<Ethernet>(), span.Length - (Unsafe.SizeOf<Ethernet>() + CrcSize));
+                return true; 
+            }
+
+            ethernet = default;
+            return false;
+        }
+
+        public override string ToString()
+        {
+            return Ethertype.ToString();
         }
     }
 }
