@@ -14,7 +14,10 @@ namespace Magma.Link
 
         public override string ToString()
         {
-            return "0x" + AddressPart1.ToString("x") + AddressPart2.ToString("x") + AddressPart3.ToString("x");
+            return "0x" + 
+                (AddressPart1 >> 8).ToString("x2") + (AddressPart1 & 0xFF).ToString("x2") +
+                (AddressPart2 >> 8).ToString("x2") + (AddressPart2 & 0xFF).ToString("x2") +
+                (AddressPart3 >> 8).ToString("x2") + (AddressPart3 & 0xFF).ToString("x2");
         }
     }
 }
