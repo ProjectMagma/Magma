@@ -31,6 +31,7 @@ namespace Magma.NetMap
                 buffer.CopyTo(outBuffer);
                 _rxRing[i].len = (ushort)buffer.Length;
                 RxRingInfo[0].head = RxRingInfo[0].cur = RingNext(i);
+                return;
             }
         }
     }
