@@ -24,6 +24,7 @@ namespace Magma.NetMap
 
         private void ThreadLoop()
         {
+            ref var ring = ref RingInfo[0];
             while (true)
             {
                 var fd = new Unix.pollFd()
@@ -42,12 +43,12 @@ namespace Magma.NetMap
                 while (!IsRingEmpty())
                 {
                     Console.WriteLine("Received data on host ring");
-                    var i = RxRingInfo[0].cur;
+                    var i = ring.cur;
                     var iNext = RingNext(i);
-                    RxRingInfo[0].cur = iNext;
-                    _transmitRing.SendWithSwap(_rxRing,(int) i);
+                    ring.cur = iNext;
+                    _transmitRing.SendWithSwap(ref _rxRing[i]);
                     Console.WriteLine("Passed on host data to a tx ring");
-                    RxRingInfo[0].head = iNext;
+                    ring.head = iNext;
                 }
             }
         }

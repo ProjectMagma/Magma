@@ -21,6 +21,7 @@ namespace Magma.NetMap
 
         private void ThreadLoop()
         {
+            ref var ring = ref RingInfo[0];
             while (true)
             {
                 var fd = new Unix.pollFd()
@@ -38,18 +39,19 @@ namespace Magma.NetMap
 
                 while (!IsRingEmpty())
                 {
-                    var i = RxRingInfo[0].cur;
+                    
+                    var i = ring.cur;
                     var nexti = RingNext(i);
-                    var slot = _rxRing[i];
-                    var buffer = GetBuffer(slot.buf_idx).Slice(0, slot.len);
-                    RxRingInfo[0].cur = nexti;
+                    ref var slot = ref _rxRing[i];
+                    var buffer = GetBuffer(slot.buf_idx, slot.len);
+                    ring.cur = nexti;
                     if (!_receiver.TryConsume(_ringId, buffer))
                     {
-                        RxRingInfo[0].flags = RxRingInfo[0].flags | (uint)netmap_slot_flags.NS_FORWARD;
-                        _rxRing[i].flags = (ushort)(_rxRing[i].flags | (ushort)netmap_slot_flags.NS_FORWARD);
+                        ring.flags = ring.flags | (uint)netmap_slot_flags.NS_FORWARD;
+                        slot.flags = (ushort)(slot.flags | (ushort)netmap_slot_flags.NS_FORWARD);
                         Console.WriteLine("Forwarded to host");
                     }
-                    RxRingInfo[0].head = nexti;
+                    ring.head = nexti;
                 }
             }
         }
