@@ -35,7 +35,7 @@ namespace Magma.NetMap.Host
                 {
                     _streamWriter.WriteLine($"{ ethernet.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
                 }
-                _streamWriter.WriteLine("+---------------------------------^    End Packet    ^---------------------------------+");
+                _streamWriter.WriteLine("+---------------------------------^    End Packet    ^---------------------------------+" + Environment.NewLine);
             }
             else
             {
