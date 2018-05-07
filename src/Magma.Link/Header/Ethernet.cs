@@ -23,7 +23,7 @@ namespace Magma.Network.Header
                 span = span.Slice(Unsafe.SizeOf<Ethernet>(), span.Length - (Unsafe.SizeOf<Ethernet>() + CrcSize));
                 return true; 
             }
-
+            
             ethernet = default;
             return false;
         }

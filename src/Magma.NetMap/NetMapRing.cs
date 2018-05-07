@@ -22,7 +22,7 @@ namespace Magma.NetMap
             _fileDescriptor = fileDescriptor;
             _queueOffset = (long)rxQueueOffset;
             _memoryRegion = memoryRegion;
-            var ringInfo = RxRingInfo[0];
+            var ringInfo = RingInfo[0];
             _bufferSize = (int)ringInfo.nr_buf_size;
             _numberOfSlots = (int)ringInfo.num_slots;
             _bufferStart = _memoryRegion + _queueOffset + ringInfo.buf_ofs;
@@ -31,18 +31,20 @@ namespace Magma.NetMap
             _rxRing = (Netmap_slot*)((long)(_memoryRegion + rxQueueOffset + Unsafe.SizeOf<Netmap_ring>() + 127 + 128) & (~0xFF));
         }
 
-        internal unsafe Netmap_ring* RxRingInfo => (Netmap_ring*)(_memoryRegion + _queueOffset);
+        internal unsafe Netmap_ring* RingInfo => (Netmap_ring*)(_memoryRegion + _queueOffset);
 
-        internal Span<byte> GetBuffer(uint bufferIndex)
+        internal Span<byte> GetBuffer(uint bufferIndex) => GetBuffer(bufferIndex, (ushort) _bufferSize);
+
+        internal Span<byte> GetBuffer(uint bufferIndex, ushort size)
         {
             var ptr = _bufferStart + (bufferIndex * _bufferSize);
-            return new Span<byte>(ptr, _bufferSize);
+            return new Span<byte>(ptr, size);
         }
 
         internal uint RingNext(uint i) => (i + 1 == _numberOfSlots) ? 0 : i + 1;
         internal bool IsRingEmpty()
         {
-            var ring = RxRingInfo[0];
+            var ring = RingInfo[0];
             return (ring.cur == ring.tail);
         }
         

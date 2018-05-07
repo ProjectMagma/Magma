@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Magma.NetMap.Interop;
+using Magma.Network.Header;
 
 namespace Magma.NetMap
 {
@@ -21,6 +24,7 @@ namespace Magma.NetMap
 
         private void ThreadLoop()
         {
+            ref var ring = ref RingInfo[0];
             while (true)
             {
                 var fd = new Unix.pollFd()
@@ -39,11 +43,12 @@ namespace Magma.NetMap
                 while (!IsRingEmpty())
                 {
                     Console.WriteLine("Received data on host ring");
-                    var i = RxRingInfo[0].cur;
-                    var slot = _rxRing[i];
-                    _transmitRing.SendWithSwap(_rxRing,(int) i);
+                    var i = ring.cur;
+                    var iNext = RingNext(i);
+                    ring.cur = iNext;
+                    _transmitRing.SendWithSwap(ref _rxRing[i]);
                     Console.WriteLine("Passed on host data to a tx ring");
-                    RxRingInfo[0].head = RxRingInfo[0].cur = RingNext(i);
+                    ring.head = iNext;
                 }
             }
         }
