@@ -16,10 +16,10 @@ namespace Magma.NetMap
         {
         }
 
-        internal void SendWithSwap(ref Netmap_slot sourceSlot)
+        internal bool TrySendWithSwap(ref Netmap_slot sourceSlot)
         {
             ref var ring = ref RingInfo[0];
-            while (true)
+            for(var loop = 0; loop < MAXLOOPTRY; loop++)
             {
                 if (IsRingEmpty())
                 {
@@ -45,8 +45,9 @@ namespace Magma.NetMap
                 sourceSlot.flags = (ushort)(sourceSlot.flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
 
                 ring.head = RingNext(i);
-                return;
+                return true;
             }
+            return false;
         }
 
         public bool TrySend(Span<byte> buffer)
