@@ -39,15 +39,17 @@ namespace Magma.NetMap
                 while (!IsRingEmpty())
                 {
                     var i = RxRingInfo[0].cur;
+                    var nexti = RingNext(i);
                     var slot = _rxRing[i];
                     var buffer = GetBuffer(slot.buf_idx).Slice(0, slot.len);
+                    RxRingInfo[0].cur = nexti;
                     if (!_receiver.TryConsume(_ringId, buffer))
                     {
                         RxRingInfo[0].flags = RxRingInfo[0].flags | (uint)netmap_slot_flags.NS_FORWARD;
                         _rxRing[i].flags = (ushort)(_rxRing[i].flags | (ushort)netmap_slot_flags.NS_FORWARD);
                         Console.WriteLine("Forwarded to host");
                     }
-                    RxRingInfo[0].head = RxRingInfo[0].cur = RingNext(i);
+                    RxRingInfo[0].head = nexti;
                 }
             }
         }
