@@ -20,3 +20,5 @@ sudo ./build-apps/pkt-gen/pkt-gen -i eth0 -f tx -l 60
 sudo vim /etc/modules
 
 #add a line with "netmap" in this file
+
+#to make ethtool perm add it to the /etc/rc.local file (you need to sudo to edit this file)
