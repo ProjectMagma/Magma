@@ -14,7 +14,7 @@ namespace Magma.Network.Header
         private uint _sequenceNumber;
         private uint _acknowledgmentNumber;
         private byte _dataOffsetAndReservedAndFlags0;
-        private ushort _flags1;
+        private byte _flags1;
         private ushort _windowSize;
         private ushort _checksum;
         private ushort _urgentPointer;
