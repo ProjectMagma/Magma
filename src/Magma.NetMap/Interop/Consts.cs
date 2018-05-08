@@ -9,5 +9,6 @@ namespace Magma.NetMap.Interop
         public const uint NIOCREGIF = 0xC03C6992;
         public const uint NIOCTXSYNC = 27028;
         public const uint NIOCRXSYNC = 27029;
+        public const int POLLTIME = 1;
     }
 }

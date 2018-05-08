@@ -93,9 +93,6 @@ namespace Magma.NetMap
             return false;
         }
 
-        public void ForceFlush()
-        {
-            Console.WriteLine($"Forced flush result {Unix.IOCtl(_fileDescriptor, Consts.NIOCTXSYNC, null)}");
-        }
+        public void ForceFlush() => Unix.IOCtl(_fileDescriptor, Consts.NIOCTXSYNC, null);
     }
 }
