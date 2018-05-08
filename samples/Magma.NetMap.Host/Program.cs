@@ -14,7 +14,7 @@ namespace Magma.NetMap.Host
 
         public PacketReceiver(int ringId)
         {
-            _streamWriter = Console.Out; // new StreamWriter($"rxOutput{ringId}.txt");
+            _streamWriter = new StreamWriter($"rxOutput{ringId}.txt");
             _ringId = ringId;
         }
         
