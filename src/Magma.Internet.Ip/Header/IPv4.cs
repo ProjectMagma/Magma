@@ -159,7 +159,7 @@ namespace Magma.Network.Header
         public override string ToString()
         {
             return "+- IPv4 Datagram ----------------------------------------------------------------------+" + Environment.NewLine +
-                  $"| {Protocol.ToString().PadRight(11)} | {SourceAddress.ToString()} -> {DestinationAddress.ToString()} ".PadRight(87) + "|";
+                  $"| {Protocol.ToString().PadRight(11)} | {SourceAddress.ToString()} -> {DestinationAddress.ToString()} | H: {(_versionAndHeaderLength & 0xf) * 4}, D: {System.Net.IPAddress.NetworkToHostOrder(_totalLength)}".PadRight(87) + "|";
         }
     }
 }
