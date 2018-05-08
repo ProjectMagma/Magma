@@ -49,7 +49,7 @@ namespace Magma.NetMap
                     var buffer = GetBuffer(slot.buf_idx, slot.len);
                     if (!_receiver.TryConsume(_ringId, buffer))
                     {
-                        //ring.flags = ring.flags | (uint)netmap_slot_flags.NS_FORWARD;
+                        ring.flags = ring.flags | (uint)netmap_slot_flags.NS_FORWARD;
                         slot.flags = (ushort)(slot.flags | (ushort)netmap_slot_flags.NS_FORWARD);
                         //Console.WriteLine("Forwarded to host");
                     }

@@ -52,6 +52,7 @@ namespace Magma.NetMap
                 ref var slot = ref _rxRing[newHead];
                 if (slot.buf_idx != manager.BufferIndex)
                 {
+                    RingInfo[0].flags = (ushort)(RingInfo[0].flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
                     slot.buf_idx = manager.BufferIndex;
                     slot.flags = (ushort)(slot.flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
                 }
@@ -73,7 +74,7 @@ namespace Magma.NetMap
                         Thread.SpinWait(SPINCOUNT);
                         continue;
                     }
-
+                    RingInfo[0].flags = (ushort)(RingInfo[0].flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
                     ref var slot = ref _rxRing[slotIndex];
                     var buffIndex = slot.buf_idx;
                     var buffSize = slot.len;
