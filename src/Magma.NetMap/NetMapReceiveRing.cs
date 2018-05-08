@@ -18,10 +18,7 @@ namespace Magma.NetMap
             _worker = new Thread(new ThreadStart(ThreadLoop));
             _worker.Start();
 
-            Console.WriteLine("Slots Start at");
-            PrintSlotInfo(0);
-            Console.WriteLine("Slots End at");
-            PrintSlotInfo(_numberOfSlots - 1);
+            if (RingInfo[0].dir != netmap_ringdirection.rx) throw new NotImplementedException();
         }
 
         private void ThreadLoop()
