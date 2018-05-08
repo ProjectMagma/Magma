@@ -89,12 +89,13 @@ namespace Magma.NetMap
                     return true;
                 }
             }
+            Console.WriteLine("Dropped packet on swap");
             return false;
         }
 
         public void ForceFlush()
         {
-
+            Console.WriteLine("Force Flush Called");
         }
 }
 }
