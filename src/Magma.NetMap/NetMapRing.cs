@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using Magma.NetMap.Interop;
 
 namespace Magma.NetMap
@@ -35,9 +36,9 @@ namespace Magma.NetMap
         internal NetMapBufferPool BufferPool { set => _bufferPool = value; }
         internal unsafe Netmap_ring* RingInfo => (Netmap_ring*)(_memoryRegion + _queueOffset);
 
-        internal Span<byte> GetBuffer(uint bufferIndex) => GetBuffer(bufferIndex, (ushort) _bufferSize);
+        internal Span<byte> GetBuffer(uint bufferIndex) => GetBuffer(bufferIndex, (ushort)_bufferSize);
 
-        internal unsafe IntPtr BufferStart => (IntPtr) _bufferStart;
+        internal unsafe IntPtr BufferStart => (IntPtr)_bufferStart;
 
         internal int BufferSize => _bufferSize;
 
@@ -47,13 +48,44 @@ namespace Magma.NetMap
             return new Span<byte>(ptr, size);
         }
 
-        internal uint RingNext(uint i) => (i + 1 == _numberOfSlots) ? 0 : i + 1;
+        internal int RingNext(int i) => (i + 1 == _numberOfSlots) ? 0 : i + 1;
         internal bool IsRingEmpty()
         {
             var ring = RingInfo[0];
             return (ring.cur == ring.tail);
         }
-        
+
+        internal int GetCursor()
+        {
+            ref var ring = ref RingInfo[0];
+            while (true)
+            {
+                var cursor = ring.cur;
+                if(RingSpace(cursor) > 0)
+                {
+                    var newIndex = RingNext(cursor);
+                    if(Interlocked.CompareExchange(ref ring.cur, newIndex, cursor) == cursor)
+                    {
+                        return cursor;
+                    }
+                }
+                else
+                {
+                    //No space so we will spin or backpressure
+                    return -1;
+                }
+            }
+        }
+
+        public int RingSpace(int cursor)
+        {
+            var ring = RingInfo[0];
+            var ret = (int)ring.tail - cursor;
+            if (ret < 0)
+                ret += _numberOfSlots;
+            return ret;
+        }
+
         internal uint GetMaxBufferId()
         {
             var max = 0u;
