@@ -19,10 +19,10 @@ namespace Magma.NetMap
             : base(memoryRegion, rxQueueOffset, fileDescriptor)
         {
         }
-               
+
         public bool TryGetNextBuffer(out Memory<byte> buffer)
         {
-            lock(_getBufferLock)
+            lock (_getBufferLock)
             {
                 ref var ring = ref RingInfo[0];
                 for (var loop = 0; loop < MAXLOOPTRY; loop++)
@@ -45,19 +45,22 @@ namespace Magma.NetMap
 
         public void SendBuffer(ReadOnlyMemory<byte> buffer)
         {
-            if(!MemoryMarshal.TryGetMemoryManager(buffer, out NetMapOwnedMemory manager, out var start, out var length))
+            if (!MemoryMarshal.TryGetMemoryManager(buffer, out NetMapOwnedMemory manager, out var start, out var length))
             {
                 throw new InvalidOperationException("Not one of our buffers whatcha up to fool?");
             }
             if (start != 0) throw new InvalidOperationException("Data not started at the start clown");
 
-            lock(_sendBufferLock)
+            lock (_sendBufferLock)
             {
                 var newHead = RingNext(RingInfo[0].head);
                 ref var slot = ref _rxRing[newHead];
-                slot.flags = (ushort)(slot.flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
+                if (slot.buf_idx != manager.BufferIndex)
+                {
+                    slot.buf_idx = manager.BufferIndex;
+                    slot.flags = (ushort)(slot.flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
+                }
                 slot.len = (ushort)buffer.Length;
-                slot.buf_idx = manager.BufferIndex;
                 RingInfo[0].head = newHead;
             }
         }
@@ -65,7 +68,7 @@ namespace Magma.NetMap
         internal bool TrySendWithSwap(ref Netmap_slot sourceSlot)
         {
             ref var ring = ref RingInfo[0];
-            for(var loop = 0; loop < MAXLOOPTRY; loop++)
+            for (var loop = 0; loop < MAXLOOPTRY; loop++)
             {
                 if (IsRingEmpty())
                 {
