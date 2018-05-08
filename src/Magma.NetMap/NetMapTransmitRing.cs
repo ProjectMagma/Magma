@@ -9,7 +9,7 @@ namespace Magma.NetMap
 {
     public sealed unsafe class NetMapTransmitRing : NetMapRing
     {
-        private const int SPINCOUNT = 1000;
+        private const int SPINCOUNT = 100;
         private const int MAXLOOPTRY = 5;
 
         private object _sendBufferLock = new object();
@@ -70,19 +70,16 @@ namespace Magma.NetMap
                     var slotIndex = GetCursor();
                     if (slotIndex == -1)
                     {
-                        //Need to poll
                         Thread.SpinWait(SPINCOUNT);
                         continue;
                     }
 
-                    Console.WriteLine($"Swapping data on ring {_ringId}");
-                    
                     ref var slot = ref _rxRing[slotIndex];
                     var buffIndex = slot.buf_idx;
                     var buffSize = slot.len;
                     slot.buf_idx = sourceSlot.buf_idx;
                     slot.len = sourceSlot.len;
-                    slot.flags = (ushort)(_rxRing[slotIndex].flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
+                    slot.flags = (ushort)(slot.flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
 
                     sourceSlot.buf_idx = buffIndex;
                     sourceSlot.len = buffSize;
@@ -92,7 +89,13 @@ namespace Magma.NetMap
                     return true;
                 }
             }
+            Console.WriteLine("Dropped packet on swap");
             return false;
         }
-}
+
+        public void ForceFlush()
+        {
+            Console.WriteLine($"Forced flush result {Unix.IOCtl(_fileDescriptor, Consts.NIOCTXSYNC, null)}");
+        }
+    }
 }

@@ -33,23 +33,24 @@ namespace Magma.NetMap
                     Fd = _fileDescriptor
                 };
 
-                var pollResult = Unix.poll(ref fd, 1, -1);
+                var pollResult = Unix.poll(ref fd, 1, 5);
                 if (pollResult < 0)
                 {
-                    Console.WriteLine($"Poll failed on ring {_ringId} exiting polling loop");
+                    //Console.WriteLine($"Poll failed on ring {_ringId} exiting polling loop");
                     return;
                 }
-
+                var sentData = false;
                 while (!IsRingEmpty())
                 {
-                    Console.WriteLine("Received data on host ring");
+                    //Console.WriteLine("Received data on host ring");
                     var i = ring.cur;
                     var iNext = RingNext(i);
                     ring.cur = iNext;
                     _transmitRing.TrySendWithSwap(ref _rxRing[i]);
-                    Console.WriteLine("Passed on host data to a tx ring");
                     ring.head = iNext;
+                    sentData = true;
                 }
+                if(sentData) _transmitRing.ForceFlush();
             }
         }
     }
