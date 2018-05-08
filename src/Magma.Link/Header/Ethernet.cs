@@ -14,13 +14,10 @@ namespace Magma.Network.Header
 
         public static bool TryConsume(ref Span<byte> span, out Ethernet ethernet)
         {
-            const int CrcSize = 4;
-
-            if (span.Length >= Unsafe.SizeOf<Ethernet>() + CrcSize)
+            if (span.Length >= Unsafe.SizeOf<Ethernet>())
             {
                 ethernet = Unsafe.As<byte, Ethernet>(ref MemoryMarshal.GetReference(span));
-                // CRC check
-                span = span.Slice(Unsafe.SizeOf<Ethernet>(), span.Length - (Unsafe.SizeOf<Ethernet>() + CrcSize));
+                span = span.Slice(Unsafe.SizeOf<Ethernet>(), span.Length - (Unsafe.SizeOf<Ethernet>()));
                 return true; 
             }
             
