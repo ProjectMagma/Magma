@@ -38,7 +38,7 @@ namespace Magma.NetMap
                 var pollResult = Unix.poll(ref fd, 1, -1);
                 if (pollResult < 0)
                 {
-                    Console.WriteLine($"Poll failed on ring {_ringId} exiting polling loop");
+                    //Console.WriteLine($"Poll failed on ring {_ringId} exiting polling loop");
                     return;
                 }
 
@@ -54,7 +54,7 @@ namespace Magma.NetMap
                     {
                         ring.flags = ring.flags | (uint)netmap_slot_flags.NS_FORWARD;
                         slot.flags = (ushort)(slot.flags | (ushort)netmap_slot_flags.NS_FORWARD);
-                        Console.WriteLine("Forwarded to host");
+                        //Console.WriteLine("Forwarded to host");
                     }
                     ring.head = nexti;
                 }

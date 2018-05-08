@@ -75,7 +75,7 @@ namespace Magma.NetMap
                         continue;
                     }
 
-                    Console.WriteLine($"Swapping data on ring {_ringId}");
+                    //Console.WriteLine($"Swapping data on ring {_ringId}");
                     
                     ref var slot = ref _rxRing[slotIndex];
                     var buffIndex = slot.buf_idx;
