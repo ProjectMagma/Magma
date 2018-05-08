@@ -1,5 +1,6 @@
 
 using System;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -140,7 +141,7 @@ namespace Magma.Network.Header
         public override string ToString()
         {
             return "+- TCP Segment ------------------------------------------------------------------------+" + Environment.NewLine +
-                  $"| :{SourcePort.ToString()} -> :{DestinationPort.ToString()} ".PadRight(87) + "|";
+                  $"| :{IPAddress.NetworkToHostOrder(SourcePort).ToString()} -> :{IPAddress.NetworkToHostOrder(DestinationPort).ToString()} ".PadRight(87) + "|";
         }
     }
 }
