@@ -1,6 +1,7 @@
 using System;
 using System.IO;
-using Magma.NetMap.Interop;
+using Magma.Internet.Icmp;
+using Magma.Internet.Ip;
 using Magma.Network;
 using Magma.Network.Abstractions;
 using Magma.Network.Header;
@@ -10,13 +11,15 @@ namespace Magma.NetMap.Host
     class PacketReceiver : IPacketReceiver
     {
         private int _ringId;
-        private StreamWriter _streamWriter;
         private NetMapTransmitRing _transmitter;
+        private TextWriter _streamWriter;
 
         public PacketReceiver(int ringId, NetMapTransmitRing transmitter, bool logToFile)
         {
             _transmitter = transmitter;
-            _streamWriter = logToFile ? new StreamWriter($"rxOutput{ringId}.txt") : null;
+            var filename = Path.Combine(Directory.GetCurrentDirectory(), $"rxOutput{ringId}.txt");
+            Console.WriteLine($"Outputing recieved packets to: {filename}");
+            _streamWriter = logToFile ? new StreamWriter(filename) : null;
             _ringId = ringId;
         }
         
@@ -31,6 +34,27 @@ namespace Magma.NetMap.Host
                     if (IPv4.TryConsume(ref buffer, out var ip))
                     {
                         _streamWriter?.WriteLine($"{ip.ToString()}");
+
+                        var protocol = ip.Protocol;
+                        if (protocol == ProtocolNumber.Tcp)
+                        {
+                            if (Tcp.TryConsume(ref buffer, out var tcp))
+                            {
+                                _streamWriter?.WriteLine($"{tcp.ToString()}");
+                            }
+                        }
+                        else if (protocol == ProtocolNumber.Icmp)
+                        {
+                            if (IcmpV4.TryConsume(ref buffer, out var icmp))
+                            {
+                                _streamWriter?.WriteLine($"{icmp.ToString()}");
+
+                                if (icmp.Code == Code.EchoRequest)
+                                {
+                                    // Need to transmit here...
+                                }
+                            }
+                        }
                     }
                 }
                 else

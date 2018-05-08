@@ -61,7 +61,9 @@ namespace Magma.Network.Header
         /// Sometimes links impose further restrictions on the packet size, in which case datagrams must be fragmented.
         /// Fragmentation in IPv4 is handled in either the host or in routers.
         /// </remarks>
-        public ushort TotalLength => _totalLength;
+        public ushort TotalLength => (ushort)System.Net.IPAddress.NetworkToHostOrder((short)_totalLength);
+        public ushort HeaderLength => (ushort)((_versionAndHeaderLength & 0xf) * 4);
+        public ushort DataLength => (ushort)(TotalLength - HeaderLength);
 
         /// <summary>
         /// This field is an identification field and is primarily used for uniquely identifying the group of fragments of a single IP datagram. 
@@ -142,8 +144,13 @@ namespace Magma.Network.Header
             if (span.Length >= Unsafe.SizeOf<IPv4>())
             {
                 ip = Unsafe.As<byte, IPv4>(ref MemoryMarshal.GetReference(span));
+                var size = (ip._versionAndHeaderLength & 0xf) * 4;
+                if (span.Length < size)
+                {
+                    return false;
+                }
                 // CRC check
-                span = span.Slice(Unsafe.SizeOf<IPv4>(), span.Length - (Unsafe.SizeOf<IPv4>()));
+                span = span.Slice(size, span.Length - size);
                 return true;
             }
 
@@ -153,8 +160,8 @@ namespace Magma.Network.Header
 
         public override string ToString()
         {
-            return "+- IPv4 Frame -------------------------------------------------------------------------+" + Environment.NewLine +
-                  $"| {Protocol.ToString().PadRight(11)} | {SourceAddress.ToString()} -> {DestinationAddress.ToString()} ".PadRight(87) + "|";
+            return "+- IPv4 Datagram ----------------------------------------------------------------------+" + Environment.NewLine +
+                  $"| {Protocol.ToString().PadRight(11)} | {SourceAddress.ToString()} -> {DestinationAddress.ToString()} | Length: {TotalLength}, H: {HeaderLength}, D: {DataLength}".PadRight(87) + "|";
         }
     }
 }
