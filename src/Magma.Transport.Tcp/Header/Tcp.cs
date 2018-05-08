@@ -141,7 +141,7 @@ namespace Magma.Network.Header
         public override string ToString()
         {
             return "+- TCP Segment ------------------------------------------------------------------------+" + Environment.NewLine +
-                  $"| :{IPAddress.NetworkToHostOrder(SourcePort).ToString()} -> :{IPAddress.NetworkToHostOrder(DestinationPort).ToString()} ".PadRight(87) + "|";
+                  $"| :{SourcePort.ToString()} -> :{DestinationPort.ToString()} ".PadRight(87) + "|";
         }
     }
 }
