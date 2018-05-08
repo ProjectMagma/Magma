@@ -16,6 +16,7 @@ namespace Magma.NetMap
         protected readonly Netmap_slot* _rxRing;
         protected readonly byte* _bufferStart;
         protected readonly int _fileDescriptor;
+        protected NetMapBufferPool _bufferPool;
 
         protected NetMapRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor)
         {
@@ -31,9 +32,14 @@ namespace Magma.NetMap
             _rxRing = (Netmap_slot*)((long)(_memoryRegion + rxQueueOffset + Unsafe.SizeOf<Netmap_ring>() + 127 + 128) & (~0xFF));
         }
 
+        internal NetMapBufferPool BufferPool { set => _bufferPool = value; }
         internal unsafe Netmap_ring* RingInfo => (Netmap_ring*)(_memoryRegion + _queueOffset);
 
         internal Span<byte> GetBuffer(uint bufferIndex) => GetBuffer(bufferIndex, (ushort) _bufferSize);
+
+        internal unsafe IntPtr BufferStart => (IntPtr) _bufferStart;
+
+        internal int BufferSize => _bufferSize;
 
         internal Span<byte> GetBuffer(uint bufferIndex, ushort size)
         {
@@ -48,5 +54,14 @@ namespace Magma.NetMap
             return (ring.cur == ring.tail);
         }
         
+        internal uint GetMaxBufferId()
+        {
+            var max = 0u;
+            for (var i = 0; i < _numberOfSlots; i++)
+            {
+                max = Math.Max(max, _rxRing[i].buf_idx);
+            }
+            return max;
+        }
     }
 }
