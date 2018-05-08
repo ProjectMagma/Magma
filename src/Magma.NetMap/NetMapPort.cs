@@ -18,12 +18,12 @@ namespace Magma.NetMap
         private int _fileDescriptor;
         private IntPtr _mappedRegion;
         private netmap_if _netmapInterface;
-        private Func<TPacketReceiver> _createReceiver;
+        private Func<NetMapTransmitRing, TPacketReceiver> _createReceiver;
 
         const ushort NETMAP_API = 12;
         const uint NIOCREGIF = 0xC03C6992;
 
-        public NetMapPort(string interfaceName, Func<TPacketReceiver> createReceiver)
+        public NetMapPort(string interfaceName, Func<NetMapTransmitRing, TPacketReceiver> createReceiver)
         {
             _interfaceName = interfaceName;
             _createReceiver = createReceiver;
@@ -78,17 +78,18 @@ namespace Magma.NetMap
             }
             var rxHost = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(span);
 
-            _receiveRings = new NetMapReceiveRing<TPacketReceiver>[rxOffsets.Length];
-            for(var i = 0; i < rxOffsets.Length;i++)
-            {
-                _receiveRings[i] = new NetMapReceiveRing<TPacketReceiver>((byte*)_mappedRegion.ToPointer(), rxOffsets[i], _fileDescriptor, _createReceiver());
-            }
-
             _transmitRings = new NetMapTransmitRing[txOffsets.Length];
-            for(var i = 0; i < txOffsets.Length;i++)
+            for (var i = 0; i < txOffsets.Length; i++)
             {
                 _transmitRings[i] = new NetMapTransmitRing((byte*)_mappedRegion.ToPointer(), txOffsets[i], _fileDescriptor);
             }
+
+            _receiveRings = new NetMapReceiveRing<TPacketReceiver>[rxOffsets.Length];
+            for(var i = 0; i < rxOffsets.Length;i++)
+            {
+                _receiveRings[i] = new NetMapReceiveRing<TPacketReceiver>((byte*)_mappedRegion.ToPointer(), rxOffsets[i], _fileDescriptor, _createReceiver(_transmitRings[i]));
+            }
+                        
             _hostRing = new NetMapHostTxRing((byte*)_mappedRegion.ToPointer(), rxHost, _fileDescriptor, _transmitRings[0]);
         }
 

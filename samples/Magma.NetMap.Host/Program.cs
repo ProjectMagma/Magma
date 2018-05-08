@@ -11,10 +11,12 @@ namespace Magma.NetMap.Host
     {
         private int _ringId;
         private StreamWriter _streamWriter;
+        private NetMapTransmitRing _transmitter;
 
-        public PacketReceiver(int ringId)
+        public PacketReceiver(int ringId, NetMapTransmitRing transmitter, bool logToFile)
         {
-            _streamWriter = new StreamWriter($"rxOutput{ringId}.txt");
+            _transmitter = transmitter;
+            _streamWriter = logToFile ? new StreamWriter($"rxOutput{ringId}.txt") : null;
             _ringId = ringId;
         }
         
@@ -22,27 +24,27 @@ namespace Magma.NetMap.Host
         {
             if (Ethernet.TryConsume(ref buffer, out var ethernet))
             {
-                _streamWriter.WriteLine($"{ethernet.ToString()}");
+                _streamWriter?.WriteLine($"{ethernet.ToString()}");
 
                 if (ethernet.Ethertype == EtherType.IPv4)
                 {
                     if (IPv4.TryConsume(ref buffer, out var ip))
                     {
-                        _streamWriter.WriteLine($"{ip.ToString()}");
+                        _streamWriter?.WriteLine($"{ip.ToString()}");
                     }
                 }
                 else
                 {
-                    _streamWriter.WriteLine($"{ ethernet.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
+                    _streamWriter?.WriteLine($"{ ethernet.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
                 }
-                _streamWriter.WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
+                _streamWriter?.WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
             }
             else
             {
-                _streamWriter.WriteLine($"Unknown ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
+                _streamWriter?.WriteLine($"Unknown ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
             }
             
-            _streamWriter.Flush();
+            _streamWriter?.Flush();
             return false;
         }
     }
@@ -59,7 +61,7 @@ namespace Magma.NetMap.Host
                 interfaceName = args[0];
             }
 
-            var netmap = new NetMapPort<PacketReceiver>(interfaceName, () => new PacketReceiver(RingId++));
+            var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, logToFile : true));
             netmap.Open();
             netmap.PrintPortInfo();
 
