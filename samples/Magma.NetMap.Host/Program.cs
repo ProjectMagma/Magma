@@ -26,18 +26,15 @@ namespace Magma.NetMap.Host
         
         public bool TryConsume(int ringId, Span<byte> buffer)
         {
-            WriteLine($"span Length: {buffer.Length.ToString()}");
             if (Ethernet.TryConsume(ref buffer, out var ethernet))
             {
                 WriteLine($"{ethernet.ToString()}");
-                WriteLine($".span Length: {buffer.Length.ToString()}");
 
                 if (ethernet.Ethertype == EtherType.IPv4)
                 {
                     if (IPv4.TryConsume(ref buffer, out var ip))
                     {
                         WriteLine($"{ip.ToString()}");
-                        WriteLine($"..span Length: {buffer.Length.ToString()}");
 
                         var protocol = ip.Protocol;
                         if (protocol == ProtocolNumber.Tcp)
@@ -45,7 +42,6 @@ namespace Magma.NetMap.Host
                             if (Tcp.TryConsume(ref buffer, out var tcp))
                             {
                                 WriteLine($"{tcp.ToString()}");
-                                WriteLine($"...span Length: {buffer.Length.ToString()}");
                             }
                         }
                         else if (protocol == ProtocolNumber.Icmp)

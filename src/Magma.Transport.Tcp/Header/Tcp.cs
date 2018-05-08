@@ -134,7 +134,7 @@ namespace Magma.Network.Header
             if (span.Length >= Unsafe.SizeOf<Tcp>())
             {
                 tcp = Unsafe.As<byte, Tcp>(ref MemoryMarshal.GetReference(span));
-                // CRC check
+                // Checksum check
                 span = span.Slice(Unsafe.SizeOf<Tcp>(), span.Length - (Unsafe.SizeOf<Tcp>()));
                 return true;
             }
