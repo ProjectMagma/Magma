@@ -1,8 +1,5 @@
 using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Magma.NetMap
 {
@@ -19,6 +16,8 @@ namespace Magma.NetMap
         }
 
         public uint BufferIndex { get; }
+
+        public override Memory<byte> Memory => CreateMemory(_length);
 
         public unsafe override Span<byte> GetSpan() => new Span<byte>(_pointer.ToPointer(), _length);
 
