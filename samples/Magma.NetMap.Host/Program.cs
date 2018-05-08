@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using Magma.Internet.Ip;
-using Magma.NetMap.Interop;
 using Magma.Network;
 using Magma.Network.Abstractions;
 using Magma.Network.Header;
@@ -11,11 +10,11 @@ namespace Magma.NetMap.Host
     class PacketReceiver : IPacketReceiver
     {
         private int _ringId;
-        private StreamWriter _streamWriter;
+        private TextWriter _streamWriter;
 
         public PacketReceiver(int ringId)
         {
-            _streamWriter = new StreamWriter($"rxOutput{ringId}.txt");
+            _streamWriter = Console.Out; // new StreamWriter($"rxOutput{ringId}.txt");
             _ringId = ringId;
         }
         
