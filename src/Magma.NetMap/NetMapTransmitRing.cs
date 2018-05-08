@@ -73,7 +73,7 @@ namespace Magma.NetMap
                         Thread.SpinWait(SPINCOUNT);
                         continue;
                     }
-                    
+
                     ref var slot = ref _rxRing[slotIndex];
                     var buffIndex = slot.buf_idx;
                     var buffSize = slot.len;
@@ -95,8 +95,7 @@ namespace Magma.NetMap
 
         public void ForceFlush()
         {
-            Unix.IOCtl(_fileDescriptor, Consts.NIOCTXSYNC, null);
-            Console.WriteLine("Force Flush Called");
+            Console.WriteLine($"Forced flush result {Unix.IOCtl(_fileDescriptor, Consts.NIOCTXSYNC, null)}");
         }
-}
+    }
 }
