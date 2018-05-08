@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Magma.Internet.Icmp;
 using Magma.Internet.Ip;
 using Magma.Network;
@@ -27,27 +28,27 @@ namespace Magma.NetMap.Host
         {
             if (Ethernet.TryConsume(ref buffer, out var ethernet))
             {
-                _streamWriter?.WriteLine($"{ethernet.ToString()}");
+                WriteLine($"{ethernet.ToString()}");
 
                 if (ethernet.Ethertype == EtherType.IPv4)
                 {
                     if (IPv4.TryConsume(ref buffer, out var ip))
                     {
-                        _streamWriter?.WriteLine($"{ip.ToString()}");
+                        WriteLine($"{ip.ToString()}");
 
                         var protocol = ip.Protocol;
                         if (protocol == ProtocolNumber.Tcp)
                         {
                             if (Tcp.TryConsume(ref buffer, out var tcp))
                             {
-                                _streamWriter?.WriteLine($"{tcp.ToString()}");
+                                WriteLine($"{tcp.ToString()}");
                             }
                         }
                         else if (protocol == ProtocolNumber.Icmp)
                         {
                             if (IcmpV4.TryConsume(ref buffer, out var icmp))
                             {
-                                _streamWriter?.WriteLine($"{icmp.ToString()}");
+                                WriteLine($"{icmp.ToString()}");
 
                                 if (icmp.Code == Code.EchoRequest)
                                 {
@@ -59,18 +60,21 @@ namespace Magma.NetMap.Host
                 }
                 else
                 {
-                    _streamWriter?.WriteLine($"{ ethernet.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
+                    WriteLine($"{ ethernet.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
                 }
-                _streamWriter?.WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
+                WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
             }
             else
             {
-                _streamWriter?.WriteLine($"Unknown ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
+                WriteLine($"Unknown ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
             }
             
-            _streamWriter?.Flush();
+            Flush();
             return false;
         }
+
+        private void WriteLine(string output) => _streamWriter?.WriteLine(output);
+        private void Flush() => _streamWriter?.Flush();
     }
     
     class Program
@@ -84,6 +88,10 @@ namespace Magma.NetMap.Host
             {
                 interfaceName = args[0];
             }
+
+            Console.WriteLine($"Ethernet Header length: {Unsafe.SizeOf<Ethernet>()}");
+            Console.WriteLine($"IP Header length: {Unsafe.SizeOf<IPv4>()}");
+            Console.WriteLine($"TCP Header length: {Unsafe.SizeOf<Tcp>()}");
 
             var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, logToFile : true));
             netmap.Open();

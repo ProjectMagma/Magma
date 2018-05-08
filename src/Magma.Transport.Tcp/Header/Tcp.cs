@@ -10,12 +10,19 @@ namespace Magma.Network.Header
     public struct Tcp
     {
         private ushort _sourcePort;
+        private ushort _destinationPort;
+        private uint _sequenceNumber;
+        private uint _acknowledgmentNumber;
+        private byte _dataOffsetAndReservedAndFlags0;
+        private byte _flags1;
+        private ushort _windowSize;
+        private ushort _checksum;
+        private ushort _urgentPointer;
+
         /// <summary>
         /// Identifies the sending port.
         /// </summary>
         public ushort SourcePort => (ushort)IPAddress.NetworkToHostOrder((short)_sourcePort);
-
-        private ushort _destinationPort;
         /// <summary>
         /// Identifies the receiving port.
         /// </summary>
@@ -26,13 +33,13 @@ namespace Magma.Network.Header
         /// The sequence number of the actual first data byte and the acknowledged number in the corresponding ACK are then this sequence number plus 1.
         /// If the SYN flag is clear (0), then this is the accumulated sequence number of the first data byte of this segment for the current session.
         /// </summary>
-        public uint SequenceNumber;
+        public uint SequenceNumber => _sequenceNumber;
 
         /// <summary>
         /// If the ACK flag is set then the value of this field is the next sequence number that the sender of the ACK is expecting.
         /// This acknowledges receipt of all prior bytes (if any). The first ACK sent by each end acknowledges the other end's initial sequence number itself, but no data.
         /// </summary>
-        public uint AcknowledgmentNumber;
+        public uint AcknowledgmentNumber => _acknowledgmentNumber;
 
         /// <summary>
         /// Specifies the size of the TCP header in 32-bit words.
@@ -40,20 +47,16 @@ namespace Magma.Network.Header
         /// allowing for up to 40 bytes of options in the header. 
         /// This field gets its name from the fact that it is also the offset from the start of the TCP segment to the actual data.
         /// </summary>
-        public byte DataOffset;
-
-        private byte _reservedAndFlags0;
+        public byte DataOffset => (byte)(_dataOffsetAndReservedAndFlags0 >> 4);
         /// <summary>
         /// For future use and should be set to zero. (3 bits)
         /// </summary>
-        public byte Reserved => (byte)(_reservedAndFlags0 >> 1);
+        public byte Reserved => (byte)((_dataOffsetAndReservedAndFlags0 & 0xf) >> 1);
 
         /// <summary>
         /// ECN-nonce - concealment protection(experimental: see RFC 3540)
         /// </summary>
-        public bool NS => (_reservedAndFlags0 & 0b1) == 0 ? false : true;
-
-        private ushort _flags1;
+        public bool NS => (_dataOffsetAndReservedAndFlags0 & 0b1) == 0 ? false : true;
 
         /// <summary>
         /// Congestion Window Reduced flag is set by the sending host to indicate that it received a TCP segment 
@@ -106,20 +109,20 @@ namespace Magma.Network.Header
         /// The size of the receive window, which specifies the number of bytes that 
         /// the sender of this segment is currently willing to receive.
         /// </summary>
-        public ushort WindowSize;
+        public ushort WindowSize => _windowSize;
 
         /// <summary>
         /// The 16-bit checksum field is used for error-checking of the header, the Payload and a Pseudo-Header.
         /// The Pseudo-Header consists of the Source IP Address, the Destination IP Address, 
         /// the protocol number for the TCP-Protocol (0x0006) and the length of the TCP-Headers including Payload (in Bytes).
         /// </summary>
-        public ushort Checksum;
+        public ushort Checksum => _checksum;
 
         /// <summary>
         /// If the URG flag is set, then this 16-bit field is an offset from the sequence number indicating the last urgent data byte.
         /// </summary>
         /// <returns></returns>
-        public ushort UrgentPointer;
+        public ushort UrgentPointer => _urgentPointer;
 
         // Options: (Variable 0–320 bits, divisible by 32)
         // Padding: The TCP header padding is used to ensure that the TCP header ends, and data begins, on a 32 bit boundary.
@@ -131,7 +134,7 @@ namespace Magma.Network.Header
             if (span.Length >= Unsafe.SizeOf<Tcp>())
             {
                 tcp = Unsafe.As<byte, Tcp>(ref MemoryMarshal.GetReference(span));
-                // CRC check
+                // Checksum check
                 span = span.Slice(Unsafe.SizeOf<Tcp>(), span.Length - (Unsafe.SizeOf<Tcp>()));
                 return true;
             }
