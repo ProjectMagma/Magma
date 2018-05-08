@@ -9,7 +9,7 @@ namespace Magma.NetMap
 {
     public sealed unsafe class NetMapTransmitRing : NetMapRing
     {
-        private const int SPINCOUNT = 1000;
+        private const int SPINCOUNT = 100;
         private const int MAXLOOPTRY = 5;
 
         private object _sendBufferLock = new object();

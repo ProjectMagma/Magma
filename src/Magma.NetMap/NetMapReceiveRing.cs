@@ -47,12 +47,12 @@ namespace Magma.NetMap
 
                     var i = ring.cur;
                     var nexti = RingNext(i);
+                    ring.cur = nexti;
                     ref var slot = ref _rxRing[i];
                     var buffer = GetBuffer(slot.buf_idx, slot.len);
-                    ring.cur = nexti;
                     if (!_receiver.TryConsume(_ringId, buffer))
                     {
-                        ring.flags = ring.flags | (uint)netmap_slot_flags.NS_FORWARD;
+                        //ring.flags = ring.flags | (uint)netmap_slot_flags.NS_FORWARD;
                         slot.flags = (ushort)(slot.flags | (ushort)netmap_slot_flags.NS_FORWARD);
                         //Console.WriteLine("Forwarded to host");
                     }
