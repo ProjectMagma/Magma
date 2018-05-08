@@ -9,15 +9,17 @@ namespace Magma.Network.Header
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Tcp
     {
+        private ushort _sourcePort;
         /// <summary>
         /// Identifies the sending port.
         /// </summary>
-        public ushort SourcePort;
+        public ushort SourcePort => (ushort)IPAddress.NetworkToHostOrder((short)_sourcePort);
 
+        private ushort _destinationPort;
         /// <summary>
         /// Identifies the receiving port.
         /// </summary>
-        public ushort DestinationPort;
+        public ushort DestinationPort => (ushort)IPAddress.NetworkToHostOrder((short)_destinationPort);
 
         /// <summary>
         /// Has a dual role: If the SYN flag is set(1), then this is the initial sequence number. 

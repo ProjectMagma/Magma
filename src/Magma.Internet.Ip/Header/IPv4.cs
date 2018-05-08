@@ -61,7 +61,7 @@ namespace Magma.Network.Header
         /// Sometimes links impose further restrictions on the packet size, in which case datagrams must be fragmented.
         /// Fragmentation in IPv4 is handled in either the host or in routers.
         /// </remarks>
-        public ushort TotalLength => _totalLength;
+        public ushort TotalLength => (ushort)System.Net.IPAddress.NetworkToHostOrder((short)_totalLength);
 
         /// <summary>
         /// This field is an identification field and is primarily used for uniquely identifying the group of fragments of a single IP datagram. 
@@ -159,7 +159,7 @@ namespace Magma.Network.Header
         public override string ToString()
         {
             return "+- IPv4 Datagram ----------------------------------------------------------------------+" + Environment.NewLine +
-                  $"| {Protocol.ToString().PadRight(11)} | {SourceAddress.ToString()} -> {DestinationAddress.ToString()} | H: {(_versionAndHeaderLength & 0xf) * 4}, D: {_totalLength}".PadRight(87) + "|";
+                  $"| {Protocol.ToString().PadRight(11)} | {SourceAddress.ToString()} -> {DestinationAddress.ToString()} | H: {(_versionAndHeaderLength & 0xf) * 4}, D: {TotalLength}".PadRight(87) + "|";
         }
     }
 }
