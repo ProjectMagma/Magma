@@ -144,13 +144,14 @@ namespace Magma.Network.Header
             if (span.Length >= Unsafe.SizeOf<IPv4>())
             {
                 ip = Unsafe.As<byte, IPv4>(ref MemoryMarshal.GetReference(span));
-                var size = (ip._versionAndHeaderLength & 0xf) * 4;
-                if (span.Length < size)
+                var totalSize = ip.TotalLength;
+                var headerSize = ip.HeaderLength;
+                if ((uint)totalSize < (uint)headerSize || (uint)totalSize > (uint)span.Length)
                 {
                     return false;
                 }
                 // CRC check
-                span = span.Slice(size, span.Length - size);
+                span = span.Slice(headerSize);
                 return true;
             }
 
