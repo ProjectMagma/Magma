@@ -23,7 +23,7 @@ namespace Magma.NetMap
         private Func<NetMapTransmitRing, TPacketReceiver> _createReceiver;
 
         const ushort NETMAP_API = 12;
-        const uint NIOCREGIF = 0xC03C6992;
+        
 
         public NetMapPort(string interfaceName, Func<NetMapTransmitRing, TPacketReceiver> createReceiver)
         {
@@ -51,7 +51,7 @@ namespace Magma.NetMap
             }
             _fileDescriptor = Unix.Open("/dev/netmap", Unix.OpenFlags.O_RDWR);
             if (_fileDescriptor < 0) throw new InvalidOperationException("Need to handle properly (release memory etc)");
-            if (Unix.IOCtl(_fileDescriptor, NIOCREGIF, &request) != 0)
+            if (Unix.IOCtl(_fileDescriptor, Consts.NIOCREGIF, &request) != 0)
             {
                 throw new InvalidOperationException("Some failure to get the port, need better error handling");
             }

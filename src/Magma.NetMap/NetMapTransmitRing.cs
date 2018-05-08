@@ -95,6 +95,7 @@ namespace Magma.NetMap
 
         public void ForceFlush()
         {
+            Unix.IOCtl(_fileDescriptor, Consts.NIOCTXSYNC, null);
             Console.WriteLine("Force Flush Called");
         }
 }
