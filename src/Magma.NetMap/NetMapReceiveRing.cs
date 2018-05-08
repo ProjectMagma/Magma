@@ -17,8 +17,6 @@ namespace Magma.NetMap
             _receiver = receiver;
             _worker = new Thread(new ThreadStart(ThreadLoop));
             _worker.Start();
-
-            if (RingInfo[0].dir != netmap_ringdirection.rx) throw new NotImplementedException();
         }
 
         private void ThreadLoop()
