@@ -143,7 +143,7 @@ namespace Magma.Network.Header
         public override string ToString()
         {
             return "+- TCP Segment ------------------------------------------------------------------------+" + Environment.NewLine +
-                  $"| :{SourcePort.ToString()} -> :{DestinationPort.ToString()} {(NS ? "NS " : "")} {(CWR ? "CWR " : "")} {(ECE ? "ECE " : "")} {(URG ? "URG " : "")} {(ACK ? "ACK " : "")} {(PSH ? "PSH " : "")} {(RST ? "RST " : "")} {(SYN ? "SYN " : "")} {(FIN ? "FIN " : "")}".PadRight(87) + "|";
+                  $"| :{SourcePort.ToString()} -> :{DestinationPort.ToString()} {(NS ? "NS " : "")}{(CWR ? "CWR " : "")}{(ECE ? "ECE " : "")}{(URG ? "URG " : "")}{(ACK ? "ACK " : "")}{(PSH ? "PSH " : "")}{(RST ? "RST " : "")}{(SYN ? "SYN " : "")}{(FIN ? "FIN " : "")}".PadRight(87) + "|";
         }
     }
 }
