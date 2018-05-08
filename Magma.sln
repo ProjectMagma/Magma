@@ -39,6 +39,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Magma.Network", "src\Magma.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Magma.Link.Facts", "test\Magma.Link.Facts\Magma.Link.Facts.csproj", "{15262650-814E-4631-A0EE-98D4857BF0B3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Magma.Common.Facts", "test\Magma.Common.Facts\Magma.Common.Facts.csproj", "{D8E37D7D-E535-4790-B93C-1E60AD624C70}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -93,6 +95,10 @@ Global
 		{15262650-814E-4631-A0EE-98D4857BF0B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15262650-814E-4631-A0EE-98D4857BF0B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15262650-814E-4631-A0EE-98D4857BF0B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8E37D7D-E535-4790-B93C-1E60AD624C70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8E37D7D-E535-4790-B93C-1E60AD624C70}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8E37D7D-E535-4790-B93C-1E60AD624C70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8E37D7D-E535-4790-B93C-1E60AD624C70}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -110,6 +116,7 @@ Global
 		{C500EF56-987B-4047-9999-831D0E558231} = {34A1DC50-486C-4BB9-9929-1805CA0B0DD0}
 		{5AAC4981-C1AB-471E-A0B3-C0BBFE8CD855} = {34A1DC50-486C-4BB9-9929-1805CA0B0DD0}
 		{15262650-814E-4631-A0EE-98D4857BF0B3} = {B1BA53C8-CCCF-46D5-BA9F-6031811F2E19}
+		{D8E37D7D-E535-4790-B93C-1E60AD624C70} = {B1BA53C8-CCCF-46D5-BA9F-6031811F2E19}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {99D656D2-FC86-462A-BB4C-610D644ADC62}

@@ -11,13 +11,15 @@ namespace Magma.NetMap.Host
     class PacketReceiver : IPacketReceiver
     {
         private int _ringId;
+        private NetMapTransmitRing _transmitter;
         private TextWriter _streamWriter;
 
-        public PacketReceiver(int ringId)
+        public PacketReceiver(int ringId, NetMapTransmitRing transmitter, bool logToFile)
         {
+            _transmitter = transmitter;
             var filename = Path.Combine(Directory.GetCurrentDirectory(), $"rxOutput{ringId}.txt");
             Console.WriteLine($"Outputing recieved packets to: {filename}");
-            _streamWriter = new StreamWriter(filename);
+            _streamWriter = logToFile ? new StreamWriter(filename) : null;
             _ringId = ringId;
         }
         
@@ -25,27 +27,27 @@ namespace Magma.NetMap.Host
         {
             if (Ethernet.TryConsume(ref buffer, out var ethernet))
             {
-                _streamWriter.WriteLine($"{ethernet.ToString()}");
+                _streamWriter?.WriteLine($"{ethernet.ToString()}");
 
                 if (ethernet.Ethertype == EtherType.IPv4)
                 {
                     if (IPv4.TryConsume(ref buffer, out var ip))
                     {
-                        _streamWriter.WriteLine($"{ip.ToString()}");
+                        _streamWriter?.WriteLine($"{ip.ToString()}");
 
                         var protocol = ip.Protocol;
                         if (protocol == ProtocolNumber.Tcp)
                         {
                             if (Tcp.TryConsume(ref buffer, out var tcp))
                             {
-                                _streamWriter.WriteLine($"{tcp.ToString()}");
+                                _streamWriter?.WriteLine($"{tcp.ToString()}");
                             }
                         }
                         else if (protocol == ProtocolNumber.Icmp)
                         {
                             if (IcmpV4.TryConsume(ref buffer, out var icmp))
                             {
-                                _streamWriter.WriteLine($"{icmp.ToString()}");
+                                _streamWriter?.WriteLine($"{icmp.ToString()}");
 
                                 if (icmp.Code == Code.EchoRequest)
                                 {
@@ -57,16 +59,16 @@ namespace Magma.NetMap.Host
                 }
                 else
                 {
-                    _streamWriter.WriteLine($"| { ethernet.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
+                    _streamWriter?.WriteLine($"{ ethernet.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
                 }
-                _streamWriter.WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
+                _streamWriter?.WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
             }
             else
             {
-                _streamWriter.WriteLine($"Unknown ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
+                _streamWriter?.WriteLine($"Unknown ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
             }
             
-            _streamWriter.Flush();
+            _streamWriter?.Flush();
             return false;
         }
     }
@@ -83,7 +85,7 @@ namespace Magma.NetMap.Host
                 interfaceName = args[0];
             }
 
-            var netmap = new NetMapPort<PacketReceiver>(interfaceName, () => new PacketReceiver(RingId++));
+            var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, logToFile : true));
             netmap.Open();
             netmap.PrintPortInfo();
 
