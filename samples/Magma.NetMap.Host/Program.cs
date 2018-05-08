@@ -42,7 +42,7 @@ namespace Magma.NetMap.Host
                 }
                 else
                 {
-                    _streamWriter.WriteLine($"{ ethernet.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
+                    _streamWriter.WriteLine($"| { ethernet.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
                 }
                 _streamWriter.WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
             }
