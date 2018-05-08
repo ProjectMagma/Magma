@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Magma.NetMap
@@ -9,16 +10,15 @@ namespace Magma.NetMap
     {
         private IntPtr _pointer;
         private ushort _length;
-        private uint _bufferIndex;
 
         public NetMapOwnedMemory(IntPtr pointer, ushort length, uint index)
         {
             _pointer = pointer;
             _length = length;
-            _bufferIndex = index;
+            BufferIndex = index;
         }
 
-        public uint BufferIndex => _bufferIndex;
+        public uint BufferIndex { get; }
 
         public unsafe override Span<byte> GetSpan() => new Span<byte>(_pointer.ToPointer(), _length);
 

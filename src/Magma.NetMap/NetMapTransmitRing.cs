@@ -45,11 +45,11 @@ namespace Magma.NetMap
 
         public void SendBuffer(ReadOnlyMemory<byte> buffer)
         {
-            if (!MemoryMarshal.TryGetMemoryManager(buffer, out NetMapOwnedMemory manager, out var start, out var length))
+            if (!MemoryMarshal.TryGetMemoryManager(buffer, out NetMapOwnedMemory manager, out var start, out var length)
+                || start != 0)
             {
-                throw new InvalidOperationException("Not one of our buffers whatcha up to fool?");
+                ExceptionHelper.ThrowInvalidOperation("Invalid buffer used for sendbuffer");
             }
-            if (start != 0) throw new InvalidOperationException("Data not started at the start clown");
 
             lock (_sendBufferLock)
             {
@@ -70,31 +70,36 @@ namespace Magma.NetMap
             ref var ring = ref RingInfo[0];
             for (var loop = 0; loop < MAXLOOPTRY; loop++)
             {
-                if (IsRingEmpty())
-                {
-                    //Need to poll
-                    Thread.SpinWait(SPINCOUNT);
-                    continue;
-                }
+                lock (_getBufferLock)
+                    lock (_sendBufferLock)
+                    {
+                        if (IsRingEmpty())
+                        {
+                            //Need to poll
+                            Thread.SpinWait(SPINCOUNT);
+                            continue;
+                        }
 
-                Console.WriteLine($"Swapping data on ring {_ringId}");
-                var i = ring.cur;
-                var iNext = RingNext(i);
-                ring.cur = iNext;
+                        Console.WriteLine($"Swapping data on ring {_ringId}");
+                        var i = ring.cur;
+                        var iNext = RingNext(i);
+                        ring.cur = iNext;
 
-                ref var slot = ref _rxRing[i];
-                var buffIndex = slot.buf_idx;
-                var buffSize = slot.len;
-                slot.buf_idx = sourceSlot.buf_idx;
-                slot.len = sourceSlot.len;
-                slot.flags = (ushort)(_rxRing[i].flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
 
-                sourceSlot.buf_idx = buffIndex;
-                sourceSlot.len = buffSize;
-                sourceSlot.flags = (ushort)(sourceSlot.flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
+                        ref var slot = ref _rxRing[i];
+                        var buffIndex = slot.buf_idx;
+                        var buffSize = slot.len;
+                        slot.buf_idx = sourceSlot.buf_idx;
+                        slot.len = sourceSlot.len;
+                        slot.flags = (ushort)(_rxRing[i].flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
 
-                ring.head = RingNext(i);
-                return true;
+                        sourceSlot.buf_idx = buffIndex;
+                        sourceSlot.len = buffSize;
+                        sourceSlot.flags = (ushort)(sourceSlot.flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
+
+                        ring.head = RingNext(i);
+                        return true;
+                    }
             }
             return false;
         }
