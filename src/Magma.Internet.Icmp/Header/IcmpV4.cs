@@ -8,15 +8,17 @@ namespace Magma.Network.Header
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct IcmpV4
     {
-        private ushort _typeAndCode;
+        private short _typeAndCode;
 
         public ControlMessage Type
         {
-            get => (ControlMessage)(_typeAndCode & 0xF);
+            get => (ControlMessage)(_typeAndCode & 0xFF);
+            set => _typeAndCode = (short)((byte)value | (_typeAndCode & 0xFF00));
         }
         public Code Code
         {
             get => (Code)_typeAndCode;
+            set => _typeAndCode = (short)value;
         }
 
         public short HeaderChecksum;
@@ -40,7 +42,7 @@ namespace Magma.Network.Header
         public override string ToString()
         {
             return "+- Icmp Datagram ----------------------------------------------------------------------+" + Environment.NewLine +
-                  $"| {Type.ToString()} - {Code} ".PadRight(87) + "|";
+                  $"| {Type.ToString()} - {Code} | Id: {System.Net.IPAddress.NetworkToHostOrder(Identifier)} | Seq: {System.Net.IPAddress.NetworkToHostOrder(SequenceNumber)} ".PadRight(87) + "|";
         }
     }
 }

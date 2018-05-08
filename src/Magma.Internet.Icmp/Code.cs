@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Magma.Internet.Icmp
 {
-    public enum Code : ushort
+    public enum Code : short
     {
         EchoReply =  0x00 << 8 | ControlMessage.EchoReply,
 
