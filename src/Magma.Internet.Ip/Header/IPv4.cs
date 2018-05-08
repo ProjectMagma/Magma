@@ -148,6 +148,8 @@ namespace Magma.Network.Header
                 var headerSize = ip.HeaderLength;
                 if ((uint)totalSize < (uint)headerSize || (uint)totalSize > (uint)span.Length)
                 {
+                    Console.WriteLine("+- *invalid* IPv4 Datagram ---------------------------------------------------------------+" + Environment.NewLine +
+                                        $"| {ip.Protocol.ToString().PadRight(11)} | {ip.SourceAddress.ToString()} -> {ip.DestinationAddress.ToString()} | Length: {ip.TotalLength}, H: {ip.HeaderLength}, D: {ip.DataLength}".PadRight(87) + "|");
                     return false;
                 }
                 // CRC check
