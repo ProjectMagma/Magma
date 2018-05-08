@@ -33,7 +33,7 @@ namespace Magma.NetMap
                     Fd = _fileDescriptor
                 };
 
-                var pollResult = Unix.poll(ref fd, 1, -1);
+                var pollResult = Unix.poll(ref fd, 1, 100);
                 if (pollResult < 0)
                 {
                     //Console.WriteLine($"Poll failed on ring {_ringId} exiting polling loop");
@@ -46,11 +46,7 @@ namespace Magma.NetMap
                     var i = ring.cur;
                     var iNext = RingNext(i);
                     ring.cur = iNext;
-                    ref var slot = ref _rxRing[i];
-                    slot.flags = (ushort)(slot.flags | (uint)netmap_slot_flags.NS_FORWARD);
-
-                    //_transmitRing.TrySendWithSwap(ref _rxRing[i]);
-                    
+                    _transmitRing.TrySendWithSwap(ref _rxRing[i]);
                     ring.head = iNext;
                     sentData = true;
                 }
