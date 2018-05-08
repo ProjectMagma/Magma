@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Magma.Internet.Icmp;
 using Magma.Internet.Ip;
 using Magma.Network;
 using Magma.Network.Abstractions;
@@ -32,11 +33,24 @@ namespace Magma.NetMap.Host
                     {
                         _streamWriter.WriteLine($"{ip.ToString()}");
 
-                        if (ip.Protocol == ProtocolNumber.Tcp)
+                        var protocol = ip.Protocol;
+                        if (protocol == ProtocolNumber.Tcp)
                         {
                             if (Tcp.TryConsume(ref buffer, out var tcp))
                             {
                                 _streamWriter.WriteLine($"{tcp.ToString()}");
+                            }
+                        }
+                        else if (protocol == ProtocolNumber.Icmp)
+                        {
+                            if (IcmpV4.TryConsume(ref buffer, out var icmp))
+                            {
+                                _streamWriter.WriteLine($"{icmp.ToString()}");
+
+                                if (icmp.Code == Code.EchoRequest)
+                                {
+                                    // Need to transmit here...
+                                }
                             }
                         }
                     }
