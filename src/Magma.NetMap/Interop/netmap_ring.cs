@@ -14,9 +14,9 @@ namespace Magma.NetMap.Interop
         public ushort ringid;
         public netmap_ringdirection dir;     /* 0: tx, 1: rx */
 
-        public uint head;      /* (u) first user slot */
-        public uint cur;       /* (u) wakeup point */
-        public uint tail;      /* (k) first kernel slot */
+        public int head;      /* (u) first user slot */
+        public int cur;       /* (u) wakeup point */
+        public int tail;      /* (k) first kernel slot */
 
         public uint flags;
 

@@ -12,7 +12,6 @@ namespace Magma.NetMap
         private const int SPINCOUNT = 1000;
         private const int MAXLOOPTRY = 5;
 
-        private object _getBufferLock = new object();
         private object _sendBufferLock = new object();
 
         internal NetMapTransmitRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor)
@@ -22,25 +21,21 @@ namespace Magma.NetMap
 
         public bool TryGetNextBuffer(out Memory<byte> buffer)
         {
-            lock (_getBufferLock)
+            ref var ring = ref RingInfo[0];
+            for (var loop = 0; loop < MAXLOOPTRY; loop++)
             {
-                ref var ring = ref RingInfo[0];
-                for (var loop = 0; loop < MAXLOOPTRY; loop++)
+                var slotIndex = GetCursor();
+                if (slotIndex == -1)
                 {
-                    if (IsRingEmpty())
-                    {
-                        Thread.SpinWait(SPINCOUNT);
-                        continue;
-                    }
-                    var i = ring.cur;
-                    var slot = _rxRing[i];
-                    ring.cur = RingNext(ring.cur);
-                    buffer = _bufferPool.GetBuffer(slot.buf_idx).Memory;
-                    return true;
+                    Thread.SpinWait(SPINCOUNT);
+                    continue;
                 }
-                buffer = default;
-                return false;
+                var slot = _rxRing[slotIndex];
+                buffer = _bufferPool.GetBuffer(slot.buf_idx).Memory;
+                return true;
             }
+            buffer = default;
+            return false;
         }
 
         public void SendBuffer(ReadOnlyMemory<byte> buffer)
@@ -70,38 +65,34 @@ namespace Magma.NetMap
             ref var ring = ref RingInfo[0];
             for (var loop = 0; loop < MAXLOOPTRY; loop++)
             {
-                lock (_getBufferLock)
-                    lock (_sendBufferLock)
+                lock (_sendBufferLock)
+                {
+                    var slotIndex = GetCursor();
+                    if (slotIndex == -1)
                     {
-                        if (IsRingEmpty())
-                        {
-                            //Need to poll
-                            Thread.SpinWait(SPINCOUNT);
-                            continue;
-                        }
-
-                        Console.WriteLine($"Swapping data on ring {_ringId}");
-                        var i = ring.cur;
-                        var iNext = RingNext(i);
-                        ring.cur = iNext;
-
-
-                        ref var slot = ref _rxRing[i];
-                        var buffIndex = slot.buf_idx;
-                        var buffSize = slot.len;
-                        slot.buf_idx = sourceSlot.buf_idx;
-                        slot.len = sourceSlot.len;
-                        slot.flags = (ushort)(_rxRing[i].flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
-
-                        sourceSlot.buf_idx = buffIndex;
-                        sourceSlot.len = buffSize;
-                        sourceSlot.flags = (ushort)(sourceSlot.flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
-
-                        ring.head = RingNext(i);
-                        return true;
+                        //Need to poll
+                        Thread.SpinWait(SPINCOUNT);
+                        continue;
                     }
+
+                    Console.WriteLine($"Swapping data on ring {_ringId}");
+                    
+                    ref var slot = ref _rxRing[slotIndex];
+                    var buffIndex = slot.buf_idx;
+                    var buffSize = slot.len;
+                    slot.buf_idx = sourceSlot.buf_idx;
+                    slot.len = sourceSlot.len;
+                    slot.flags = (ushort)(_rxRing[slotIndex].flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
+
+                    sourceSlot.buf_idx = buffIndex;
+                    sourceSlot.len = buffSize;
+                    sourceSlot.flags = (ushort)(sourceSlot.flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
+
+                    ring.head = RingNext(slotIndex);
+                    return true;
+                }
             }
             return false;
         }
-    }
+}
 }
