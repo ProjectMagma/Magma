@@ -10,6 +10,7 @@
     <ProjectReference Include="..\..\src\Magma.Internet.Ip\Magma.Internet.Ip.csproj" />
     <ProjectReference Include="..\..\src\Magma.Link\Magma.Link.csproj" />
     <ProjectReference Include="..\..\src\Magma.NetMap\Magma.NetMap.csproj" />
+    <ProjectReference Include="..\..\src\Magma.Transport.Tcp\Magma.Transport.Tcp.csproj" />
   </ItemGroup>
 
 </Project>

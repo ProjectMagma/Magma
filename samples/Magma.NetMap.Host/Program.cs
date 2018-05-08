@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Magma.NetMap.Interop;
+using Magma.Internet.Ip;
 using Magma.Network;
 using Magma.Network.Abstractions;
 using Magma.Network.Header;
@@ -10,7 +10,7 @@ namespace Magma.NetMap.Host
     class PacketReceiver : IPacketReceiver
     {
         private int _ringId;
-        private StreamWriter _streamWriter;
+        private TextWriter _streamWriter;
 
         public PacketReceiver(int ringId)
         {
@@ -29,11 +29,19 @@ namespace Magma.NetMap.Host
                     if (IPv4.TryConsume(ref buffer, out var ip))
                     {
                         _streamWriter.WriteLine($"{ip.ToString()}");
+
+                        if (ip.Protocol == ProtocolNumber.Tcp)
+                        {
+                            if (Tcp.TryConsume(ref buffer, out var tcp))
+                            {
+                                _streamWriter.WriteLine($"{tcp.ToString()}");
+                            }
+                        }
                     }
                 }
                 else
                 {
-                    _streamWriter.WriteLine($"{ ethernet.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
+                    _streamWriter.WriteLine($"| { ethernet.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
                 }
                 _streamWriter.WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
             }
