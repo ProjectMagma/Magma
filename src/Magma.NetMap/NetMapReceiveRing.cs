@@ -17,6 +17,11 @@ namespace Magma.NetMap
             _receiver = receiver;
             _worker = new Thread(new ThreadStart(ThreadLoop));
             _worker.Start();
+
+            Console.WriteLine("Slots Start at");
+            PrintSlotInfo(0);
+            Console.WriteLine("Slots End at");
+            PrintSlotInfo(_numberOfSlots - 1);
         }
 
         private void ThreadLoop()
@@ -39,7 +44,7 @@ namespace Magma.NetMap
 
                 while (!IsRingEmpty())
                 {
-                    
+
                     var i = ring.cur;
                     var nexti = RingNext(i);
                     ref var slot = ref _rxRing[i];

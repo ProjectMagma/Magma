@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Magma.NetMap.Interop;
@@ -12,6 +13,7 @@ namespace Magma.NetMap
     {
         private NetMapReceiveRing<TPacketReceiver>[] _receiveRings;
         private NetMapTransmitRing[] _transmitRings;
+        private List<NetMapRing> _allRings;
         private NetMapHostTxRing _hostRing;
         private readonly string _interfaceName;
         private NetMapRequest _request;
@@ -56,10 +58,20 @@ namespace Magma.NetMap
             _request = request;
             MapMemory();
             SetupRings();
+
+            var maxBufferId = _allRings.Select(r => r.GetMaxBufferId()).Max();
+            var buffersStart = _allRings[0].BufferStart;
+            var pool = new NetMapBufferPool((ushort)_allRings[0].BufferSize, buffersStart, maxBufferId + 1);
+            foreach(var ring in _allRings)
+            {
+                ring.BufferPool = pool;
+            }
         }
 
         private unsafe void SetupRings()
         {
+            _allRings = new List<NetMapRing>();
+
             var txOffsets = new ulong[_netmapInterface.ni_tx_rings];
             var rxOffsets = new ulong[_netmapInterface.ni_rx_rings];
             var span = new Span<byte>(IntPtr.Add(NetMapInterfaceAddress, Unsafe.SizeOf<netmap_if>()).ToPointer(), (int)((_netmapInterface.ni_rx_rings + _netmapInterface.ni_tx_rings + 2) * sizeof(IntPtr)));
@@ -82,15 +94,19 @@ namespace Magma.NetMap
             for (var i = 0; i < txOffsets.Length; i++)
             {
                 _transmitRings[i] = new NetMapTransmitRing((byte*)_mappedRegion.ToPointer(), txOffsets[i], _fileDescriptor);
+                _allRings.Add(_transmitRings[i]);
             }
 
             _receiveRings = new NetMapReceiveRing<TPacketReceiver>[rxOffsets.Length];
+            
             for(var i = 0; i < rxOffsets.Length;i++)
             {
                 _receiveRings[i] = new NetMapReceiveRing<TPacketReceiver>((byte*)_mappedRegion.ToPointer(), rxOffsets[i], _fileDescriptor, _createReceiver(_transmitRings[i]));
+                _allRings.Add(_transmitRings[i]);
             }
                         
             _hostRing = new NetMapHostTxRing((byte*)_mappedRegion.ToPointer(), rxHost, _fileDescriptor, _transmitRings[0]);
+            _allRings.Add(_hostRing);
         }
 
         private unsafe void MapMemory()
