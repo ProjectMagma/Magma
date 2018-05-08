@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Magma.Internet.Icmp;
 using Magma.Internet.Ip;
 using Magma.Network;
@@ -84,6 +85,10 @@ namespace Magma.NetMap.Host
             {
                 interfaceName = args[0];
             }
+
+            Console.WriteLine($"Ethernet Header length: {Unsafe.SizeOf<Ethernet>()}");
+            Console.WriteLine($"IP Header length: {Unsafe.SizeOf<IPv4>()}");
+            Console.WriteLine($"TCP Header length: {Unsafe.SizeOf<Tcp>()}");
 
             var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, logToFile : true));
             netmap.Open();
