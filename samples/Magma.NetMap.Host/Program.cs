@@ -81,6 +81,7 @@ namespace Magma.NetMap.Host
                                         icmpOutput.HeaderChecksum = icmpOutput.CalculateChecksum();
 
                                         _transmitter.SendBuffer(output.Slice(0, input.Length));
+                                        return true;
                                     }
                                 }
                             }
