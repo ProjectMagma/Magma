@@ -53,7 +53,7 @@ namespace Magma.Network.Header
         {
             var currentChecksum = HeaderChecksum;
             HeaderChecksum = 0;
-            var newChecksum = Checksum.Calcuate(this, Unsafe.SizeOf<short>());
+            var newChecksum = Checksum.Calcuate(this, Unsafe.SizeOf<IcmpV4>());
             HeaderChecksum = currentChecksum;
             return (currentChecksum == newChecksum, newChecksum);
         }
