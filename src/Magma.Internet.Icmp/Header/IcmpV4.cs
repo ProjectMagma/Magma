@@ -21,7 +21,7 @@ namespace Magma.Network.Header
             set => _typeAndCode = (short)value;
         }
 
-        public short HeaderChecksum;
+        public ushort HeaderChecksum;
         public short Identifier;
         public short SequenceNumber;
         public int Payload;
@@ -39,10 +39,23 @@ namespace Magma.Network.Header
             return false;
         }
 
-        public override string ToString()
+        public unsafe override string ToString()
         {
+            var (isValid, calcChecksum) = ValidateChecksum();
             return "+- Icmp Datagram ----------------------------------------------------------------------+" + Environment.NewLine +
-                  $"| {Type.ToString()} - {Code} | Id: {System.Net.IPAddress.NetworkToHostOrder(Identifier)} | Seq: {System.Net.IPAddress.NetworkToHostOrder(SequenceNumber)} ".PadRight(87) + "|";
+                  $"| {Type.ToString()} - {Code} | Id: {System.Net.IPAddress.NetworkToHostOrder(Identifier)} | Seq: {System.Net.IPAddress.NetworkToHostOrder(SequenceNumber)} ".PadRight(86) +
+                  (isValid ? " " : $"{HeaderChecksum:x}:{calcChecksum:x}")
+                  + "|"
+                  + BitConverter.ToString(new Span<byte>(Unsafe.AsPointer(ref this), Unsafe.SizeOf<IcmpV4>()).ToArray());
+        }
+
+        public (bool isValid, ushort calcChecksum) ValidateChecksum()
+        {
+            var currentChecksum = HeaderChecksum;
+            HeaderChecksum = 0;
+            var newChecksum = Checksum.Calcuate(this, Unsafe.SizeOf<IcmpV4>());
+            HeaderChecksum = currentChecksum;
+            return (currentChecksum == newChecksum, newChecksum);
         }
     }
 }
