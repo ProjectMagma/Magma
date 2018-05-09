@@ -12,8 +12,9 @@ namespace Magma.NetMap
         private TPacketReceiver _receiver;
 
         internal NetMapReceiveRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, TPacketReceiver receiver)
-            : base(memoryRegion, rxQueueOffset, fileDescriptor)
+            : base(memoryRegion, rxQueueOffset)
         {
+            _fileDescriptor = fileDescriptor;
             _receiver = receiver;
             _worker = new Thread(new ThreadStart(ThreadLoop));
             _worker.Start();

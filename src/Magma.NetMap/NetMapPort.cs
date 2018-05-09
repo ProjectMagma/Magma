@@ -22,9 +22,6 @@ namespace Magma.NetMap
         private NetMapInterface _netmapInterface;
         private Func<NetMapTransmitRing, TPacketReceiver> _createReceiver;
 
-        const ushort NETMAP_API = 12;
-        
-
         public NetMapPort(string interfaceName, Func<NetMapTransmitRing, TPacketReceiver> createReceiver)
         {
             _interfaceName = interfaceName;
@@ -40,9 +37,10 @@ namespace Magma.NetMap
             var request = new NetMapRequest
             {
                 nr_cmd = 0,
-                nr_flags = 0x8003,
+                nr_flags = 0x0003,
                 nr_ringid = 0,
-                nr_version = NETMAP_API,
+                nr_version = Consts.NETMAP_API,
+                
             };
             var textbytes = Encoding.ASCII.GetBytes(_interfaceName + "\0");
             fixed (void* txtPtr = textbytes)
