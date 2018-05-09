@@ -90,11 +90,6 @@ namespace Magma.NetMap
             }
             var rxHost = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(span);
 
-            _hostRxRing = new NetMapHostRxRing((byte*)_mappedRegion.ToPointer(), rxHost, _fileDescriptor, _transmitRings[0]);
-            _hostTxRing = new NetMapTransmitRing((byte*)_mappedRegion.ToPointer(), txHost, _fileDescriptor);
-            _allRings.Add(_hostRxRing);
-            _allRings.Add(_hostTxRing);
-
             _transmitRings = new NetMapTransmitRing[txOffsets.Length];
             for (var i = 0; i < txOffsets.Length; i++)
             {
@@ -102,6 +97,11 @@ namespace Magma.NetMap
                 _allRings.Add(_transmitRings[i]);
             }
 
+            _hostRxRing = new NetMapHostRxRing((byte*)_mappedRegion.ToPointer(), rxHost, _fileDescriptor, _transmitRings[0]);
+            _hostTxRing = new NetMapTransmitRing((byte*)_mappedRegion.ToPointer(), txHost, _fileDescriptor);
+            _allRings.Add(_hostRxRing);
+            _allRings.Add(_hostTxRing);
+            
             _receiveRings = new NetMapReceiveRing<TPacketReceiver>[rxOffsets.Length];
             for(var i = 0; i < rxOffsets.Length;i++)
             {
