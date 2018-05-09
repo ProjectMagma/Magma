@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Magma.Internet.Icmp;
 using Magma.Internet.Ip;
 using Magma.Network;
@@ -24,35 +25,72 @@ namespace Magma.NetMap.Host
             _ringId = ringId;
         }
         
-        public bool TryConsume(int ringId, Span<byte> buffer)
+        public bool TryConsume(int ringId, Span<byte> input)
         {
-            if (Ethernet.TryConsume(ref buffer, out var ethernet))
+            var data = input;
+            if (Ethernet.TryConsume(ref data, out var ether))
             {
-                WriteLine($"{ethernet.ToString()}");
+                WriteLine($"{ether.ToString()}");
 
-                if (ethernet.Ethertype == EtherType.IPv4)
+                if (ether.Ethertype == EtherType.IPv4)
                 {
-                    if (IPv4.TryConsume(ref buffer, out var ip))
+                    if (IPv4.TryConsume(ref data, out var ip))
                     {
                         WriteLine($"{ip.ToString()}");
+
+                        if (!ip.IsChecksumValid())
+                        {
+                            // Consume packets with invalid checksums; but don't do further processing
+                            return true;
+                        }
 
                         var protocol = ip.Protocol;
                         if (protocol == ProtocolNumber.Tcp)
                         {
-                            if (Tcp.TryConsume(ref buffer, out var tcp))
+                            if (Tcp.TryConsume(ref data, out var tcp))
                             {
                                 WriteLine($"{tcp.ToString()}");
                             }
                         }
                         else if (protocol == ProtocolNumber.Icmp)
                         {
-                            if (IcmpV4.TryConsume(ref buffer, out var icmp))
+                            if (IcmpV4.TryConsume(ref data, out var icmp))
                             {
                                 WriteLine($"{icmp.ToString()}");
 
                                 if (icmp.Code == Code.EchoRequest)
                                 {
-                                    // Need to transmit here...
+                                    if (_transmitter.TryGetNextBuffer(out var output))
+                                    {
+                                        var span = output.Span;
+                                        input.CopyTo(span);
+
+                                        // Swap destinations
+                                        ref byte current = ref MemoryMarshal.GetReference(span);
+                                        ref var etherOut = ref Unsafe.As<byte, Ethernet>(ref current);
+                                        var srcMac = etherOut.Source;
+                                        etherOut.Source = etherOut.Destination;
+                                        etherOut.Destination = srcMac;
+
+                                        current = ref Unsafe.Add(ref current, Unsafe.SizeOf<Ethernet>());
+
+                                        ref var ipOuput = ref Unsafe.As<byte, IPv4>(ref current);
+                                        var srcIp = ipOuput.SourceAddress;
+                                        ipOuput.SourceAddress = ipOuput.DestinationAddress;
+                                        ipOuput.DestinationAddress = srcIp;
+                                        ipOuput.HeaderChecksum = 0;
+                                        ipOuput.HeaderChecksum = Checksum.Calcuate(in ipOuput, Unsafe.SizeOf<IPv4>());
+
+                                        current = ref Unsafe.Add(ref current, Unsafe.SizeOf<IPv4>());
+
+                                        ref var icmpOutput = ref Unsafe.As<byte, IcmpV4>(ref current);
+                                        icmpOutput.Code = Code.EchoReply;
+                                        icmpOutput.HeaderChecksum = 0;
+                                        icmpOutput.HeaderChecksum = Checksum.Calcuate(in icmpOutput, Unsafe.SizeOf<IcmpV4>());
+
+                                        _transmitter.SendBuffer(output.Slice(0, input.Length));
+                                        return true;
+                                    }
                                 }
                             }
                         }
@@ -60,13 +98,13 @@ namespace Magma.NetMap.Host
                 }
                 else
                 {
-                    WriteLine($"{ ethernet.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
+                    WriteLine($"{ ether.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(data.ToArray()).Substring(60)}...");
                 }
                 WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
             }
             else
             {
-                WriteLine($"Unknown ---> {BitConverter.ToString(buffer.ToArray()).Substring(60)}...");
+                WriteLine($"Unknown ---> {BitConverter.ToString(data.ToArray()).Substring(60)}...");
             }
             
             Flush();
@@ -93,7 +131,7 @@ namespace Magma.NetMap.Host
             Console.WriteLine($"IP Header length: {Unsafe.SizeOf<IPv4>()}");
             Console.WriteLine($"TCP Header length: {Unsafe.SizeOf<Tcp>()}");
 
-            var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, logToFile : false));
+            var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, logToFile : true));
             netmap.Open();
             netmap.PrintPortInfo();
 
