@@ -56,8 +56,7 @@ namespace Magma.Network
                 t3 += t4;
                 if (t3 < t4) t3++;
 
-                t3 = (ushort)~t3;
-                return (ushort)(t3 << 8 | t3 >> 8);
+                return (ushort)~t3;
             }
         }
     }
