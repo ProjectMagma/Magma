@@ -41,20 +41,21 @@ namespace Magma.Network.Header
 
         public unsafe override string ToString()
         {
+            var (isValid, calcChecksum) = ValidateChecksum();
             return "+- Icmp Datagram ----------------------------------------------------------------------+" + Environment.NewLine +
                   $"| {Type.ToString()} - {Code} | Id: {System.Net.IPAddress.NetworkToHostOrder(Identifier)} | Seq: {System.Net.IPAddress.NetworkToHostOrder(SequenceNumber)} ".PadRight(86) +
-                  (ValidateChecksum() ? " " : "X")
+                  (isValid ? " " : $"{HeaderChecksum:x}:{calcChecksum:x}")
                   + "|"
                   + BitConverter.ToString(new Span<byte>(Unsafe.AsPointer(ref this), Unsafe.SizeOf<IcmpV4>()).ToArray());
         }
 
-        public bool ValidateChecksum()
+        public (bool isValid, ushort calcChecksum) ValidateChecksum()
         {
             var currentChecksum = HeaderChecksum;
             HeaderChecksum = 0;
             var newChecksum = Checksum.Calcuate(this, Unsafe.SizeOf<IcmpV4>());
             HeaderChecksum = currentChecksum;
-            return currentChecksum == newChecksum ? true : false;
+            return (currentChecksum == newChecksum, newChecksum);
         }
     }
 }
