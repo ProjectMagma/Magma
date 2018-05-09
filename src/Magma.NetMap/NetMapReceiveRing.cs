@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading;
 using Magma.NetMap.Interop;
 using Magma.Network.Abstractions;
@@ -12,10 +13,30 @@ namespace Magma.NetMap
         private TPacketReceiver _receiver;
         private NetMapTransmitRing _hostTxRing;
 
-        internal NetMapReceiveRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
+        internal NetMapReceiveRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
             : base(memoryRegion, rxQueueOffset)
         {
-            _fileDescriptor = fileDescriptor;
+            _fileDescriptor = Unix.Open("/dev/netmap", Unix.OpenFlags.O_RDWR);
+            if (_fileDescriptor < 0) throw new InvalidOperationException($"Need to handle properly (release memory etc) error was {_fileDescriptor}");
+            var request = new NetMapRequest
+            {
+                nr_cmd = 0,
+                nr_flags = 0x0000,
+                nr_ringid = (ushort)_ringId,
+                nr_version = Consts.NETMAP_API,
+            };
+            Console.WriteLine($"Getting FD for Receive RingID {_ringId}");
+            var textbytes = Encoding.ASCII.GetBytes(interfaceName + "\0");
+            fixed (void* txtPtr = textbytes)
+            {
+                Buffer.MemoryCopy(txtPtr, request.nr_name, textbytes.Length, textbytes.Length);
+            }
+
+
+            if (Unix.IOCtl(_fileDescriptor, Consts.NIOCREGIF, &request) != 0)
+            {
+                throw new InvalidOperationException("Failed to open an FD for a single ring");
+            }
             _hostTxRing = hostTxRing;
             _receiver = receiver;
             _worker = new Thread(new ThreadStart(ThreadLoop));

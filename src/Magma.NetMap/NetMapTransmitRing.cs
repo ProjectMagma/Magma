@@ -27,6 +27,7 @@ namespace Magma.NetMap
                 nr_ringid = (ushort)_ringId,
                 nr_version = Consts.NETMAP_API,
             };
+            Console.WriteLine($"Getting FD for Transmit RingID {_ringId}");
             var textbytes = Encoding.ASCII.GetBytes(interfaceName + "\0");
             fixed (void* txtPtr = textbytes)
             {
