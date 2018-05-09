@@ -19,7 +19,7 @@ namespace Magma.NetMap
         protected int _fileDescriptor;
         protected NetMapBufferPool _bufferPool;
 
-        protected NetMapRing(byte* memoryRegion, ulong rxQueueOffset)
+        protected NetMapRing(string interfaceName, bool isTxRing, byte* memoryRegion, ulong rxQueueOffset)
         {
             _queueOffset = (long)rxQueueOffset;
             _memoryRegion = memoryRegion;
@@ -30,6 +30,24 @@ namespace Magma.NetMap
             _ringId = ringInfo.ringid & (ushort)nr_ringid.NETMAP_RING_MASK;
 
             _rxRing = (Netmap_slot*)((long)(_memoryRegion + rxQueueOffset + Unsafe.SizeOf<Netmap_ring>() + 127 + 128) & (~0xFF));
+
+            _fileDescriptor = Unix.Open("/dev/netmap", Unix.OpenFlags.O_RDWR);
+            if (_fileDescriptor < 0) throw new InvalidOperationException($"Need to handle properly (release memory etc) error was {_fileDescriptor}");
+            var request = new NetMapRequest
+            {
+                nr_cmd = 0,
+                nr_flags = isTxRing ? (uint)NetMapRequestFlags.NR_TX_RINGS_ONLY : (uint)NetMapRequestFlags.NR_RX_RINGS_ONLY,
+                nr_ringid = (ushort)_ringId,
+                nr_version = Consts.NETMAP_API,
+            };
+            Console.WriteLine($"Getting FD for Receive RingID {_ringId}");
+            var textbytes = Encoding.ASCII.GetBytes(interfaceName + "\0");
+            fixed (void* txtPtr = textbytes)
+            {
+                Buffer.MemoryCopy(txtPtr, request.nr_name, textbytes.Length, textbytes.Length);
+            }
+            
+            if (Unix.IOCtl(_fileDescriptor, Consts.NIOCREGIF, &request) != 0) throw new InvalidOperationException("Failed to open an FD for a single ring");
         }
 
         internal NetMapBufferPool BufferPool { set => _bufferPool = value; }
@@ -60,10 +78,10 @@ namespace Magma.NetMap
             while (true)
             {
                 var cursor = ring.cur;
-                if(RingSpace(cursor) > 0)
+                if (RingSpace(cursor) > 0)
                 {
                     var newIndex = RingNext(cursor);
-                    if(Interlocked.CompareExchange(ref ring.cur, newIndex, cursor) == cursor)
+                    if (Interlocked.CompareExchange(ref ring.cur, newIndex, cursor) == cursor)
                     {
                         return cursor;
                     }
