@@ -45,7 +45,6 @@ namespace Magma.NetMap
 
                     var i = ring.cur;
                     var nexti = RingNext(i);
-                    ring.cur = nexti;
                     ref var slot = ref _rxRing[i];
                     var buffer = GetBuffer(slot.buf_idx, slot.len);
                     if (!_receiver.TryConsume(_ringId, buffer))
@@ -54,7 +53,12 @@ namespace Magma.NetMap
                         _hostTxRing.ForceFlush();
                         //Console.WriteLine("Forwarded to host");
                     }
-                    ring.head = nexti;
+                    else
+                    {
+                        ring.cur = nexti;
+                        ring.head = nexti;
+                    }
+                    
                 }
             }
         }
