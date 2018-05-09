@@ -54,8 +54,7 @@ namespace Magma.NetMap
 
         public void SendBuffer(ReadOnlyMemory<byte> buffer)
         {
-            if (!MemoryMarshal.TryGetMemoryManager(buffer, out NetMapOwnedMemory manager, out var start, out var length)
-                || start != 0)
+            if (!MemoryMarshal.TryGetMemoryManager(buffer, out NetMapOwnedMemory manager, out var start, out var length))
             {
                 ExceptionHelper.ThrowInvalidOperation("Invalid buffer used for sendbuffer");
             }
