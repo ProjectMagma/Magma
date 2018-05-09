@@ -181,12 +181,15 @@ namespace Magma.Network.Header
             return false;
         }
 
-        public override string ToString()
+        public unsafe override string ToString()
         {
             return "+- IPv4 Datagram ----------------------------------------------------------------------+" + Environment.NewLine +
                   $"| {Protocol.ToString().PadRight(11)} | {SourceAddress.ToString()} -> {DestinationAddress.ToString()} | Length: {TotalLength}, H: {HeaderLength}, D: {DataLength}".PadRight(86) +
                   (HeaderChecksum == CalculateChecksum() ? " " : "X")
-                  + "|";
+                  + "|"
+                  + BitConverter.ToString(new Span<byte>(Unsafe.AsPointer(ref this), Unsafe.SizeOf<IPv4>()).ToArray())
+                  ;
+
         }
     }
 }
