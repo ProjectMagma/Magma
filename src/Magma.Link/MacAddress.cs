@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Magma.Link
 {
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct MacAddress
     {
         public static readonly MacAddress Broadcast = new MacAddress() { AddressPart1 = 0xFFFF, AddressPart2 = 0xFFFF, AddressPart3 = 0xFFFF };
