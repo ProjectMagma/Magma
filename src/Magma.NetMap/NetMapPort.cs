@@ -14,7 +14,7 @@ namespace Magma.NetMap
         private NetMapReceiveRing<TPacketReceiver>[] _receiveRings;
         private NetMapTransmitRing[] _transmitRings;
         private List<NetMapRing> _allRings;
-        private NetMapHostTxRing _hostRing;
+        private NetMapHostRxRing _hostRing;
         private readonly string _interfaceName;
         private NetMapRequest _request;
         private int _fileDescriptor;
@@ -104,7 +104,7 @@ namespace Magma.NetMap
                 _allRings.Add(_transmitRings[i]);
             }
                         
-            _hostRing = new NetMapHostTxRing((byte*)_mappedRegion.ToPointer(), rxHost, _fileDescriptor, _transmitRings[0]);
+            _hostRing = new NetMapHostRxRing((byte*)_mappedRegion.ToPointer(), rxHost, _fileDescriptor, _transmitRings[0]);
             _allRings.Add(_hostRing);
         }
 
