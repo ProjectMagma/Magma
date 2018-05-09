@@ -112,7 +112,7 @@ namespace Magma.NetMap.Host
                 }
                 else
                 {
-                    WriteLine($"{ ether.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(data.ToArray()).Substring(60)}...");
+                    WriteLine($"{ ether.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
                 }
                 WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
             }
