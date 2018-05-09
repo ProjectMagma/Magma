@@ -36,7 +36,8 @@ namespace Magma.NetMap
             var request = new NetMapRequest
             {
                 nr_cmd = 0,
-                nr_flags = isTxRing ? (uint)NetMapRequestFlags.NR_TX_RINGS_ONLY : (uint)NetMapRequestFlags.NR_RX_RINGS_ONLY,
+                nr_flags = (isTxRing ? (uint)NetMapRequestFlags.NR_TX_RINGS_ONLY : (uint)NetMapRequestFlags.NR_RX_RINGS_ONLY) | 
+                (isHost ? (uint) NetMapRequestMode.NR_REG_SW : (uint)NetMapRequestMode.NR_REG_ONE_NIC),
                 nr_ringid = (ushort)_ringId,
                 nr_version = Consts.NETMAP_API,
             };
