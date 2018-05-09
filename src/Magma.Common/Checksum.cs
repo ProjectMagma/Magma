@@ -30,7 +30,7 @@ namespace Magma.Network
                     if (sum > 0xFFFF)
                         sum -= 0xFFFF;
                 }
-                return (ushort)sum;
+                return (ushort)System.Net.IPAddress.HostToNetworkOrder((short)sum);
             }
         }
     }
