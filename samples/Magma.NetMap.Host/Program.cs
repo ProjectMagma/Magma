@@ -97,7 +97,7 @@ namespace Magma.NetMap.Host
                                         ref var icmpOutput = ref Unsafe.As<byte, IcmpV4>(ref current);
                                         icmpOutput.Code = Code.EchoReply;
                                         icmpOutput.HeaderChecksum = 0;
-                                        icmpOutput.HeaderChecksum = Checksum.Calcuate(in icmpOutput, Unsafe.SizeOf<short>());
+                                        icmpOutput.HeaderChecksum = Checksum.Calcuate(in icmpOutput, Unsafe.SizeOf<IcmpV4>());
 
                                         _transmitter.SendBuffer(output.Slice(0, input.Length));
                                         WriteLine($"RECEIVED ---> {BitConverter.ToString(input.ToArray())}...");
