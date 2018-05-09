@@ -45,8 +45,9 @@ namespace Magma.NetMap
             }
             else
             {
-                request.nr_flags = (uint)NetMapRequestMode.NR_REG_ONE_NIC | (isTxRing ? (uint)NetMapRequestFlags.NR_TX_RINGS_ONLY : (uint)NetMapRequestFlags.NR_RX_RINGS_ONLY);
+                request.nr_flags = (uint)NetMapRequestMode.NR_REG_ONE_NIC;
             }
+            request.nr_flags |= (isTxRing ? (uint)NetMapRequestFlags.NR_TX_RINGS_ONLY : (uint)NetMapRequestFlags.NR_RX_RINGS_ONLY);
 
             Console.WriteLine($"Getting FD for Receive RingID {_ringId}");
             var textbytes = Encoding.ASCII.GetBytes(interfaceName + "\0");
