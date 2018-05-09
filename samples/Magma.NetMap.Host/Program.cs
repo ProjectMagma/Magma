@@ -100,7 +100,8 @@ namespace Magma.NetMap.Host
                                         icmpOutput.HeaderChecksum = Checksum.Calcuate(in icmpOutput, Unsafe.SizeOf<IcmpV4>());
 
                                         _transmitter.SendBuffer(output.Slice(0, input.Length));
-                                        WriteLine($"SENT { ether.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(output.Slice(0,input.Length).ToArray()).Substring(60)}...");
+                                        WriteLine($"RECEIVED { ether.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(input.ToArray()).Substring(60)}...");
+                                        WriteLine($"SENT     { ether.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(output.Slice(0,input.Length).ToArray()).Substring(60)}...");
                                         _transmitter.ForceFlush();
                                         return true;
                                     }
