@@ -54,7 +54,7 @@ namespace Magma.NetMap
 
         public void SendBuffer(ReadOnlyMemory<byte> buffer)
         {
-            if (!MemoryMarshal.TryGetMemoryManager(buffer, out NetMapOwnedMemory manager, out var start, out var length))
+            if (!MemoryMarshal.TryGetMemoryManager(buffer, out NetMapOwnedMemory manager))
             {
                 ExceptionHelper.ThrowInvalidOperation("Invalid buffer used for sendbuffer");
             }
@@ -65,7 +65,6 @@ namespace Magma.NetMap
                 ref var slot = ref _rxRing[newHead];
                 if (slot.buf_idx != manager.BufferIndex)
                 {
-                    RingInfo[0].flags = (ushort)(RingInfo[0].flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
                     slot.buf_idx = manager.BufferIndex;
                     slot.flags = (ushort)(slot.flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
                 }
