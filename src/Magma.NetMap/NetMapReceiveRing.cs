@@ -10,11 +10,13 @@ namespace Magma.NetMap
     {
         private readonly Thread _worker;
         private TPacketReceiver _receiver;
+        private NetMapTransmitRing _hostTxRing;
 
-        internal NetMapReceiveRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, TPacketReceiver receiver)
+        internal NetMapReceiveRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
             : base(memoryRegion, rxQueueOffset)
         {
             _fileDescriptor = fileDescriptor;
+            _hostTxRing = hostTxRing;
             _receiver = receiver;
             _worker = new Thread(new ThreadStart(ThreadLoop));
             _worker.Start();
@@ -43,16 +45,20 @@ namespace Magma.NetMap
 
                     var i = ring.cur;
                     var nexti = RingNext(i);
-                    ring.cur = nexti;
                     ref var slot = ref _rxRing[i];
                     var buffer = GetBuffer(slot.buf_idx, slot.len);
                     if (!_receiver.TryConsume(_ringId, buffer))
                     {
-                        ring.flags = ring.flags | (uint)netmap_slot_flags.NS_FORWARD;
-                        slot.flags = (ushort)(slot.flags | (ushort)netmap_slot_flags.NS_FORWARD);
+                        _hostTxRing.TrySendWithSwap(ref slot, ref ring);
+                        _hostTxRing.ForceFlush();
                         //Console.WriteLine("Forwarded to host");
                     }
-                    ring.head = nexti;
+                    else
+                    {
+                        ring.cur = nexti;
+                        ring.head = nexti;
+                    }
+                    
                 }
             }
         }
