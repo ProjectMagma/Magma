@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Magma.NetMap
 {
-    internal enum nr_flags : ulong
+    internal enum NetMapRequestFlags : ulong
     {
         NR_MONITOR_TX = 0x100,
         NR_MONITOR_RX = 0x200,
