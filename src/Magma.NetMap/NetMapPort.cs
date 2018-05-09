@@ -93,12 +93,12 @@ namespace Magma.NetMap
             _transmitRings = new NetMapTransmitRing[txOffsets.Length];
             for (var i = 0; i < txOffsets.Length; i++)
             {
-                _transmitRings[i] = new NetMapTransmitRing((byte*)_mappedRegion.ToPointer(), txOffsets[i], _fileDescriptor);
+                _transmitRings[i] = new NetMapTransmitRing(_interfaceName, (byte*)_mappedRegion.ToPointer(), txOffsets[i], _fileDescriptor);
                 _allRings.Add(_transmitRings[i]);
             }
 
             _hostRxRing = new NetMapHostRxRing((byte*)_mappedRegion.ToPointer(), rxHost, _fileDescriptor, _transmitRings[0]);
-            _hostTxRing = new NetMapTransmitRing((byte*)_mappedRegion.ToPointer(), txHost, _fileDescriptor);
+            _hostTxRing = new NetMapTransmitRing(_interfaceName, (byte*)_mappedRegion.ToPointer(), txHost, _fileDescriptor);
             _allRings.Add(_hostRxRing);
             _allRings.Add(_hostTxRing);
             

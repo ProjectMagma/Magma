@@ -14,12 +14,12 @@ namespace Magma.NetMap
 
         private object _sendBufferLock = new object();
 
-        internal NetMapTransmitRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor)
+        internal unsafe NetMapTransmitRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor)
             : base(memoryRegion, rxQueueOffset)
         {
             _fileDescriptor = fileDescriptor;
             _fileDescriptor = Unix.Open("/dev/netmap", Unix.OpenFlags.O_RDWR);
-            if (_fileDescriptor < 0) throw new InvalidOperationException("Need to handle properly (release memory etc)");
+            if (_fileDescriptor < 0) throw new InvalidOperationException($"Need to handle properly (release memory etc) error was {_fileDescriptor}");
             var request = new NetMapRequest
             {
                 nr_cmd = 0,
@@ -27,6 +27,13 @@ namespace Magma.NetMap
                 nr_ringid = (ushort)_ringId,
                 nr_version = Consts.NETMAP_API,
             };
+            var textbytes = Encoding.ASCII.GetBytes(interfaceName + "\0");
+            fixed (void* txtPtr = textbytes)
+            {
+                Buffer.MemoryCopy(txtPtr, request.nr_name, textbytes.Length, textbytes.Length);
+            }
+
+
             if (Unix.IOCtl(_fileDescriptor, Consts.NIOCREGIF, &request) != 0)
             {
                 throw new InvalidOperationException("Failed to open an FD for a single ring");
