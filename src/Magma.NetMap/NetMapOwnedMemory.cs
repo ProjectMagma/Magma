@@ -15,7 +15,8 @@ namespace Magma.NetMap
             BufferIndex = index;
         }
 
-        public uint BufferIndex { get; }
+        internal uint BufferIndex { get; }
+        internal int RingId { get; set; }
 
         public override Memory<byte> Memory => CreateMemory(_length);
 
