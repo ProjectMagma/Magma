@@ -72,13 +72,15 @@ namespace Magma.NetMap.Host
                                         var srcIp = ipOuput.SourceAddress;
                                         ipOuput.SourceAddress = ipOuput.DestinationAddress;
                                         ipOuput.DestinationAddress = srcIp;
-                                        ipOuput.HeaderChecksum = ipOuput.CalculateChecksum();
+                                        ipOuput.HeaderChecksum = 0;
+                                        ipOuput.HeaderChecksum = Checksum.Calcuate(in ipOuput, Unsafe.SizeOf<IPv4>());
 
                                         current = ref Unsafe.Add(ref current, Unsafe.SizeOf<IPv4>());
 
                                         ref var icmpOutput = ref Unsafe.As<byte, IcmpV4>(ref current);
                                         icmpOutput.Code = Code.EchoReply;
-                                        icmpOutput.HeaderChecksum = icmpOutput.CalculateChecksum();
+                                        icmpOutput.HeaderChecksum = 0;
+                                        icmpOutput.HeaderChecksum = Checksum.Calcuate(in icmpOutput, Unsafe.SizeOf<IcmpV4>());
 
                                         _transmitter.SendBuffer(output.Slice(0, input.Length));
                                         return true;

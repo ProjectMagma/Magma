@@ -2,9 +2,9 @@ using System;
 
 namespace Magma.Network
 {
-    public static class SpanExtensions
+    public static class Checksum
     {
-        public unsafe static ushort Checksum<T>(in T buffer, int length)
+        public unsafe static ushort Calcuate<T>(in T buffer, int length)
             where T : unmanaged
         {
             fixed (T* ptr = &buffer)

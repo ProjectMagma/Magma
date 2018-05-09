@@ -39,21 +39,22 @@ namespace Magma.Network.Header
             return false;
         }
 
-        public override string ToString()
+        public unsafe override string ToString()
         {
             return "+- Icmp Datagram ----------------------------------------------------------------------+" + Environment.NewLine +
                   $"| {Type.ToString()} - {Code} | Id: {System.Net.IPAddress.NetworkToHostOrder(Identifier)} | Seq: {System.Net.IPAddress.NetworkToHostOrder(SequenceNumber)} ".PadRight(86) +
-                  (HeaderChecksum == CalculateChecksum() ? " " : "X")
-                  + "|";
+                  (ValidateChecksum() ? " " : "X")
+                  + "|"
+                  + BitConverter.ToString(new Span<byte>(Unsafe.AsPointer(ref this), Unsafe.SizeOf<IcmpV4>()).ToArray());
         }
 
-        public ushort CalculateChecksum()
+        public bool ValidateChecksum()
         {
-            var oldChecksum = HeaderChecksum;
+            var currentChecksum = HeaderChecksum;
             HeaderChecksum = 0;
-            var calcedChecksum = SpanExtensions.Checksum(this, Unsafe.SizeOf<IcmpV4>());
-            HeaderChecksum = oldChecksum;
-            return calcedChecksum;
+            var newChecksum = Checksum.Calcuate(this, Unsafe.SizeOf<IcmpV4>());
+            HeaderChecksum = currentChecksum;
+            return currentChecksum == newChecksum ? true : false;
         }
     }
 }

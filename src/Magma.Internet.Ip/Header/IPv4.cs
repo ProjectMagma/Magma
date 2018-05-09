@@ -63,13 +63,13 @@ namespace Magma.Network.Header
         /// </remarks>
         public ushort TotalLength => (ushort)System.Net.IPAddress.NetworkToHostOrder((short)_totalLength);
 
-        public ushort CalculateChecksum()
+        public bool ValidateChecksum()
         {
-            var oldChecksum = _checksum;
+            var currentChecksum = _checksum;
             _checksum = 0;
-            var calcedChecksum = SpanExtensions.Checksum(this, Unsafe.SizeOf<IPv4>());
-            _checksum = oldChecksum;
-            return calcedChecksum;
+            var newChecksum = Checksum.Calcuate(this, Unsafe.SizeOf<IPv4>());
+            _checksum = currentChecksum;
+            return currentChecksum == newChecksum ? true : false;
         }
 
         public ushort HeaderLength => (ushort)((_versionAndHeaderLength & 0xf) * 4);
@@ -185,7 +185,7 @@ namespace Magma.Network.Header
         {
             return "+- IPv4 Datagram ----------------------------------------------------------------------+" + Environment.NewLine +
                   $"| {Protocol.ToString().PadRight(11)} | {SourceAddress.ToString()} -> {DestinationAddress.ToString()} | Length: {TotalLength}, H: {HeaderLength}, D: {DataLength}".PadRight(86) +
-                  (HeaderChecksum == CalculateChecksum() ? " " : "X")
+                  (ValidateChecksum() ? " " : "X")
                   + "|"
                   + BitConverter.ToString(new Span<byte>(Unsafe.AsPointer(ref this), Unsafe.SizeOf<IPv4>()).ToArray())
                   ;
