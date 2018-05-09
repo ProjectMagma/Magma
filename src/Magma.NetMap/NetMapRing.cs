@@ -36,11 +36,18 @@ namespace Magma.NetMap
             var request = new NetMapRequest
             {
                 nr_cmd = 0,
-                nr_flags = (isTxRing ? (uint)NetMapRequestFlags.NR_TX_RINGS_ONLY : (uint)NetMapRequestFlags.NR_RX_RINGS_ONLY) | 
-                (uint)NetMapRequestMode.NR_REG_ONE_NIC,
                 nr_ringid = (ushort)_ringId,
                 nr_version = Consts.NETMAP_API,
             };
+            if(isHost)
+            {
+                request.nr_flags = (uint)NetMapRequestMode.NR_REG_SW;
+            }
+            else
+            {
+                request.nr_flags = (uint)NetMapRequestMode.NR_REG_ONE_NIC | (isTxRing ? (uint)NetMapRequestFlags.NR_TX_RINGS_ONLY : (uint)NetMapRequestFlags.NR_RX_RINGS_ONLY);
+            }
+
             Console.WriteLine($"Getting FD for Receive RingID {_ringId}");
             var textbytes = Encoding.ASCII.GetBytes(interfaceName + "\0");
             fixed (void* txtPtr = textbytes)
