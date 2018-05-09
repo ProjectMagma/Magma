@@ -73,36 +73,33 @@ namespace Magma.NetMap.Host
                                 {
                                     if (_transmitter.TryGetNextBuffer(out var output))
                                     {
-                                        var span = output.Span;
-                                        input.CopyTo(span);
+                                        var span = output.Span.Slice(0, input.Length);
 
-                                        // Swap destinations
-                                        ref byte current = ref MemoryMarshal.GetReference(span);
-                                        ref var etherOut = ref Unsafe.As<byte, Ethernet>(ref current);
-                                        var srcMac = etherOut.Source;
-                                        etherOut.Source = etherOut.Destination;
-                                        etherOut.Destination = srcMac;
+                                        // Ethernet
+                                        var ethSrc = ether.Source;
+                                        ether.Source = ether.Destination;
+                                        ether.Destination = ethSrc;
+                                        MemoryMarshal.Write(span, ref ether);
+                                        span = span.Slice(Unsafe.SizeOf<Ethernet>());
 
-                                        current = ref Unsafe.Add(ref current, Unsafe.SizeOf<Ethernet>());
+                                        // IP
+                                        var ipSrc = ip.SourceAddress;
+                                        ip.SourceAddress = ip.DestinationAddress;
+                                        ip.DestinationAddress = ipSrc;
+                                        ip.HeaderChecksum = 0;
+                                        ip.HeaderChecksum = Checksum.Calcuate(in ip, Unsafe.SizeOf<IPv4>());
+                                        MemoryMarshal.Write(span, ref ip);
+                                        span = span.Slice(Unsafe.SizeOf<IPv4>());
 
-                                        ref var ipOuput = ref Unsafe.As<byte, IPv4>(ref current);
-                                        var srcIp = ipOuput.SourceAddress;
-                                        ipOuput.SourceAddress = ipOuput.DestinationAddress;
-                                        ipOuput.DestinationAddress = srcIp;
-                                        ipOuput.HeaderChecksum = 0;
-                                        ipOuput.HeaderChecksum = Checksum.Calcuate(in ipOuput, Unsafe.SizeOf<IPv4>());
-
-                                        current = ref Unsafe.Add(ref current, Unsafe.SizeOf<IPv4>());
-
-                                        ref var icmpOutput = ref Unsafe.As<byte, IcmpV4>(ref current);
-                                        icmpOutput.Code = Code.EchoReply;
-                                        icmpOutput.HeaderChecksum = 0;
-                                        icmpOutput.HeaderChecksum = Checksum.Calcuate(in icmpOutput, Unsafe.SizeOf<IcmpV4>());
+                                        icmp.Code = Code.EchoReply;
+                                        icmp.HeaderChecksum = 0;
+                                        icmp.HeaderChecksum = Checksum.Calcuate(in icmp, Unsafe.SizeOf<IcmpV4>());
+                                        MemoryMarshal.Write(span, ref icmp);
+                                        span = span.Slice(Unsafe.SizeOf<IcmpV4>());
 
                                         _transmitter.SendBuffer(output.Slice(0, input.Length));
                                         WriteLine($"RECEIVED  ---> {BitConverter.ToString(input.ToArray()).Substring(60)}...");
                                         WriteLine($"SENT      ---> {BitConverter.ToString(output.Slice(0,input.Length).ToArray()).Substring(60)}...");
-                                        WriteLine($"SENT SPAN ---> {BitConverter.ToString(output.Span.Slice(0,input.Length).ToArray()).Substring(60)}...");
                                         _transmitter.ForceFlush();
                                         return true;
                                     }
