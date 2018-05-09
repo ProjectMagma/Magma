@@ -98,7 +98,14 @@ namespace Magma.NetMap.Host
             netmap.PrintPortInfo();
 
             Console.WriteLine("Started reading");
-            Console.ReadLine();
+            while (true)
+            {
+                var line = Console.ReadLine();
+                if (line == "x") return;
+                if (!netmap.TransmitRings[0].TryGetNextBuffer(out var buffer)) throw new Exception("Failed to get buffer");
+                netmap.TransmitRings[0].SendBuffer(buffer);
+                Console.WriteLine("Sent buffer!");
+            }
         }
     }
 }

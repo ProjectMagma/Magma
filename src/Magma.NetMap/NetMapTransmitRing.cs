@@ -45,7 +45,9 @@ namespace Magma.NetMap
                     continue;
                 }
                 var slot = _rxRing[slotIndex];
-                buffer = _bufferPool.GetBuffer(slot.buf_idx).Memory;
+                var manager = _bufferPool.GetBuffer(slot.buf_idx);
+                manager.RingId = _ringId;
+                buffer = manager.Memory;
                 return true;
             }
             buffer = default;
@@ -58,6 +60,11 @@ namespace Magma.NetMap
             {
                 ExceptionHelper.ThrowInvalidOperation("Invalid buffer used for sendbuffer");
             }
+            if(start != 0)
+            {
+                ExceptionHelper.ThrowInvalidOperation("Invalid start for buffer");
+            }
+            if (manager.RingId != _ringId) ExceptionHelper.ThrowInvalidOperation($"Invalid ring id, expected {_ringId} actual {manager.RingId}");
 
             lock (_sendBufferLock)
             {
@@ -65,7 +72,6 @@ namespace Magma.NetMap
                 ref var slot = ref _rxRing[newHead];
                 if (slot.buf_idx != manager.BufferIndex)
                 {
-                    RingInfo[0].flags = (ushort)(RingInfo[0].flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
                     slot.buf_idx = manager.BufferIndex;
                     slot.flags = (ushort)(slot.flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
                 }
