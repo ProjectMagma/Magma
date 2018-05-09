@@ -38,6 +38,12 @@ namespace Magma.NetMap.Host
                     {
                         WriteLine($"{ip.ToString()}");
 
+                        if (!ip.IsChecksumValid())
+                        {
+                            // Drop invalid checksums
+                            return false;
+                        }
+
                         var protocol = ip.Protocol;
                         if (protocol == ProtocolNumber.Tcp)
                         {

@@ -174,21 +174,19 @@ namespace Magma.Network.Header
 
         public unsafe override string ToString()
         {
-            var (isValid, calcChecksum) = ValidateChecksum();
             return "+- IPv4 Datagram ----------------------------------------------------------------------+" + Environment.NewLine +
                   $"| {Protocol.ToString().PadRight(11)} | {SourceAddress.ToString()} -> {DestinationAddress.ToString()} | Length: {TotalLength}, H: {HeaderLength}, D: {DataLength}".PadRight(86) +
-                  (isValid ? " " : $"{HeaderChecksum:x}:{calcChecksum:x}")
-                  + "|"
-                  + BitConverter.ToString(new Span<byte>(Unsafe.AsPointer(ref this), Unsafe.SizeOf<IPv4>()).ToArray());
+                  (IsChecksumValid() ? " " : "X")
+                  + "|";
         }
 
-        public (bool isValid, ushort calcChecksum) ValidateChecksum()
+        public bool IsChecksumValid()
         {
             var currentChecksum = _checksum;
             _checksum = 0;
             var newChecksum = Checksum.Calcuate(this, Unsafe.SizeOf<IPv4>());
             _checksum = currentChecksum;
-            return (currentChecksum == newChecksum, newChecksum);
+            return currentChecksum == newChecksum ? true : false;
         }
     }
 }
