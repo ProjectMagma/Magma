@@ -100,6 +100,7 @@ namespace Magma.NetMap.Host
                                         icmpOutput.HeaderChecksum = Checksum.Calcuate(in icmpOutput, Unsafe.SizeOf<IcmpV4>());
 
                                         _transmitter.SendBuffer(output.Slice(0, input.Length));
+                                        _transmitter.ForceFlush();
                                         return true;
                                     }
                                 }
