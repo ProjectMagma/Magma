@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Magma.NetMap
 {
-    internal enum nr_mode : uint
+    internal enum NetMapRequestMode : uint
     {
         NR_REG_ALL_NIC = 1,
         NR_REG_SW = 2,

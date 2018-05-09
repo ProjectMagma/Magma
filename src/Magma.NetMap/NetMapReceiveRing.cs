@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading;
 using Magma.NetMap.Interop;
 using Magma.Network.Abstractions;
@@ -12,10 +13,9 @@ namespace Magma.NetMap
         private TPacketReceiver _receiver;
         private NetMapTransmitRing _hostTxRing;
 
-        internal NetMapReceiveRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
-            : base(memoryRegion, rxQueueOffset)
+        internal NetMapReceiveRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
+            : base(interfaceName, isTxRing:false, isHost:false, memoryRegion, rxQueueOffset)
         {
-            _fileDescriptor = fileDescriptor;
             _hostTxRing = hostTxRing;
             _receiver = receiver;
             _worker = new Thread(new ThreadStart(ThreadLoop));
@@ -36,7 +36,7 @@ namespace Magma.NetMap
                 var pollResult = Unix.poll(ref fd, 1, Consts.POLLTIME);
                 if (pollResult < 0)
                 {
-                    //Console.WriteLine($"Poll failed on ring {_ringId} exiting polling loop");
+                    Console.WriteLine($"Poll failed on ring {_ringId} exiting polling loop");
                     return;
                 }
 

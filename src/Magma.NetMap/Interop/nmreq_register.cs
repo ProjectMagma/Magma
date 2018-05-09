@@ -16,8 +16,8 @@ namespace Magma.NetMap
         public ushort nr_rx_rings;   /* number of rx rings */
         public ushort nr_mem_id; /* id of the memory allocator */
         public ushort nr_ringid; /* ring(s) we care about */
-        public nr_mode nr_mode;   /* specify NR_REG_* modes */
-        public nr_flags nr_flags;  /* additional flags (see below) */
+        public NetMapRequestMode nr_mode;   /* specify NR_REG_* modes */
+        public NetMapRequestFlags nr_flags;  /* additional flags (see below) */
                                    /* monitors use nr_ringid and nr_mode to select the rings to monitor */
         public uint nr_extra_bufs; /* number of requested extra buffers */
     }

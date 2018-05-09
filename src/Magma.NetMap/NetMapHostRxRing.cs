@@ -14,10 +14,9 @@ namespace Magma.NetMap
         private readonly Thread _worker;
         private readonly NetMapTransmitRing _transmitRing;
 
-        internal NetMapHostRxRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, NetMapTransmitRing transmitRing)
-            : base(memoryRegion, rxQueueOffset)
+        internal NetMapHostRxRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, NetMapTransmitRing transmitRing)
+            : base(interfaceName, isTxRing : false, isHost:true, memoryRegion, rxQueueOffset)
         {
-            _fileDescriptor = fileDescriptor;
             _transmitRing = transmitRing;
             _worker = new Thread(new ThreadStart(ThreadLoop));
             _worker.Start();
@@ -48,7 +47,6 @@ namespace Magma.NetMap
                     
                     _transmitRing.TrySendWithSwap(ref _rxRing[i], ref ring);
                     //RingInfo[0].flags = (ushort)(RingInfo[0].flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
-                    
                     sentData = true;
                 }
                 if(sentData) _transmitRing.ForceFlush();
