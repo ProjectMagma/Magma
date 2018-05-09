@@ -45,11 +45,10 @@ namespace Magma.NetMap
                 {
                     //Console.WriteLine("Received data on host ring");
                     var i = ring.cur;
-                    var iNext = RingNext(i);
-                    ring.cur = iNext;
-                    _transmitRing.TrySendWithSwap(ref _rxRing[i]);
+                    
+                    _transmitRing.TrySendWithSwap(ref _rxRing[i], ref ring);
                     RingInfo[0].flags = (ushort)(RingInfo[0].flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
-                    ring.head = iNext;
+                    
                     sentData = true;
                 }
                 if(sentData) _transmitRing.ForceFlush();
