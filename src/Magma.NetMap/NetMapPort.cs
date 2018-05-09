@@ -37,7 +37,7 @@ namespace Magma.NetMap
             var request = new NetMapRequest
             {
                 nr_cmd = 0,
-                nr_flags = 0x0003,
+                nr_flags = 0x8003,
                 nr_ringid = 0,
                 nr_version = Consts.NETMAP_API,
                 
