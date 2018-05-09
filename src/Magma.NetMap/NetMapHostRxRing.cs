@@ -14,10 +14,30 @@ namespace Magma.NetMap
         private readonly Thread _worker;
         private readonly NetMapTransmitRing _transmitRing;
 
-        internal NetMapHostRxRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, NetMapTransmitRing transmitRing)
+        internal NetMapHostRxRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, NetMapTransmitRing transmitRing)
             : base(memoryRegion, rxQueueOffset)
         {
-            _fileDescriptor = fileDescriptor;
+            _fileDescriptor = Unix.Open("/dev/netmap", Unix.OpenFlags.O_RDWR);
+            if (_fileDescriptor < 0) throw new InvalidOperationException($"Need to handle properly (release memory etc) error was {_fileDescriptor}");
+            var request = new NetMapRequest
+            {
+                nr_cmd = 0,
+                nr_flags = (uint)nr_flags.NR_RX_RINGS_ONLY,
+                nr_ringid = (ushort)_ringId,
+                nr_version = Consts.NETMAP_API,
+            };
+            Console.WriteLine($"Getting FD for Receive RingID {_ringId}");
+            var textbytes = Encoding.ASCII.GetBytes(interfaceName + "\0");
+            fixed (void* txtPtr = textbytes)
+            {
+                Buffer.MemoryCopy(txtPtr, request.nr_name, textbytes.Length, textbytes.Length);
+            }
+
+
+            if (Unix.IOCtl(_fileDescriptor, Consts.NIOCREGIF, &request) != 0)
+            {
+                throw new InvalidOperationException("Failed to open an FD for a single ring");
+            }
             _transmitRing = transmitRing;
             _worker = new Thread(new ThreadStart(ThreadLoop));
             _worker.Start();

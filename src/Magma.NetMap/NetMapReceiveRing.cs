@@ -21,7 +21,7 @@ namespace Magma.NetMap
             var request = new NetMapRequest
             {
                 nr_cmd = 0,
-                nr_flags = 0x0000,
+                nr_flags = (uint)nr_flags.NR_RX_RINGS_ONLY,
                 nr_ringid = (ushort)_ringId,
                 nr_version = Consts.NETMAP_API,
             };
