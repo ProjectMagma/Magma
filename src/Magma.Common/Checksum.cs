@@ -7,31 +7,57 @@ namespace Magma.Network
         public unsafe static ushort Checksum<T>(in T buffer, int length)
             where T : unmanaged
         {
-            var sum = 0;
             fixed (T* ptr = &buffer)
             {
-                var pBuffer = (byte*)ptr;
-                var len = (int)(((uint)length) & ~1U);
-                var i = 0;
-                for (; i < len; i += 2)
+                var pByte = (byte*)ptr;
+
+                long sum = 0;
+
+                var pLong = (long*)ptr;
+                while (length >= sizeof(long))
                 {
-                    sum += (ushort)System.Net.IPAddress.NetworkToHostOrder(*((short*)(pBuffer + i)));
-                    if (sum > 0xFFFF)
-                        sum -= 0xFFFF;
-                }
-                /*
-                 * If there's a single byte left over, checksum it, too.
-                 * Network byte order is big-endian, so the remaining byte is
-                 * the high byte.
-                 */
-                if (i < length)
-                {
-                    sum += pBuffer[i] << 8;
-                    if (sum > 0xFFFF)
-                        sum -= 0xFFFF;
+                    var s = *pLong++;
+                    sum += s;
+                    if (sum < s) sum++;
+                    length -= 8;
                 }
 
-                return (ushort)System.Net.IPAddress.HostToNetworkOrder((short)(~sum - 1));
+                pByte = (byte*)pLong;
+                if ((length & 4) != 0)
+                {
+                    var s = *(uint*)pByte;
+                    sum += s;
+                    if (sum < s) sum++;
+                    pByte += 4;
+                }
+
+                if ((length & 2) != 0)
+                {
+                    var s = *(ushort*)pByte;
+                    sum += s;
+                    if (sum < s) sum++;
+                    pByte += 2;
+                }
+
+                if ((length & 1) != 0)
+                {
+                    var s = *pByte;
+                    sum += s;
+                    if (sum < s) sum++;
+                }
+
+                /* Fold down to 16 bits */
+                var t1 = (uint)sum;
+                var t2 = (uint)(sum >> 32);
+                t1 += t2;
+                if (t1 < t2) t1++;
+                var t3 = (ushort)t1;
+                var t4 = (ushort)(t1 >> 16);
+                t3 += t4;
+                if (t3 < t4) t3++;
+
+                t3 = (ushort)~t3;
+                return (ushort)(t3 << 8 | t3 >> 8);
             }
         }
     }
