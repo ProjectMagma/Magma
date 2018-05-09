@@ -16,18 +16,28 @@ namespace Magma.NetMap.Host
         private NetMapTransmitRing _transmitter;
         private TextWriter _streamWriter;
 
-        public PacketReceiver(int ringId, NetMapTransmitRing transmitter, bool logToFile)
+        public PacketReceiver(int ringId, NetMapTransmitRing transmitter, bool log, bool loggingToFile)
         {
             _transmitter = transmitter;
             var filename = Path.Combine(Directory.GetCurrentDirectory(), $"rxOutput{ringId}.txt");
             Console.WriteLine($"Outputing recieved packets to: {filename}");
-            _streamWriter = logToFile ? new StreamWriter(filename) : null;
+            if (log)
+            {
+                if (loggingToFile)
+                {
+                    _streamWriter = new StreamWriter(filename);
+                }
+                else
+                {
+                    _streamWriter = new StreamWriter(Console.OpenStandardOutput());
+                }
+            }
+
             _ringId = ringId;
         }
-        
+
         public bool TryConsume(int ringId, Span<byte> input)
         {
-            return false;
             var data = input;
             if (Ethernet.TryConsume(ref data, out var ether))
             {
@@ -107,7 +117,7 @@ namespace Magma.NetMap.Host
             {
                 WriteLine($"Unknown ---> {BitConverter.ToString(data.ToArray()).Substring(60)}...");
             }
-            
+
             Flush();
             return false;
         }
@@ -115,7 +125,7 @@ namespace Magma.NetMap.Host
         private void WriteLine(string output) => _streamWriter?.WriteLine(output);
         private void Flush() => _streamWriter?.Flush();
     }
-    
+
     class Program
     {
         private static int RingId = 0;
@@ -132,7 +142,7 @@ namespace Magma.NetMap.Host
             Console.WriteLine($"IP Header length: {Unsafe.SizeOf<IPv4>()}");
             Console.WriteLine($"TCP Header length: {Unsafe.SizeOf<Tcp>()}");
 
-            var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, logToFile : true));
+            var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, log: true, loggingToFile: false));
             netmap.Open();
             netmap.PrintPortInfo();
 
