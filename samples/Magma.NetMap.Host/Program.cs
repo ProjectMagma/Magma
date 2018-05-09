@@ -27,6 +27,7 @@ namespace Magma.NetMap.Host
         
         public bool TryConsume(int ringId, Span<byte> input)
         {
+            return false;
             var data = input;
             if (Ethernet.TryConsume(ref data, out var ether))
             {
