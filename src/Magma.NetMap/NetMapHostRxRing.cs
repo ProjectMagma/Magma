@@ -47,7 +47,7 @@ namespace Magma.NetMap
                     var i = ring.cur;
                     
                     _transmitRing.TrySendWithSwap(ref _rxRing[i], ref ring);
-                    RingInfo[0].flags = (ushort)(RingInfo[0].flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
+                    //RingInfo[0].flags = (ushort)(RingInfo[0].flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
                     
                     sentData = true;
                 }
