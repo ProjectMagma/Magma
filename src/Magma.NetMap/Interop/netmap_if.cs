@@ -6,13 +6,13 @@ using System.Text;
 namespace Magma.NetMap.Interop
 {
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct netmap_if
+    public unsafe struct NetMapInterface
     {
-        public fixed byte ni_name[16];
-        public uint ni_version;
-        public uint ni_flags;
-        public uint ni_tx_rings;
-        public uint ni_rx_rings;
+        public fixed byte Name[16];
+        public uint Version;
+        public uint Flags;
+        public uint NumberOfTXRings;
+        public uint NumberOfRXRings;
         public uint ni_bufs_head;
         public uint spare1;
         public uint spare2;

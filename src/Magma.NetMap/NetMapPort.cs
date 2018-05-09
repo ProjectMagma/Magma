@@ -14,16 +14,13 @@ namespace Magma.NetMap
         private NetMapReceiveRing<TPacketReceiver>[] _receiveRings;
         private NetMapTransmitRing[] _transmitRings;
         private List<NetMapRing> _allRings;
-        private NetMapHostTxRing _hostRing;
+        private NetMapHostRxRing _hostRing;
         private readonly string _interfaceName;
         private NetMapRequest _request;
         private int _fileDescriptor;
         private IntPtr _mappedRegion;
-        private netmap_if _netmapInterface;
+        private NetMapInterface _netmapInterface;
         private Func<NetMapTransmitRing, TPacketReceiver> _createReceiver;
-
-        const ushort NETMAP_API = 12;
-        
 
         public NetMapPort(string interfaceName, Func<NetMapTransmitRing, TPacketReceiver> createReceiver)
         {
@@ -40,9 +37,10 @@ namespace Magma.NetMap
             var request = new NetMapRequest
             {
                 nr_cmd = 0,
-                nr_flags = 0x8003,
+                nr_flags = 0x0003,
                 nr_ringid = 0,
-                nr_version = NETMAP_API,
+                nr_version = Consts.NETMAP_API,
+                
             };
             var textbytes = Encoding.ASCII.GetBytes(_interfaceName + "\0");
             fixed (void* txtPtr = textbytes)
@@ -56,6 +54,7 @@ namespace Magma.NetMap
                 throw new InvalidOperationException("Some failure to get the port, need better error handling");
             }
             _request = request;
+            
             MapMemory();
             SetupRings();
 
@@ -72,9 +71,9 @@ namespace Magma.NetMap
         {
             _allRings = new List<NetMapRing>();
 
-            var txOffsets = new ulong[_netmapInterface.ni_tx_rings];
-            var rxOffsets = new ulong[_netmapInterface.ni_rx_rings];
-            var span = new Span<byte>(IntPtr.Add(NetMapInterfaceAddress, Unsafe.SizeOf<netmap_if>()).ToPointer(), (int)((_netmapInterface.ni_rx_rings + _netmapInterface.ni_tx_rings + 2) * sizeof(IntPtr)));
+            var txOffsets = new ulong[_netmapInterface.NumberOfTXRings];
+            var rxOffsets = new ulong[_netmapInterface.NumberOfRXRings];
+            var span = new Span<byte>(IntPtr.Add(NetMapInterfaceAddress, Unsafe.SizeOf<NetMapInterface>()).ToPointer(), (int)((_netmapInterface.NumberOfRXRings + _netmapInterface.NumberOfTXRings + 2) * sizeof(IntPtr)));
             for (var i = 0; i < txOffsets.Length; i++)
             {
                 txOffsets[i] = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(span);
@@ -105,7 +104,7 @@ namespace Magma.NetMap
                 _allRings.Add(_transmitRings[i]);
             }
                         
-            _hostRing = new NetMapHostTxRing((byte*)_mappedRegion.ToPointer(), rxHost, _fileDescriptor, _transmitRings[0]);
+            _hostRing = new NetMapHostRxRing((byte*)_mappedRegion.ToPointer(), rxHost, _fileDescriptor, _transmitRings[0]);
             _allRings.Add(_hostRing);
         }
 
@@ -117,7 +116,7 @@ namespace Magma.NetMap
 
             Console.WriteLine("Mapped the memory region correctly");
             _mappedRegion = mapResult;
-            _netmapInterface = Unsafe.Read<netmap_if>(NetMapInterfaceAddress.ToPointer());
+            _netmapInterface = Unsafe.Read<NetMapInterface>(NetMapInterfaceAddress.ToPointer());
         }
         
         public void PrintPortInfo()
@@ -128,8 +127,8 @@ namespace Magma.NetMap
             Console.WriteLine($"tx slots = {_request.nr_tx_slots}");
             Console.WriteLine($"rx slots = {_request.nr_rx_slots}");
             Console.WriteLine($"Offset to IF Header {_request.nr_offset}");
-            Console.WriteLine($"Interface Nic RX Queues {_netmapInterface.ni_rx_rings}");
-            Console.WriteLine($"Interface Nic TX Queues {_netmapInterface.ni_tx_rings}");
+            Console.WriteLine($"Interface Nic RX Queues {_netmapInterface.NumberOfRXRings}");
+            Console.WriteLine($"Interface Nic TX Queues {_netmapInterface.NumberOfTXRings}");
             Console.WriteLine($"Interface Start of extra buffers {_netmapInterface.ni_bufs_head}");
         }
     }

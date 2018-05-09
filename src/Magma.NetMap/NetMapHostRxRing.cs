@@ -9,14 +9,15 @@ using Magma.Network.Header;
 
 namespace Magma.NetMap
 {
-    public sealed unsafe class NetMapHostTxRing:NetMapRing
+    public sealed unsafe class NetMapHostRxRing:NetMapRing
     {
         private readonly Thread _worker;
         private readonly NetMapTransmitRing _transmitRing;
 
-        internal NetMapHostTxRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, NetMapTransmitRing transmitRing)
-            : base(memoryRegion, rxQueueOffset, fileDescriptor)
+        internal NetMapHostRxRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, NetMapTransmitRing transmitRing)
+            : base(memoryRegion, rxQueueOffset)
         {
+            _fileDescriptor = fileDescriptor;
             _transmitRing = transmitRing;
             _worker = new Thread(new ThreadStart(ThreadLoop));
             _worker.Start();
@@ -33,7 +34,7 @@ namespace Magma.NetMap
                     Fd = _fileDescriptor
                 };
 
-                var pollResult = Unix.poll(ref fd, 1, 5);
+                var pollResult = Unix.poll(ref fd, 1, Consts.POLLTIME);
                 if (pollResult < 0)
                 {
                     //Console.WriteLine($"Poll failed on ring {_ringId} exiting polling loop");
@@ -44,10 +45,10 @@ namespace Magma.NetMap
                 {
                     //Console.WriteLine("Received data on host ring");
                     var i = ring.cur;
-                    var iNext = RingNext(i);
-                    ring.cur = iNext;
-                    _transmitRing.TrySendWithSwap(ref _rxRing[i]);
-                    ring.head = iNext;
+                    
+                    _transmitRing.TrySendWithSwap(ref _rxRing[i], ref ring);
+                    RingInfo[0].flags = (ushort)(RingInfo[0].flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
+                    
                     sentData = true;
                 }
                 if(sentData) _transmitRing.ForceFlush();

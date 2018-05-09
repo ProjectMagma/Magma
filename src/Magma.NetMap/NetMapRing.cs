@@ -16,12 +16,11 @@ namespace Magma.NetMap
         protected readonly int _ringId;
         protected readonly Netmap_slot* _rxRing;
         protected readonly byte* _bufferStart;
-        protected readonly int _fileDescriptor;
+        protected int _fileDescriptor;
         protected NetMapBufferPool _bufferPool;
 
-        protected NetMapRing(byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor)
+        protected NetMapRing(byte* memoryRegion, ulong rxQueueOffset)
         {
-            _fileDescriptor = fileDescriptor;
             _queueOffset = (long)rxQueueOffset;
             _memoryRegion = memoryRegion;
             var ringInfo = RingInfo[0];
