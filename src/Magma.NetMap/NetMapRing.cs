@@ -19,7 +19,7 @@ namespace Magma.NetMap
         protected int _fileDescriptor;
         protected NetMapBufferPool _bufferPool;
 
-        protected NetMapRing(string interfaceName, bool isTxRing, byte* memoryRegion, ulong rxQueueOffset)
+        protected NetMapRing(string interfaceName, bool isTxRing, bool isHost, byte* memoryRegion, ulong rxQueueOffset)
         {
             _queueOffset = (long)rxQueueOffset;
             _memoryRegion = memoryRegion;

@@ -14,7 +14,7 @@ namespace Magma.NetMap
         private NetMapTransmitRing _hostTxRing;
 
         internal NetMapReceiveRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
-            : base(interfaceName, isTxRing:false, memoryRegion, rxQueueOffset)
+            : base(interfaceName, isTxRing:false, isHost:false, memoryRegion, rxQueueOffset)
         {
             _hostTxRing = hostTxRing;
             _receiver = receiver;

@@ -15,7 +15,7 @@ namespace Magma.NetMap
         private readonly NetMapTransmitRing _transmitRing;
 
         internal NetMapHostRxRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, NetMapTransmitRing transmitRing)
-            : base(interfaceName, isTxRing : false, memoryRegion, rxQueueOffset)
+            : base(interfaceName, isTxRing : false, isHost:true, memoryRegion, rxQueueOffset)
         {
             _transmitRing = transmitRing;
             _worker = new Thread(new ThreadStart(ThreadLoop));
