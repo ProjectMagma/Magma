@@ -40,8 +40,8 @@ namespace Magma.NetMap.Host
 
                         if (!ip.IsChecksumValid())
                         {
-                            // Drop invalid checksums
-                            return false;
+                            // Consume packets with invalid checksums; but don't do further processing
+                            return true;
                         }
 
                         var protocol = ip.Protocol;
