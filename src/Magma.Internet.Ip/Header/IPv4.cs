@@ -62,6 +62,16 @@ namespace Magma.Network.Header
         /// Fragmentation in IPv4 is handled in either the host or in routers.
         /// </remarks>
         public ushort TotalLength => (ushort)System.Net.IPAddress.NetworkToHostOrder((short)_totalLength);
+
+        public ushort CalculateChecksum()
+        {
+            var oldChecksum = _checksum;
+            _checksum = 0;
+            var calcedChecksum = SpanExtensions.Checksum(this, Unsafe.SizeOf<IPv4>());
+            _checksum = oldChecksum;
+            return calcedChecksum;
+        }
+
         public ushort HeaderLength => (ushort)((_versionAndHeaderLength & 0xf) * 4);
         public ushort DataLength => (ushort)(TotalLength - HeaderLength);
 
@@ -125,19 +135,31 @@ namespace Magma.Network.Header
         /// <remarks>
         /// When a packet arrives at a router, the router decreases the TTL field. Consequently, the router must calculate a new checksum.
         /// </remarks>
-        public ushort HeaderChecksum => _checksum;
+        public ushort HeaderChecksum
+        {
+            get => _checksum;
+            set => _checksum = value;
+        }
 
         /// <summary>
         /// This field is the IPv4 address of the sender of the packet. 
         /// Note that this address may be changed in transit by a network address translation device.
         /// </summary>
-        public V4Address SourceAddress => _sourceIPAdress;
+        public V4Address SourceAddress
+        {
+            get => _sourceIPAdress;
+            set => _sourceIPAdress = value;
+        }
 
         /// <summary>
         /// This field is the IPv4 address of the receiver of the packet.
         /// As with the source address, this may be changed in transit by a network address translation device.
         /// </summary>
-        public V4Address DestinationAddress => _destinationIPAdress;
+        public V4Address DestinationAddress
+        {
+            get => _destinationIPAdress;
+            set => _destinationIPAdress = value;
+        }
 
         public static bool TryConsume(ref Span<byte> span, out IPv4 ip)
         {
@@ -162,7 +184,9 @@ namespace Magma.Network.Header
         public override string ToString()
         {
             return "+- IPv4 Datagram ----------------------------------------------------------------------+" + Environment.NewLine +
-                  $"| {Protocol.ToString().PadRight(11)} | {SourceAddress.ToString()} -> {DestinationAddress.ToString()} | Length: {TotalLength}, H: {HeaderLength}, D: {DataLength}".PadRight(87) + "|";
+                  $"| {Protocol.ToString().PadRight(11)} | {SourceAddress.ToString()} -> {DestinationAddress.ToString()} | Length: {TotalLength}, H: {HeaderLength}, D: {DataLength}".PadRight(86) +
+                  (HeaderChecksum == CalculateChecksum() ? " " : "X")
+                  + "|";
         }
     }
 }

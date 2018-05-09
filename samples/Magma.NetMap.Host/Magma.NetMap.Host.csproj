@@ -6,6 +6,10 @@
       <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Magma.Internet.Icmp\Magma.Internet.Icmp.csproj" />
     <ProjectReference Include="..\..\src\Magma.Internet.Ip\Magma.Internet.Ip.csproj" />
