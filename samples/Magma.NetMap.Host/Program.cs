@@ -65,6 +65,7 @@ namespace Magma.NetMap.Host
                         }
                         else if (protocol == ProtocolNumber.Icmp)
                         {
+                            WriteLine($"{BitConverter.ToString(data.ToArray())}");
                             if (IcmpV4.TryConsume(ref data, out var icmpIn))
                             {
                                 WriteLine($"{icmpIn.ToString()} {icmpIn.ValidateChecksum(ipIn.DataLength)}");
