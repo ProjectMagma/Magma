@@ -61,6 +61,7 @@ namespace Magma.NetMap
 
             var maxBufferId = _allRings.Select(r => r.GetMaxBufferId()).Max();
             var buffersStart = _allRings[0].BufferStart;
+            if (_allRings[0].BufferStart != _allRings[_allRings.Capacity - 1].BufferStart) throw new InvalidOperationException("Buffer start doesn't match!!");
             var pool = new NetMapBufferPool((ushort)_allRings[0].BufferSize, buffersStart, maxBufferId + 1);
             foreach(var ring in _allRings)
             {
