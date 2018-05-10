@@ -55,7 +55,7 @@ namespace Magma.NetMap
             lock (_sendBufferLock)
             {
                 var newHead = RingNext(RingInfo[0].head);
-                ref var slot = ref _rxRing[RingInfo[0].head];
+                ref var slot = ref _rxRing[newHead];
                 if (slot.buf_idx != manager.BufferIndex)
                 {
                     Console.WriteLine("Buffer Index Changed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
