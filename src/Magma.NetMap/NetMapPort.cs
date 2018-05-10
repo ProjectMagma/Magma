@@ -49,7 +49,7 @@ namespace Magma.NetMap
                 Buffer.MemoryCopy(txtPtr, request.nr_name, textbytes.Length, textbytes.Length);
             }
             _fileDescriptor = Unix.Open("/dev/netmap", Unix.OpenFlags.O_RDWR);
-            if (_fileDescriptor < 0) throw new InvalidOperationException("Need to handle properly (release memory etc)");
+            if (_fileDescriptor < 0) throw new InvalidOperationException("Unable to open /dev/netmap is the kernel module running? Have you run with sudo?");
             if (Unix.IOCtl(_fileDescriptor, Consts.NIOCREGIF, &request) != 0)
             {
                 throw new InvalidOperationException("Some failure to get the port, need better error handling");

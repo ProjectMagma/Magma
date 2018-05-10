@@ -9,12 +9,12 @@ using Magma.Network.Header;
 
 namespace Magma.NetMap
 {
-    public sealed unsafe class NetMapHostRxRing:NetMapRing
+    public sealed class NetMapHostRxRing:NetMapRing
     {
         private readonly Thread _worker;
         private readonly NetMapTransmitRing _transmitRing;
 
-        internal NetMapHostRxRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, NetMapTransmitRing transmitRing)
+        internal unsafe NetMapHostRxRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, NetMapTransmitRing transmitRing)
             : base(interfaceName, isTxRing : false, isHost:true, memoryRegion, rxQueueOffset)
         {
             _transmitRing = transmitRing;
@@ -24,7 +24,7 @@ namespace Magma.NetMap
 
         private void ThreadLoop()
         {
-            ref var ring = ref RingInfo[0];
+            ref var ring = ref RingInfo();
             while (true)
             {
                 var fd = new Unix.pollFd()
@@ -45,7 +45,7 @@ namespace Magma.NetMap
                     //Console.WriteLine("Received data on host ring");
                     var i = ring.cur;
                     
-                    _transmitRing.TrySendWithSwap(ref _rxRing[i], ref ring);
+                    _transmitRing.TrySendWithSwap(ref GetSlot(i), ref ring);
                     //RingInfo[0].flags = (ushort)(RingInfo[0].flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
                     sentData = true;
                 }

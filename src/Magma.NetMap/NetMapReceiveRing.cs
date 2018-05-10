@@ -6,14 +6,14 @@ using Magma.Network.Abstractions;
 
 namespace Magma.NetMap
 {
-    public sealed unsafe class NetMapReceiveRing<TPacketReceiver> : NetMapRing
+    public sealed class NetMapReceiveRing<TPacketReceiver> : NetMapRing
         where TPacketReceiver : IPacketReceiver
     {
         private readonly Thread _worker;
         private TPacketReceiver _receiver;
         private NetMapTransmitRing _hostTxRing;
 
-        internal NetMapReceiveRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
+        internal unsafe NetMapReceiveRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
             : base(interfaceName, isTxRing:false, isHost:false, memoryRegion, rxQueueOffset)
         {
             _hostTxRing = hostTxRing;
@@ -24,7 +24,7 @@ namespace Magma.NetMap
 
         private void ThreadLoop()
         {
-            ref var ring = ref RingInfo[0];
+            ref var ring = ref RingInfo();
             while (true)
             {
                 var fd = new Unix.pollFd()
@@ -45,7 +45,7 @@ namespace Magma.NetMap
 
                     var i = ring.cur;
                     var nexti = RingNext(i);
-                    ref var slot = ref _rxRing[i];
+                    ref var slot = ref GetSlot(i);
                     var buffer = GetBuffer(slot.buf_idx, slot.len);
                     if (!_receiver.TryConsume(_ringId, buffer))
                     {
@@ -65,7 +65,7 @@ namespace Magma.NetMap
 
         private void PrintSlotInfo(int index)
         {
-            var slot = _rxRing[index];
+            var slot = GetSlot(index);
             Console.WriteLine($"Slot {index} bufferIndex {slot.buf_idx} flags {slot.flags} length {slot.len} pointer {slot.ptr}");
         }
     }

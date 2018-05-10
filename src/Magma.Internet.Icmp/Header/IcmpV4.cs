@@ -30,6 +30,7 @@ namespace Magma.Network.Header
             if (span.Length >= Unsafe.SizeOf<IcmpV4>())
             {
                 icmp = Unsafe.As<byte, IcmpV4>(ref MemoryMarshal.GetReference(span));
+                span = span.Slice(Unsafe.SizeOf<IcmpV4>());
                 // CRC check
                 span = span.Slice(0, Unsafe.SizeOf<IcmpV4>());
                 return true;
