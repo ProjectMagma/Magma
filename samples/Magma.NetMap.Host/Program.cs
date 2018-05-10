@@ -19,12 +19,12 @@ namespace Magma.NetMap.Host
         public PacketReceiver(int ringId, NetMapTransmitRing transmitter, bool log, bool loggingToFile)
         {
             _transmitter = transmitter;
-            var filename = Path.Combine(Directory.GetCurrentDirectory(), $"rxOutput{ringId}.txt");
-            Console.WriteLine($"Outputing recieved packets to: {filename}");
             if (log)
             {
                 if (loggingToFile)
                 {
+                    var filename = Path.Combine(Directory.GetCurrentDirectory(), $"rxOutput{ringId}.txt");
+                    Console.WriteLine($"Outputing recieved packets to: {filename}");
                     _streamWriter = new StreamWriter(filename);
                 }
                 else
