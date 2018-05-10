@@ -119,7 +119,7 @@ namespace Magma.NetMap.Host
                                         }
 
                                         _transmitter.SendBuffer(txMemory.Slice(0, input.Length));
-                                        //_transmitter.ForceFlush();
+                                        _transmitter.ForceFlush();
                                         result = true;
                                     }
                                     else
