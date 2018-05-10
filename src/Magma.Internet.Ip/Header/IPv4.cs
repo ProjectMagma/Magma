@@ -180,6 +180,6 @@ namespace Magma.Network.Header
                   + "|";
         }
 
-        public bool IsChecksumValid() => Checksum.Calcuate(this, Unsafe.SizeOf<IPv4>()) == 0 ? true : false;
+        public bool IsChecksumValid() => Checksum.IsValid(ref Unsafe.As<IPv4, byte>(ref this), Unsafe.SizeOf<IPv4>());
     }
 }

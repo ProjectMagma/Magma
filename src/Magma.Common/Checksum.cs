@@ -1,22 +1,17 @@
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Magma.Network
 {
     public static class Checksum
     {
-        public unsafe static ushort Calcuate<T>(in T buffer, int length)
-            where T : unmanaged
-        {
-            fixed (T* pByte = &buffer)
-            {
-                return Calcuate((byte*)pByte, length);
-            }
-        }
+        public unsafe static bool IsValid(ref byte buffer, int length)
+            => Calcuate(ref buffer, length) == 0 ? true : false;
 
-        private unsafe static ushort Calcuate(byte* pByte, int length)
+        public unsafe static ushort Calcuate(ref byte buffer, int length)
         {
             var remaining = length;
-            var ptr = pByte;
+            ref var ptr = ref buffer;
 
             ulong sum = 0;
 
@@ -24,8 +19,8 @@ namespace Magma.Network
             {
                 remaining -= 8;
 
-                var ulong0 = *(ulong*)ptr;
-                ptr += 8;
+                var ulong0 = Unsafe.As<byte, ulong>(ref ptr);
+                ptr = ref Unsafe.Add(ref ptr, 8);
 
                 sum += ulong0;
                 if (sum < ulong0)
@@ -36,8 +31,8 @@ namespace Magma.Network
 
             if ((remaining & 4) != 0)
             {
-                var uint0 = *(uint*)ptr;
-                ptr += 4;
+                var uint0 = Unsafe.As<byte, uint>(ref ptr);
+                ptr = ref Unsafe.Add(ref ptr, 4);
 
                 sum += uint0;
                 if (sum < uint0)
@@ -48,8 +43,8 @@ namespace Magma.Network
 
             if ((remaining & 2) != 0)
             {
-                var ushort0 = *(ushort*)ptr;
-                ptr += 2;
+                var ushort0 = Unsafe.As<byte, ushort>(ref ptr);
+                ptr = ref Unsafe.Add(ref ptr, 2);
 
                 sum += ushort0;
                 if (sum < ushort0)
@@ -60,7 +55,7 @@ namespace Magma.Network
 
             if ((remaining & 1) != 0)
             {
-                var byte0 = *ptr;
+                var byte0 = ptr;
 
                 sum += byte0;
                 if (sum < byte0)
