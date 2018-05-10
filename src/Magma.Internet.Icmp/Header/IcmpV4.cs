@@ -42,7 +42,7 @@ namespace Magma.Network.Header
         public unsafe override string ToString()
         {
             return "+- Icmp Datagram ----------------------------------------------------------------------+" + Environment.NewLine +
-                  $"| {Type.ToString()} - {Code} | Id: {System.Net.IPAddress.NetworkToHostOrder(Identifier)} | Seq: {System.Net.IPAddress.NetworkToHostOrder(SequenceNumber)} ".PadRight(86) 
+                  $"| {Type.ToString()} - {Code} | Id: {System.Net.IPAddress.NetworkToHostOrder(Identifier)} | Seq: {System.Net.IPAddress.NetworkToHostOrder(SequenceNumber)} ".PadRight(87) 
                   + "|";
         }
 
