@@ -70,10 +70,10 @@ namespace Magma.NetMap.Host
                         }
                         else if (protocol == ProtocolNumber.Icmp)
                         {
-                            WriteLine($"Data -> {BitConverter.ToString(data.ToArray())}");
+                            WriteLine($"Data {(IcmpV4.IsChecksumValid(ref MemoryMarshal.GetReference(data), ipIn.DataLength) ? "" : "(Checksum Invalid)")} -> {BitConverter.ToString(data.ToArray())}");
                             if (IcmpV4.TryConsume(ref data, out var icmpIn))
                             {
-                                WriteLine($"{icmpIn.ToString()} {icmpIn.IsChecksumValid(ipIn.DataLength)}");
+                                WriteLine($"{icmpIn.ToString()}");
 
                                 //if (!icmpIn.ValidateChecksum(ipIn.DataLength))
                                 //{

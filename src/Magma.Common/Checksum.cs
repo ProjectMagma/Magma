@@ -7,60 +7,80 @@ namespace Magma.Network
         public unsafe static ushort Calcuate<T>(in T buffer, int length)
             where T : unmanaged
         {
-            fixed (T* ptr = &buffer)
+            var remaining = length;
+            fixed (T* pByte = &buffer)
             {
-                var pByte = (byte*)ptr;
-
+                var ptr = (byte*)pByte;
                 ulong sum = 0;
 
-                var pLong = (ulong*)ptr;
-                while (length >= sizeof(ulong))
+                while (remaining >= sizeof(ulong))
                 {
-                    length -= 8;
-                    var s = *pLong;
+                    remaining -= 8;
 
-                    pLong++;
-                    sum += s;
-                    if (sum < s) sum++;
+                    var ulong0 = *(ulong*)ptr;
+                    ptr += 8;
+
+                    sum += ulong0;
+                    if (sum < ulong0)
+                    {
+                        sum++;
+                    }
                 }
 
-                pByte = (byte*)pLong;
-                if ((length & 4) != 0)
+                if ((remaining & 4) != 0)
                 {
-                    var s = *(uint*)pByte;
-                    pByte += 4;
+                    var uint0 = *(uint*)ptr;
+                    ptr += 4;
 
-                    sum += s;
-                    if (sum < s) sum++;
+                    sum += uint0;
+                    if (sum < uint0)
+                    {
+                        sum++;
+                    }
                 }
 
-                if ((length & 2) != 0)
+                if ((remaining & 2) != 0)
                 {
-                    var s = *(ushort*)pByte;
-                    pByte += 2;
+                    var ushort0 = *(ushort*)ptr;
+                    ptr += 2;
 
-                    sum += s;
-                    if (sum < s) sum++;
+                    sum += ushort0;
+                    if (sum < ushort0)
+                    {
+                        sum++;
+                    }
                 }
 
-                if (length != 0)
+                if ((remaining & 1) != 0)
                 {
-                    var s = *pByte;
-                    sum += s;
-                    if (sum < s) sum++;
+                    var byte0 = *ptr;
+
+                    sum += byte0;
+                    if (sum < byte0)
+                    {
+                        sum++;
+                    }
                 }
 
-                /* Fold down to 16 bits */
-                var t1 = (uint)sum;
-                var t2 = (uint)(sum >> 32);
-                t1 += t2;
-                if (t1 < t2) t1++;
-                var t3 = (ushort)t1;
-                var t4 = (ushort)(t1 >> 16);
-                t3 += t4;
-                if (t3 < t4) t3++;
+                // Fold down to 16 bits
+                var uint1 = (uint)sum;
+                var uint2 = (uint)(sum >> 32);
+                uint1 += uint2;
+                if (uint1 < uint2)
+                {
+                    uint1++;
+                }
 
-                return (ushort)~t3;
+                var ushort1 = (ushort)uint1;
+                var ushort2 = (ushort)(uint1 >> 16);
+                ushort1 += ushort2;
+                if (ushort1 < ushort2)
+                {
+                    ushort1++;
+                }
+
+                // Invert to get ones-complement result 
+                return (ushort)~ushort1;
             }
         }
     }
