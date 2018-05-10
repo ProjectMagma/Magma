@@ -27,15 +27,13 @@ namespace Magma.NetMap
         {
             ref var ring = ref RingInfo();
             var epoll = Libc.EPollCreate(0);
+            if (epoll.Pointer < 0) ExceptionHelper.ThrowInvalidOperation("Failed to get Epoll handle");
             var epollEvent = new Libc.EPollEvent()
             {
                 data = new Libc.EPollData() { FileDescriptor = _fileDescriptor, },
                 events = Libc.EPollEvents.EPOLLIN ,
             };
-            if (Libc.EPollControl(epoll, Libc.EPollCommand.EPOLL_CTL_ADD, _fileDescriptor, ref epollEvent) != 0)
-            {
-                ExceptionHelper.ThrowInvalidOperation("Epoll failed");
-            }
+            if (Libc.EPollControl(epoll, Libc.EPollCommand.EPOLL_CTL_ADD, _fileDescriptor, ref epollEvent) != 0) ExceptionHelper.ThrowInvalidOperation("Epoll failed");
 
             Span<Libc.EPollEvent> events = stackalloc Libc.EPollEvent[4];
 
@@ -52,7 +50,6 @@ namespace Magma.NetMap
                     {
                         _hostTxRing.TrySendWithSwap(ref slot, ref ring);
                         _hostTxRing.ForceFlush();
-                        //Console.WriteLine("Forwarded to host");
                     }
                     else
                     {
@@ -62,9 +59,7 @@ namespace Magma.NetMap
 
                 }
 
-                var numberOfEvents = Libc.EPollWait(epoll, ref MemoryMarshal.GetReference(events), 4, 10000);
-
-                Console.WriteLine($"{_ringId} completed an epoll, trigged by {numberOfEvents} events");
+                var numberOfEvents = Libc.EPollWait(epoll, ref MemoryMarshal.GetReference(events), 4, -1);
             }
         }
 
