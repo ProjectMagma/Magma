@@ -46,13 +46,6 @@ namespace Magma.Network.Header
                   + "|";
         }
 
-        public bool ValidateChecksum(int length)
-        {
-            var currentChecksum = HeaderChecksum;
-            HeaderChecksum = 0;
-            var newChecksum = Checksum.Calcuate(this, Unsafe.SizeOf<IcmpV4>());
-            HeaderChecksum = currentChecksum;
-            return currentChecksum == newChecksum ? true : false;
-        }
+        public bool IsChecksumValid(int length) => Checksum.Calcuate(this, length) == 0 ? true : false;
     }
 }
