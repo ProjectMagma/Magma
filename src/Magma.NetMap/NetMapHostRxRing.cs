@@ -9,12 +9,12 @@ using Magma.Network.Header;
 
 namespace Magma.NetMap
 {
-    public sealed unsafe class NetMapHostRxRing:NetMapRing
+    public sealed class NetMapHostRxRing:NetMapRing
     {
         private readonly Thread _worker;
         private readonly NetMapTransmitRing _transmitRing;
 
-        internal NetMapHostRxRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, NetMapTransmitRing transmitRing)
+        internal unsafe NetMapHostRxRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, NetMapTransmitRing transmitRing)
             : base(interfaceName, isTxRing : false, isHost:true, memoryRegion, rxQueueOffset)
         {
             _transmitRing = transmitRing;

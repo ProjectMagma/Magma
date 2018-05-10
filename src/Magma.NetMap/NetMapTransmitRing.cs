@@ -19,7 +19,7 @@ namespace Magma.NetMap
         {
         }
 
-        public unsafe bool TryGetNextBuffer(out Memory<byte> buffer)
+        public bool TryGetNextBuffer(out Memory<byte> buffer)
         {
             ref var ring = ref RingInfo();
             for (var loop = 0; loop < MAXLOOPTRY; loop++)
@@ -40,7 +40,7 @@ namespace Magma.NetMap
             return false;
         }
 
-        public unsafe void SendBuffer(ReadOnlyMemory<byte> buffer)
+        public void SendBuffer(ReadOnlyMemory<byte> buffer)
         {
             if (!MemoryMarshal.TryGetMemoryManager(buffer, out NetMapOwnedMemory manager, out var start, out var length))
             {
@@ -68,7 +68,7 @@ namespace Magma.NetMap
             }
         }
 
-        internal unsafe bool TrySendWithSwap(ref Netmap_slot sourceSlot, ref Netmap_ring sourceRing)
+        internal bool TrySendWithSwap(ref Netmap_slot sourceSlot, ref Netmap_ring sourceRing)
         {
             ref var ring = ref RingInfo();
             for (var loop = 0; loop < MAXLOOPTRY; loop++)

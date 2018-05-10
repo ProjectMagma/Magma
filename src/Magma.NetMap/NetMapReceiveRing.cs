@@ -6,14 +6,14 @@ using Magma.Network.Abstractions;
 
 namespace Magma.NetMap
 {
-    public sealed unsafe class NetMapReceiveRing<TPacketReceiver> : NetMapRing
+    public sealed class NetMapReceiveRing<TPacketReceiver> : NetMapRing
         where TPacketReceiver : IPacketReceiver
     {
         private readonly Thread _worker;
         private TPacketReceiver _receiver;
         private NetMapTransmitRing _hostTxRing;
 
-        internal NetMapReceiveRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
+        internal unsafe NetMapReceiveRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
             : base(interfaceName, isTxRing:false, isHost:false, memoryRegion, rxQueueOffset)
         {
             _hostTxRing = hostTxRing;
