@@ -19,12 +19,12 @@ namespace Magma.NetMap.Host
         public PacketReceiver(int ringId, NetMapTransmitRing transmitter, bool log, bool loggingToFile)
         {
             _transmitter = transmitter;
-            var filename = Path.Combine(Directory.GetCurrentDirectory(), $"rxOutput{ringId}.txt");
-            Console.WriteLine($"Outputing recieved packets to: {filename}");
             if (log)
             {
                 if (loggingToFile)
                 {
+                    var filename = Path.Combine(Directory.GetCurrentDirectory(), $"rxOutput{ringId}.txt");
+                    Console.WriteLine($"Outputing recieved packets to: {filename}");
                     _streamWriter = new StreamWriter(filename);
                 }
                 else
@@ -39,45 +39,45 @@ namespace Magma.NetMap.Host
         public bool TryConsume(int ringId, Span<byte> input)
         {
             var data = input;
-            if (Ethernet.TryConsume(ref data, out var ether))
+            if (Ethernet.TryConsume(ref data, out var etherIn))
             {
-                WriteLine($"{ether.ToString()}");
+                WriteLine($"{etherIn.ToString()}");
 
-                if (ether.Ethertype == EtherType.IPv4)
+                if (etherIn.Ethertype == EtherType.IPv4)
                 {
-                    if (IPv4.TryConsume(ref data, out var ip))
+                    if (IPv4.TryConsume(ref data, out var ipIn))
                     {
-                        WriteLine($"{ip.ToString()}");
+                        WriteLine($"{ipIn.ToString()}");
 
-                        if (!ip.IsChecksumValid())
+                        if (!ipIn.IsChecksumValid())
                         {
                             // Consume packets with invalid checksums; but don't do further processing
                             return true;
                         }
 
-                        var protocol = ip.Protocol;
+                        var protocol = ipIn.Protocol;
                         if (protocol == ProtocolNumber.Tcp)
                         {
-                            if (Tcp.TryConsume(ref data, out var tcp))
+                            if (Tcp.TryConsume(ref data, out var tcpIn))
                             {
-                                WriteLine($"{tcp.ToString()}");
+                                WriteLine($"{tcpIn.ToString()}");
                             }
                         }
                         else if (protocol == ProtocolNumber.Icmp)
                         {
-                            if (IcmpV4.TryConsume(ref data, out var icmp))
+                            if (IcmpV4.TryConsume(ref data, out var icmpIn))
                             {
-                                WriteLine($"{icmp.ToString()}");
+                                WriteLine($"{icmpIn.ToString()}");
 
-                                if (icmp.Code == Code.EchoRequest)
+                                if (icmpIn.Code == Code.EchoRequest)
                                 {
-                                    if (_transmitter.TryGetNextBuffer(out var output))
+                                    if (_transmitter.TryGetNextBuffer(out var txMemory))
                                     {
-                                        var span = output.Span;
-                                        input.CopyTo(span);
+                                        var output = txMemory.Span;
+                                        input.CopyTo(output);
 
                                         // Swap destinations
-                                        ref byte current = ref MemoryMarshal.GetReference(span);
+                                        ref byte current = ref MemoryMarshal.GetReference(output);
                                         ref var etherOut = ref Unsafe.As<byte, Ethernet>(ref current);
                                         var srcMac = etherOut.Source;
                                         etherOut.Source = etherOut.Destination;
@@ -97,11 +97,11 @@ namespace Magma.NetMap.Host
                                         ref var icmpOutput = ref Unsafe.As<byte, IcmpV4>(ref current);
                                         icmpOutput.Code = Code.EchoReply;
                                         icmpOutput.HeaderChecksum = 0;
-                                        icmpOutput.HeaderChecksum = Checksum.Calcuate(in icmpOutput, Unsafe.SizeOf<IcmpV4>());
+                                        icmpOutput.HeaderChecksum = Checksum.Calcuate(in icmpOutput, ipIn.DataLength);
 
-                                        _transmitter.SendBuffer(output.Slice(0, input.Length));
+                                        _transmitter.SendBuffer(txMemory.Slice(0, input.Length));
                                         WriteLine($"RECEIVED ---> {BitConverter.ToString(input.ToArray())}...");
-                                        WriteLine($"SENT     ---> {BitConverter.ToString(output.Slice(0, input.Length).ToArray())}...");
+                                        WriteLine($"SENT     ---> {BitConverter.ToString(txMemory.Slice(0, input.Length).ToArray())}...");
                                         _transmitter.ForceFlush();
                                         return true;
                                     }
@@ -112,7 +112,7 @@ namespace Magma.NetMap.Host
                 }
                 else
                 {
-                    WriteLine($"{ ether.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
+                    WriteLine($"{ etherIn.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
                 }
                 WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
             }
