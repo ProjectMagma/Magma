@@ -67,7 +67,13 @@ namespace Magma.NetMap.Host
                         {
                             if (IcmpV4.TryConsume(ref data, out var icmpIn))
                             {
-                                WriteLine($"{icmpIn.ToString()}");
+                                WriteLine($"{icmpIn.ToString()} {icmpIn.ValidateChecksum(ipIn.DataLength)}");
+
+                                //if (!icmpIn.ValidateChecksum(ipIn.DataLength))
+                                //{
+                                //    // Consume packets with invalid checksums; but don't do further processing
+                                //    return true;
+                                //}
 
                                 if (icmpIn.Code == Code.EchoRequest)
                                 {

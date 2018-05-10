@@ -32,6 +32,7 @@ namespace Magma.Network.Header
             {
                 icmp = Unsafe.As<byte, IcmpV4>(ref MemoryMarshal.GetReference(span));
                 // CRC check
+                span = span.Slice(0, Unsafe.SizeOf<IcmpV4>());
                 return true;
             }
 
@@ -41,21 +42,18 @@ namespace Magma.Network.Header
 
         public unsafe override string ToString()
         {
-            var (isValid, calcChecksum) = ValidateChecksum();
             return "+- Icmp Datagram ----------------------------------------------------------------------+" + Environment.NewLine +
-                  $"| {Type.ToString()} - {Code} | Id: {System.Net.IPAddress.NetworkToHostOrder(Identifier)} | Seq: {System.Net.IPAddress.NetworkToHostOrder(SequenceNumber)} ".PadRight(86) +
-                  (isValid ? " " : $"{HeaderChecksum:x}:{calcChecksum:x}")
-                  + "|"
-                  + BitConverter.ToString(new Span<byte>(Unsafe.AsPointer(ref this), Unsafe.SizeOf<IcmpV4>()).ToArray());
+                  $"| {Type.ToString()} - {Code} | Id: {System.Net.IPAddress.NetworkToHostOrder(Identifier)} | Seq: {System.Net.IPAddress.NetworkToHostOrder(SequenceNumber)} ".PadRight(86) 
+                  + "|";
         }
 
-        public (bool isValid, ushort calcChecksum) ValidateChecksum()
+        public bool ValidateChecksum(int length)
         {
             var currentChecksum = HeaderChecksum;
             HeaderChecksum = 0;
             var newChecksum = Checksum.Calcuate(this, Unsafe.SizeOf<IcmpV4>());
             HeaderChecksum = currentChecksum;
-            return (currentChecksum == newChecksum, newChecksum);
+            return currentChecksum == newChecksum ? true : false;
         }
     }
 }
