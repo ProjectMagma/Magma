@@ -65,7 +65,7 @@ namespace Magma.NetMap.Host
                             }
                             else
                             {
-                                WriteLine($"TCP not parsed ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
+                                WriteLine($"TCP not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}...");
                             }
                         }
                         else if (protocol == ProtocolNumber.Icmp)
@@ -125,27 +125,27 @@ namespace Magma.NetMap.Host
                             }
                             else
                             {
-                                WriteLine($"IcmpV4 not parsed ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
+                                WriteLine($"IcmpV4 not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}...");
                             }
                         }
                         else
                         {
-                            WriteLine($"Other protocol {protocol.ToString()} ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
+                            WriteLine($"Other protocol {protocol.ToString()} ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}...");
                         }
                     }
                     else
                     {
-                        WriteLine($"IPv4 not parsed ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
+                        WriteLine($"IPv4 not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}...");
                     }
                 }
                 else
                 {
-                    WriteLine($"{ etherIn.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
+                    WriteLine($"{ etherIn.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}...");
                 }
             }
             else
             {
-                WriteLine($"Ether not parsed ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
+                WriteLine($"Ether not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}...");
             }
             WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
 
@@ -186,6 +186,20 @@ namespace Magma.NetMap.Host
                 netmap.TransmitRings[0].SendBuffer(buffer);
                 Console.WriteLine("Sent buffer!");
             }
+        }
+    }
+
+    public static class StringExtensions
+    {
+        public static string MaxLength(this string s, int length)
+        {
+            if (s.Length <= length)
+            {
+                return s;
+            }
+
+            return s.Substring(0, length - 3) + "...";
+           
         }
     }
 }
