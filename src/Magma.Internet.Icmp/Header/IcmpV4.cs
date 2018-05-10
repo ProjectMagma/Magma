@@ -24,7 +24,6 @@ namespace Magma.Network.Header
         public ushort HeaderChecksum;
         public short Identifier;
         public short SequenceNumber;
-        public int Payload;
 
         public static bool TryConsume(ref Span<byte> span, out IcmpV4 icmp)
         {
