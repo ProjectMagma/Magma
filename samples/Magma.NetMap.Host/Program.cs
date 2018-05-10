@@ -63,10 +63,14 @@ namespace Magma.NetMap.Host
                             {
                                 WriteLine($"{tcpIn.ToString()}");
                             }
+                            else
+                            {
+                                WriteLine($"TCP not parsed ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
+                            }
                         }
                         else if (protocol == ProtocolNumber.Icmp)
                         {
-                            WriteLine($"{BitConverter.ToString(data.ToArray())}");
+                            WriteLine($"Data -> {BitConverter.ToString(data.ToArray())}");
                             if (IcmpV4.TryConsume(ref data, out var icmpIn))
                             {
                                 WriteLine($"{icmpIn.ToString()} {icmpIn.ValidateChecksum(ipIn.DataLength)}");
@@ -112,6 +116,10 @@ namespace Magma.NetMap.Host
                                         WriteLine($"SENT     ---> {BitConverter.ToString(txMemory.Slice(0, input.Length).ToArray())}...");
                                         _transmitter.ForceFlush();
                                         return true;
+                                    }
+                                    else
+                                    {
+                                        WriteLine($"TryGetNextBuffer returned false");
                                     }
                                 }
                             }
