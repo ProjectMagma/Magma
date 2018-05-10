@@ -114,19 +114,27 @@ namespace Magma.NetMap.Host
                                     }
                                 }
                             }
+                            else
+                            {
+                                WriteLine($"IcmpV4 not parsed ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
+                            }
                         }
+                    }
+                    else
+                    {
+                        WriteLine($"IPv4 not parsed ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
                     }
                 }
                 else
                 {
                     WriteLine($"{ etherIn.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
                 }
-                WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
             }
             else
             {
-                WriteLine($"Unknown ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
+                WriteLine($"Ether not parsed ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
             }
+            WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
 
             Flush();
             return false;
