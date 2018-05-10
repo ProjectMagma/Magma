@@ -36,8 +36,9 @@ namespace Magma.NetMap.Host
             _ringId = ringId;
         }
 
-        public bool TryConsume(int ringId, Span<byte> input)
+        public unsafe bool TryConsume(int ringId, Span<byte> input)
         {
+            var result = false;
             var data = input;
             if (Ethernet.TryConsume(ref data, out var etherIn))
             {
@@ -51,6 +52,8 @@ namespace Magma.NetMap.Host
 
                         if (!ipIn.IsChecksumValid())
                         {
+                            WriteLine($"Invalid IPv4 Checksum");
+                            WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
                             // Consume packets with invalid checksums; but don't do further processing
                             return true;
                         }
@@ -62,9 +65,20 @@ namespace Magma.NetMap.Host
                             {
                                 WriteLine($"{tcpIn.ToString()}");
                             }
+                            else
+                            {
+                                WriteLine($"TCP not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
+                            }
                         }
                         else if (protocol == ProtocolNumber.Icmp)
                         {
+                            if (!IcmpV4.IsChecksumValid(ref MemoryMarshal.GetReference(data), ipIn.DataLength))
+                            {
+                                WriteLine($"In Icmp (Checksum Invalid) -> {BitConverter.ToString(data.ToArray())}");
+                                //    // Consume packets with invalid checksums; but don't do further processing
+                                //    return true;
+                            }
+
                             if (IcmpV4.TryConsume(ref data, out var icmpIn))
                             {
                                 WriteLine($"{icmpIn.ToString()}");
@@ -99,30 +113,49 @@ namespace Magma.NetMap.Host
                                         icmpOutput.HeaderChecksum = 0;
                                         icmpOutput.HeaderChecksum = Checksum.Calcuate(in icmpOutput, ipIn.DataLength);
 
+                                        if (!IcmpV4.IsChecksumValid(ref Unsafe.As<IcmpV4, byte>(ref icmpOutput), ipIn.DataLength))
+                                        {
+                                            WriteLine($"Out Icmp (Checksum Invalid) -> {BitConverter.ToString(new Span<byte>(Unsafe.AsPointer(ref icmpOutput), ipIn.DataLength).ToArray())}");
+                                        }
+
                                         _transmitter.SendBuffer(txMemory.Slice(0, input.Length));
-                                        WriteLine($"RECEIVED ---> {BitConverter.ToString(input.ToArray())}...");
-                                        WriteLine($"SENT     ---> {BitConverter.ToString(txMemory.Slice(0, input.Length).ToArray())}...");
                                         _transmitter.ForceFlush();
-                                        return true;
+                                        result = true;
+                                    }
+                                    else
+                                    {
+                                        WriteLine($"TryGetNextBuffer returned false");
                                     }
                                 }
                             }
+                            else
+                            {
+                                WriteLine($"IcmpV4 not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
+                            }
                         }
+                        else
+                        {
+                            WriteLine($"Other protocol {protocol.ToString()} ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
+                        }
+                    }
+                    else
+                    {
+                        WriteLine($"IPv4 not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
                     }
                 }
                 else
                 {
-                    WriteLine($"{ etherIn.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
+                    WriteLine($"{ etherIn.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
                 }
-                WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
             }
             else
             {
-                WriteLine($"Unknown ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
+                WriteLine($"Ether not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
             }
+            WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
 
             Flush();
-            return false;
+            return result;
         }
 
         private void WriteLine(string output) => _streamWriter?.WriteLine(output);
@@ -158,6 +191,20 @@ namespace Magma.NetMap.Host
                 netmap.TransmitRings[0].SendBuffer(buffer);
                 Console.WriteLine("Sent buffer!");
             }
+        }
+    }
+
+    public static class StringExtensions
+    {
+        public static string MaxLength(this string s, int length)
+        {
+            if (s.Length <= length)
+            {
+                return s;
+            }
+
+            return s.Substring(0, length - 3) + "...";
+           
         }
     }
 }

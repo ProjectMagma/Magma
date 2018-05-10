@@ -7,57 +7,87 @@ namespace Magma.Network
         public unsafe static ushort Calcuate<T>(in T buffer, int length)
             where T : unmanaged
         {
-            fixed (T* ptr = &buffer)
+            fixed (T* pByte = &buffer)
             {
-                var pByte = (byte*)ptr;
-
-                long sum = 0;
-
-                var pLong = (long*)ptr;
-                while (length >= sizeof(long))
-                {
-                    var s = *pLong++;
-                    sum += s;
-                    if (sum < s) sum++;
-                    length -= 8;
-                }
-
-                pByte = (byte*)pLong;
-                if ((length & 4) != 0)
-                {
-                    var s = *(uint*)pByte;
-                    sum += s;
-                    if (sum < s) sum++;
-                    pByte += 4;
-                }
-
-                if ((length & 2) != 0)
-                {
-                    var s = *(ushort*)pByte;
-                    sum += s;
-                    if (sum < s) sum++;
-                    pByte += 2;
-                }
-
-                if ((length & 1) != 0)
-                {
-                    var s = *pByte;
-                    sum += s;
-                    if (sum < s) sum++;
-                }
-
-                /* Fold down to 16 bits */
-                var t1 = (uint)sum;
-                var t2 = (uint)(sum >> 32);
-                t1 += t2;
-                if (t1 < t2) t1++;
-                var t3 = (ushort)t1;
-                var t4 = (ushort)(t1 >> 16);
-                t3 += t4;
-                if (t3 < t4) t3++;
-
-                return (ushort)~t3;
+                return Calcuate((byte*)pByte, length);
             }
+        }
+
+        private unsafe static ushort Calcuate(byte* pByte, int length)
+        {
+            var remaining = length;
+            var ptr = pByte;
+
+            ulong sum = 0;
+
+            while (remaining >= sizeof(ulong))
+            {
+                remaining -= 8;
+
+                var ulong0 = *(ulong*)ptr;
+                ptr += 8;
+
+                sum += ulong0;
+                if (sum < ulong0)
+                {
+                    sum++;
+                }
+            }
+
+            if ((remaining & 4) != 0)
+            {
+                var uint0 = *(uint*)ptr;
+                ptr += 4;
+
+                sum += uint0;
+                if (sum < uint0)
+                {
+                    sum++;
+                }
+            }
+
+            if ((remaining & 2) != 0)
+            {
+                var ushort0 = *(ushort*)ptr;
+                ptr += 2;
+
+                sum += ushort0;
+                if (sum < ushort0)
+                {
+                    sum++;
+                }
+            }
+
+            if ((remaining & 1) != 0)
+            {
+                var byte0 = *ptr;
+
+                sum += byte0;
+                if (sum < byte0)
+                {
+                    sum++;
+                }
+            }
+
+            // Fold down to 16 bits
+            var uint1 = (uint)sum;
+            var uint2 = (uint)(sum >> 32);
+            uint1 += uint2;
+            if (uint1 < uint2)
+            {
+                uint1++;
+            }
+
+            var ushort1 = (ushort)uint1;
+            var ushort2 = (ushort)(uint1 >> 16);
+            ushort1 += ushort2;
+            if (ushort1 < ushort2)
+            {
+                ushort1++;
+            }
+
+            // Invert to get ones-complement result 
+            return (ushort)~ushort1;
         }
     }
 }
