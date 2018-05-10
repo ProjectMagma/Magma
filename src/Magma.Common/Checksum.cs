@@ -11,35 +11,39 @@ namespace Magma.Network
             {
                 var pByte = (byte*)ptr;
 
-                long sum = 0;
+                ulong sum = 0;
 
-                var pLong = (long*)ptr;
-                while (length >= sizeof(long))
+                var pLong = (ulong*)ptr;
+                while (length >= sizeof(ulong))
                 {
-                    var s = *pLong++;
+                    length -= 8;
+                    var s = *pLong;
+
+                    pLong++;
                     sum += s;
                     if (sum < s) sum++;
-                    length -= 8;
                 }
 
                 pByte = (byte*)pLong;
                 if ((length & 4) != 0)
                 {
                     var s = *(uint*)pByte;
+                    pByte += 4;
+
                     sum += s;
                     if (sum < s) sum++;
-                    pByte += 4;
                 }
 
                 if ((length & 2) != 0)
                 {
                     var s = *(ushort*)pByte;
+                    pByte += 2;
+
                     sum += s;
                     if (sum < s) sum++;
-                    pByte += 2;
                 }
 
-                if ((length & 1) != 0)
+                if (length != 0)
                 {
                     var s = *pByte;
                     sum += s;

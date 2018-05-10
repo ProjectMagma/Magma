@@ -73,7 +73,7 @@ namespace Magma.NetMap.Host
                             WriteLine($"Data -> {BitConverter.ToString(data.ToArray())}");
                             if (IcmpV4.TryConsume(ref data, out var icmpIn))
                             {
-                                WriteLine($"{icmpIn.ToString()} {icmpIn.ValidateChecksum(ipIn.DataLength)}");
+                                WriteLine($"{icmpIn.ToString()} {icmpIn.IsChecksumValid(ipIn.DataLength)}");
 
                                 //if (!icmpIn.ValidateChecksum(ipIn.DataLength))
                                 //{
