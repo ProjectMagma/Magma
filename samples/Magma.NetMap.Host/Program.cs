@@ -65,7 +65,7 @@ namespace Magma.NetMap.Host
                             }
                             else
                             {
-                                WriteLine($"TCP not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}...");
+                                WriteLine($"TCP not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
                             }
                         }
                         else if (protocol == ProtocolNumber.Icmp)
@@ -125,27 +125,27 @@ namespace Magma.NetMap.Host
                             }
                             else
                             {
-                                WriteLine($"IcmpV4 not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}...");
+                                WriteLine($"IcmpV4 not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
                             }
                         }
                         else
                         {
-                            WriteLine($"Other protocol {protocol.ToString()} ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}...");
+                            WriteLine($"Other protocol {protocol.ToString()} ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
                         }
                     }
                     else
                     {
-                        WriteLine($"IPv4 not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}...");
+                        WriteLine($"IPv4 not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
                     }
                 }
                 else
                 {
-                    WriteLine($"{ etherIn.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}...");
+                    WriteLine($"{ etherIn.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
                 }
             }
             else
             {
-                WriteLine($"Ether not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}...");
+                WriteLine($"Ether not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
             }
             WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
 
