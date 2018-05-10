@@ -4,6 +4,15 @@ namespace Magma.Network
 {
     public static class Checksum
     {
+        public unsafe static bool IsValid<T>(in T buffer, int length)
+            where T : unmanaged
+        {
+            fixed (T* pByte = &buffer)
+            {
+                return Calcuate((byte*)pByte, length) == 0 ? true : false;
+            }
+        }
+
         public unsafe static ushort Calcuate<T>(in T buffer, int length)
             where T : unmanaged
         {

@@ -47,6 +47,6 @@ namespace Magma.Network.Header
                   + "|";
         }
 
-        public static bool IsChecksumValid(ref byte IcmpStart, int length) => Checksum.Calcuate(IcmpStart, length) == 0 ? true : false;
+        public static bool IsChecksumValid(ref byte IcmpStart, int length) => Checksum.IsValid(IcmpStart, length);
     }
 }
