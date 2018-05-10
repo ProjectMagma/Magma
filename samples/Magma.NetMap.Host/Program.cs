@@ -104,14 +104,14 @@ namespace Magma.NetMap.Host
                                         ipOuput.SourceAddress = ipOuput.DestinationAddress;
                                         ipOuput.DestinationAddress = srcIp;
                                         ipOuput.HeaderChecksum = 0;
-                                        ipOuput.HeaderChecksum = Checksum.Calcuate(in ipOuput, Unsafe.SizeOf<IPv4>());
+                                        ipOuput.HeaderChecksum = Checksum.Calcuate(ref current, Unsafe.SizeOf<IPv4>());
 
                                         current = ref Unsafe.Add(ref current, Unsafe.SizeOf<IPv4>());
 
                                         ref var icmpOutput = ref Unsafe.As<byte, IcmpV4>(ref current);
                                         icmpOutput.Code = Code.EchoReply;
                                         icmpOutput.HeaderChecksum = 0;
-                                        icmpOutput.HeaderChecksum = Checksum.Calcuate(in icmpOutput, ipIn.DataLength);
+                                        icmpOutput.HeaderChecksum = Checksum.Calcuate(ref current, ipIn.DataLength);
 
                                         if (!IcmpV4.IsChecksumValid(ref Unsafe.As<IcmpV4, byte>(ref icmpOutput), ipIn.DataLength))
                                         {

@@ -26,13 +26,13 @@ namespace Magma.Common.Facts
 
             var checksum = icmpIn.HeaderChecksum;
 
-            Assert.Equal(0, Checksum.Calcuate(MemoryMarshal.GetReference(data), IcpmPacket.Length));
+            Assert.Equal(0, Checksum.Calcuate(ref MemoryMarshal.GetReference(data), IcpmPacket.Length));
 
             icmpIn.HeaderChecksum = 0;
             var changedData = new Span<byte>(&icmpIn, Unsafe.SizeOf<IcmpV4>());
             changedData.CopyTo(data);
 
-            var newChecksum = Checksum.Calcuate(MemoryMarshal.GetReference(data), IcpmPacket.Length);
+            var newChecksum = Checksum.Calcuate(ref MemoryMarshal.GetReference(data), IcpmPacket.Length);
 
             Assert.Equal(checksum, newChecksum);
         }
