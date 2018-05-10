@@ -36,7 +36,7 @@ namespace Magma.NetMap.Host
             _ringId = ringId;
         }
 
-        public bool TryConsume(int ringId, Span<byte> input)
+        public unsafe bool TryConsume(int ringId, Span<byte> input)
         {
             var data = input;
             if (Ethernet.TryConsume(ref data, out var etherIn))
@@ -111,9 +111,12 @@ namespace Magma.NetMap.Host
                                         icmpOutput.HeaderChecksum = 0;
                                         icmpOutput.HeaderChecksum = Checksum.Calcuate(in icmpOutput, ipIn.DataLength);
 
+                                        if (!IcmpV4.IsChecksumValid(ref Unsafe.As<IcmpV4, byte>(ref icmpOutput), ipIn.DataLength))
+                                        {
+                                            WriteLine($"Out Icmp (Checksum Invalid) -> {BitConverter.ToString(new Span<byte>(Unsafe.AsPointer(ref icmpOutput), ipIn.DataLength).ToArray())}");
+                                        }
+
                                         _transmitter.SendBuffer(txMemory.Slice(0, input.Length));
-                                        WriteLine($"RECEIVED ---> {BitConverter.ToString(input.ToArray())}...");
-                                        WriteLine($"SENT     ---> {BitConverter.ToString(txMemory.Slice(0, input.Length).ToArray())}...");
                                         _transmitter.ForceFlush();
                                         return true;
                                     }
