@@ -70,16 +70,16 @@ namespace Magma.NetMap.Host
                         }
                         else if (protocol == ProtocolNumber.Icmp)
                         {
-                            WriteLine($"Data {(IcmpV4.IsChecksumValid(ref MemoryMarshal.GetReference(data), ipIn.DataLength) ? "" : "(Checksum Invalid)")} -> {BitConverter.ToString(data.ToArray())}");
+                            if (!IcmpV4.IsChecksumValid(ref MemoryMarshal.GetReference(data), ipIn.DataLength))
+                            {
+                                WriteLine($"In Icmp (Checksum Invalid) -> {BitConverter.ToString(data.ToArray())}");
+                                //    // Consume packets with invalid checksums; but don't do further processing
+                                //    return true;
+                            }
+
                             if (IcmpV4.TryConsume(ref data, out var icmpIn))
                             {
                                 WriteLine($"{icmpIn.ToString()}");
-
-                                //if (!icmpIn.ValidateChecksum(ipIn.DataLength))
-                                //{
-                                //    // Consume packets with invalid checksums; but don't do further processing
-                                //    return true;
-                                //}
 
                                 if (icmpIn.Code == Code.EchoRequest)
                                 {
