@@ -38,6 +38,7 @@ namespace Magma.NetMap.Host
 
         public unsafe bool TryConsume(int ringId, Span<byte> input)
         {
+            var result = false;
             var data = input;
             if (Ethernet.TryConsume(ref data, out var etherIn))
             {
@@ -52,6 +53,7 @@ namespace Magma.NetMap.Host
                         if (!ipIn.IsChecksumValid())
                         {
                             WriteLine($"Invalid IPv4 Checksum");
+                            WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
                             // Consume packets with invalid checksums; but don't do further processing
                             return true;
                         }
@@ -118,7 +120,7 @@ namespace Magma.NetMap.Host
 
                                         _transmitter.SendBuffer(txMemory.Slice(0, input.Length));
                                         _transmitter.ForceFlush();
-                                        return true;
+                                        result = true;
                                     }
                                     else
                                     {
@@ -153,7 +155,7 @@ namespace Magma.NetMap.Host
             WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
 
             Flush();
-            return false;
+            return result;
         }
 
         private void WriteLine(string output) => _streamWriter?.WriteLine(output);
