@@ -30,7 +30,7 @@ namespace Magma.NetMap
             var epollEvent = new Libc.EPollEvent()
             {
                 data = new Libc.EPollData() { FileDescriptor = _fileDescriptor, },
-                events = Libc.EPollEvents.EPOLLIN | Libc.EPollEvents.EPOLLERR | Libc.EPollEvents.EPOLLOUT,
+                events = Libc.EPollEvents.EPOLLIN ,
             };
             if (Libc.EPollControl(epoll, Libc.EPollCommand.EPOLL_CTL_ADD, _fileDescriptor, ref epollEvent) != 0)
             {
