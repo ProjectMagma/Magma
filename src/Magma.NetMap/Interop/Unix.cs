@@ -13,6 +13,9 @@ namespace Magma.NetMap
         [DllImport("libc", EntryPoint = "ioctl", SetLastError = true)]
         public unsafe static extern int IOCtl(int descriptor, uint request, void* data);
 
+        //[DllImport("libc", EntryPoint="")]
+        //public unsafe static extern 
+
         [Flags]
         public enum OpenFlags
         {
@@ -39,7 +42,7 @@ namespace Magma.NetMap
             MAP_ANONYMOUS = 0x20,
         }
 
-        [DllImport("libc.so.6", SetLastError = true, EntryPoint = "mmap")]
+        [DllImport("libc", SetLastError = true, EntryPoint = "mmap")]
         public static extern IntPtr MMap(IntPtr addr, ulong length, MemoryMappedProtections prot, MemoryMappedFlags flags, int fd, ulong offset);
 
         [DllImport("libc", EntryPoint = "poll")]
