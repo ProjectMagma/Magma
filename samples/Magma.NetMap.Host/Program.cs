@@ -51,6 +51,7 @@ namespace Magma.NetMap.Host
 
                         if (!ipIn.IsChecksumValid())
                         {
+                            WriteLine($"Invalid IPv4 Checksum");
                             // Consume packets with invalid checksums; but don't do further processing
                             return true;
                         }
@@ -118,6 +119,10 @@ namespace Magma.NetMap.Host
                             {
                                 WriteLine($"IcmpV4 not parsed ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
                             }
+                        }
+                        else
+                        {
+                            WriteLine($"Other protocol {protocol.ToString()} ---> {BitConverter.ToString(data.ToArray()).Substring(0, 60)}...");
                         }
                     }
                     else
