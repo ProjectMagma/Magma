@@ -46,7 +46,7 @@ namespace Magma.NetMap
                     var nexti = RingNext(i);
                     ref var slot = ref GetSlot(i);
                     var buffer = GetBuffer(slot.buf_idx, slot.len);
-                    if (!_receiver.TryConsume(_ringId, buffer))
+                    if (!_receiver.TryConsume(buffer))
                     {
                         _hostTxRing.TrySendWithSwap(ref slot, ref ring);
                         _hostTxRing.ForceFlush();

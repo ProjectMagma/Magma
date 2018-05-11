@@ -36,127 +36,158 @@ namespace Magma.NetMap.Host
             _ringId = ringId;
         }
 
-        public unsafe bool TryConsume(int ringId, Span<byte> input)
+        public unsafe bool TryConsume(ReadOnlySpan<byte> input)
         {
-            var result = false;
-            var data = input;
-            if (Ethernet.TryConsume(ref data, out var etherIn))
+            bool result;
+            if (Ethernet.TryConsume(input, out var etherIn, out var data))
             {
                 WriteLine($"{etherIn.ToString()}");
 
                 if (etherIn.Ethertype == EtherType.IPv4)
                 {
-                    if (IPv4.TryConsume(ref data, out var ipIn))
-                    {
-                        WriteLine($"{ipIn.ToString()}");
-
-                        if (!ipIn.IsChecksumValid())
-                        {
-                            WriteLine($"Invalid IPv4 Checksum");
-                            WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
-                            // Consume packets with invalid checksums; but don't do further processing
-                            return true;
-                        }
-
-                        var protocol = ipIn.Protocol;
-                        if (protocol == ProtocolNumber.Tcp)
-                        {
-                            if (Tcp.TryConsume(ref data, out var tcpIn))
-                            {
-                                WriteLine($"{tcpIn.ToString()}");
-                            }
-                            else
-                            {
-                                WriteLine($"TCP not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
-                            }
-                        }
-                        else if (protocol == ProtocolNumber.Icmp)
-                        {
-                            if (!IcmpV4.IsChecksumValid(ref MemoryMarshal.GetReference(data), ipIn.DataLength))
-                            {
-                                WriteLine($"In Icmp (Checksum Invalid) -> {BitConverter.ToString(data.ToArray())}");
-                                //    // Consume packets with invalid checksums; but don't do further processing
-                                //    return true;
-                            }
-
-                            if (IcmpV4.TryConsume(ref data, out var icmpIn))
-                            {
-                                WriteLine($"{icmpIn.ToString()}");
-
-                                if (icmpIn.Code == Code.EchoRequest)
-                                {
-                                    if (_transmitter.TryGetNextBuffer(out var txMemory))
-                                    {
-                                        var output = txMemory.Span;
-                                        input.CopyTo(output);
-
-                                        // Swap destinations
-                                        ref byte current = ref MemoryMarshal.GetReference(output);
-                                        ref var etherOut = ref Unsafe.As<byte, Ethernet>(ref current);
-                                        var srcMac = etherOut.Source;
-                                        etherOut.Source = etherOut.Destination;
-                                        etherOut.Destination = srcMac;
-
-                                        current = ref Unsafe.Add(ref current, Unsafe.SizeOf<Ethernet>());
-
-                                        ref var ipOuput = ref Unsafe.As<byte, IPv4>(ref current);
-                                        var srcIp = ipOuput.SourceAddress;
-                                        ipOuput.SourceAddress = ipOuput.DestinationAddress;
-                                        ipOuput.DestinationAddress = srcIp;
-                                        ipOuput.HeaderChecksum = 0;
-                                        ipOuput.HeaderChecksum = Checksum.Calcuate(ref current, Unsafe.SizeOf<IPv4>());
-
-                                        current = ref Unsafe.Add(ref current, Unsafe.SizeOf<IPv4>());
-
-                                        ref var icmpOutput = ref Unsafe.As<byte, IcmpV4>(ref current);
-                                        icmpOutput.Code = Code.EchoReply;
-                                        icmpOutput.HeaderChecksum = 0;
-                                        icmpOutput.HeaderChecksum = Checksum.Calcuate(ref current, ipIn.DataLength);
-
-                                        if (!IcmpV4.IsChecksumValid(ref Unsafe.As<IcmpV4, byte>(ref icmpOutput), ipIn.DataLength))
-                                        {
-                                            WriteLine($"Out Icmp (Checksum Invalid) -> {BitConverter.ToString(MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref icmpOutput, ipIn.DataLength)).ToArray())}");
-                                        }
-
-                                        _transmitter.SendBuffer(txMemory.Slice(0, input.Length));
-                                        _transmitter.ForceFlush();
-                                        result = true;
-                                    }
-                                    else
-                                    {
-                                        WriteLine($"TryGetNextBuffer returned false");
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                WriteLine($"IcmpV4 not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
-                            }
-                        }
-                        else
-                        {
-                            WriteLine($"Other protocol {protocol.ToString()} ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
-                        }
-                    }
-                    else
-                    {
-                        WriteLine($"IPv4 not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
-                    }
+                    result = TryConsumeIPv4(in etherIn, data);
                 }
                 else
                 {
                     WriteLine($"{ etherIn.Ethertype.ToString().PadRight(11)} ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
+                    // Pass on to host
+                    result = false;
                 }
             }
             else
             {
                 WriteLine($"Ether not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
+                // Consume invalid IP packets and don't do further processing
+                result = true;
             }
             WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
 
             Flush();
             return result;
         }
+
+        public unsafe bool TryConsumeIPv4(in Ethernet ethernetFrame, ReadOnlySpan<byte> input)
+        {
+            if (IPv4.TryConsume(input, out var ipIn, out var data))
+            {
+                WriteLine($"{ipIn.ToString()}");
+
+                var protocol = ipIn.Protocol;
+                if (protocol == ProtocolNumber.Tcp)
+                {
+                    return TryConsumeTcp(in ethernetFrame, in ipIn, data);
+                }
+                else if (protocol == ProtocolNumber.Icmp)
+                {
+                    return TryConsumeIcmp(in ethernetFrame, in ipIn, data);
+                }
+                else
+                {
+                    WriteLine($"Other protocol {protocol.ToString()} ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
+                    // Pass to host
+                    return false;
+                }
+            }
+            else
+            {
+                // Couldn't parse; consume the invalid packet
+                return true;
+            }
+        }
+
+        public unsafe bool TryConsumeTcp(in Ethernet ethernetFrame, in IPv4 ipv4, ReadOnlySpan<byte> input)
+        {
+            if (Tcp.TryConsume(input, out var tcpIn, out var data))
+            {
+                WriteLine($"{tcpIn.ToString()}");
+                // Pass to host to deal with
+                return false;
+            }
+            else
+            {
+                WriteLine($"TCP not parsed ---> {BitConverter.ToString(input.ToArray()).MaxLength(60)}");
+                // Couldn't parse; consume the invalid packet
+                return true;
+            }
+        }
+
+        public unsafe bool TryConsumeIcmp(in Ethernet ethernetFrame, in IPv4 ipv4, ReadOnlySpan<byte> input)
+        {
+            if (!IcmpV4.IsChecksumValid(ref MemoryMarshal.GetReference(input), ipv4.DataLength))
+            {
+                WriteLine($"In Icmp (Checksum Invalid) -> {BitConverter.ToString(input.ToArray())}");
+                // Consume packets with invalid checksums; but don't do further processing
+                return true;
+            }
+
+            if (IcmpV4.TryConsume(input, out var icmpIn, out var data))
+            {
+                WriteLine($"{icmpIn.ToString()}");
+
+                if (icmpIn.Code == Code.EchoRequest)
+                {
+                    if (_transmitter.TryGetNextBuffer(out var txMemory))
+                    {
+                        var output = txMemory.Span;
+
+                        ref byte current = ref MemoryMarshal.GetReference(output);
+                        ref var etherOut = ref Unsafe.As<byte, Ethernet>(ref current);
+                        // Swap source & destination
+                        etherOut.Destination = ethernetFrame.Source;
+                        etherOut.Source = ethernetFrame.Destination;
+                        etherOut.Ethertype = ethernetFrame.Ethertype;
+
+                        current = ref Unsafe.Add(ref current, Unsafe.SizeOf<Ethernet>());
+
+                        ref var ipOuput = ref Unsafe.As<byte, IPv4>(ref current);
+                        ipOuput = ipv4;
+                        // Swap source & destination
+                        ipOuput.SourceAddress = ipv4.DestinationAddress;
+                        ipOuput.DestinationAddress = ipv4.SourceAddress;
+                        // Zero checksum and calcaulate
+                        ipOuput.HeaderChecksum = 0;
+                        ipOuput.HeaderChecksum = Checksum.Calcuate(ref current, Unsafe.SizeOf<IPv4>());
+
+                        current = ref Unsafe.Add(ref current, Unsafe.SizeOf<IPv4>());
+
+                        ref var icmpOutput = ref Unsafe.As<byte, IcmpV4>(ref current);
+                        icmpOutput.Code = Code.EchoReply;
+
+                        current = ref Unsafe.Add(ref current, Unsafe.SizeOf<IcmpV4>());
+                        // Copy input data to output
+                        data.CopyTo(MemoryMarshal.CreateSpan(ref current, data.Length));
+                        // Zero checksum and calcaulate
+                        icmpOutput.HeaderChecksum = 0;
+                        icmpOutput.HeaderChecksum = Checksum.Calcuate(ref current, ipv4.DataLength);
+
+                        if (!IcmpV4.IsChecksumValid(ref Unsafe.As<IcmpV4, byte>(ref icmpOutput), ipv4.DataLength))
+                        {
+                            WriteLine($"Out Icmp (Checksum Invalid) -> {BitConverter.ToString(MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref icmpOutput, ipv4.DataLength)).ToArray())}");
+                        }
+
+                        _transmitter.SendBuffer(txMemory.Slice(0, input.Length));
+                        _transmitter.ForceFlush();
+                    }
+                    else
+                    {
+                        WriteLine($"TryGetNextBuffer returned false");
+                    }
+                    return true;
+                }
+                else
+                {
+                    // Pass other types onto host
+                    return false;
+                }
+            }
+            else
+            {
+                WriteLine($"IcmpV4 not parsed ---> {BitConverter.ToString(data.ToArray()).MaxLength(60)}");
+                // Consume invalid packets; and don't do further processing
+                return true;
+            }
+        }
+
 
         private void WriteLine(string output) => _streamWriter?.WriteLine(output);
         private void Flush() => _streamWriter?.Flush();

@@ -25,16 +25,17 @@ namespace Magma.Network.Header
         public short Identifier;
         public short SequenceNumber;
 
-        public static bool TryConsume(ref Span<byte> span, out IcmpV4 icmp)
+        public static bool TryConsume(ReadOnlySpan<byte> input, out IcmpV4 icmp, out ReadOnlySpan<byte> data)
         {
-            if (span.Length >= Unsafe.SizeOf<IcmpV4>())
+            if (input.Length >= Unsafe.SizeOf<IcmpV4>())
             {
-                icmp = Unsafe.As<byte, IcmpV4>(ref MemoryMarshal.GetReference(span));
+                icmp = Unsafe.As<byte, IcmpV4>(ref MemoryMarshal.GetReference(input));
                 // CRC check
-                span = span.Slice(Unsafe.SizeOf<IcmpV4>());
+                data = input.Slice(Unsafe.SizeOf<IcmpV4>());
                 return true;
             }
 
+            data = default;
             icmp = default;
             return false;
         }
