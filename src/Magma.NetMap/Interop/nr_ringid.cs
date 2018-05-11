@@ -11,6 +11,5 @@ namespace Magma.NetMap.Interop
         NETMAP_RING_MASK = 0x0fff,  /* the ring number */
         NETMAP_NO_TX_POLL = 0x1000, /* no automatic txsync on poll */
         NETMAP_DO_RX_POLL = 0x8000,	/* DO automatic rxsync on poll */
-
     }
 }
