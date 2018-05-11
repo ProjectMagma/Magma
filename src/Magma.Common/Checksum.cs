@@ -5,23 +5,23 @@ namespace Magma.Network
 {
     public static class Checksum
     {
-        public unsafe static bool IsValid(ref byte buffer, int length)
+        public static bool IsValid(ref byte buffer, int length)
             => Calcuate(ref buffer, length) == 0 ? true : false;
 
-        public unsafe static ushort Calcuate(ref byte buffer, int length)
+        // Internet Checksum as defined by RFC 791, RFC 793, RFC 1071, RFC 1141, RFC 1624
+        public static ushort Calcuate(ref byte buffer, int length)
         {
-            var remaining = length;
-            ref var ptr = ref buffer;
-
+            ref var current = ref buffer;
             ulong sum = 0;
 
-            while (remaining >= sizeof(ulong))
+            while (length >= sizeof(ulong))
             {
-                remaining -= 8;
+                length -= sizeof(ulong);
 
-                var ulong0 = Unsafe.As<byte, ulong>(ref ptr);
-                ptr = ref Unsafe.Add(ref ptr, 8);
+                var ulong0 = Unsafe.As<byte, ulong>(ref current);
+                current = ref Unsafe.Add(ref current, sizeof(ulong));
 
+                // Add with carry
                 sum += ulong0;
                 if (sum < ulong0)
                 {
@@ -29,11 +29,12 @@ namespace Magma.Network
                 }
             }
 
-            if ((remaining & 4) != 0)
+            if ((length & sizeof(uint)) != 0)
             {
-                var uint0 = Unsafe.As<byte, uint>(ref ptr);
-                ptr = ref Unsafe.Add(ref ptr, 4);
+                var uint0 = Unsafe.As<byte, uint>(ref current);
+                current = ref Unsafe.Add(ref current, sizeof(uint));
 
+                // Add with carry
                 sum += uint0;
                 if (sum < uint0)
                 {
@@ -41,11 +42,12 @@ namespace Magma.Network
                 }
             }
 
-            if ((remaining & 2) != 0)
+            if ((length & sizeof(ushort)) != 0)
             {
-                var ushort0 = Unsafe.As<byte, ushort>(ref ptr);
-                ptr = ref Unsafe.Add(ref ptr, 2);
+                var ushort0 = Unsafe.As<byte, ushort>(ref current);
+                current = ref Unsafe.Add(ref current, sizeof(ushort));
 
+                // Add with carry
                 sum += ushort0;
                 if (sum < ushort0)
                 {
@@ -53,10 +55,11 @@ namespace Magma.Network
                 }
             }
 
-            if ((remaining & 1) != 0)
+            if ((length & sizeof(byte)) != 0)
             {
-                var byte0 = ptr;
+                var byte0 = current;
 
+                // Add with carry
                 sum += byte0;
                 if (sum < byte0)
                 {
@@ -65,17 +68,22 @@ namespace Magma.Network
             }
 
             // Fold down to 16 bits
-            var uint1 = (uint)sum;
-            var uint2 = (uint)(sum >> 32);
+
+            var uint1 = (uint)(sum >> 32);
+            var uint2 = (uint)sum;
+
+            // Add with carry
             uint1 += uint2;
             if (uint1 < uint2)
             {
                 uint1++;
             }
 
-            var ushort1 = (ushort)uint1;
-            var ushort2 = (ushort)(uint1 >> 16);
-            ushort1 += ushort2;
+            var ushort2 = (ushort)uint1;
+            var ushort1 = (ushort)(uint1 >> 16);
+
+            // Add with carry
+            ushort1 = (ushort)(ushort1 + ushort2);
             if (ushort1 < ushort2)
             {
                 ushort1++;
