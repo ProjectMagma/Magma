@@ -12,16 +12,16 @@ namespace Magma.Link.Facts
         {
             var frame = ValidFrame.HexToByteArray().AsSpan();
 
-            Assert.True(Network.Header.Ethernet.TryConsume(ref frame, out var ethernet));
+            Assert.True(Network.Header.Ethernet.TryConsume(frame, out var ethernet, out var data));
 
-            Assert.Equal(72, frame.Length);
+            Assert.Equal(72, data.Length);
         }
 
         [Fact]
         public void FromMacAddressCorrect()
         {
             var frame = ValidFrame.HexToByteArray().AsSpan();
-            Assert.True(Network.Header.Ethernet.TryConsume(ref frame, out var ethernet));
+            Assert.True(Network.Header.Ethernet.TryConsume(frame, out var ethernet, out var data));
 
         }
     }
