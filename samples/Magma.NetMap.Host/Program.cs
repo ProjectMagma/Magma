@@ -156,6 +156,7 @@ namespace Magma.NetMap.Host
                         current = ref Unsafe.Add(ref current, Unsafe.SizeOf<IPv4>());
 
                         ref var icmpOutput = ref Unsafe.As<byte, IcmpV4>(ref current);
+                        icmpOutput = icmpIn;
                         icmpOutput.Code = Code.EchoReply;
 
                         current = ref Unsafe.Add(ref current, Unsafe.SizeOf<IcmpV4>());
