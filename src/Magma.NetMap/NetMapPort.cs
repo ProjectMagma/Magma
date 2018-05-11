@@ -52,7 +52,7 @@ namespace Magma.NetMap
             }
             _fileDescriptor = Libc.Open("/dev/netmap", OpenFlags.O_RDWR);
             if (!_fileDescriptor.IsValid) throw new InvalidOperationException("Unable to open /dev/netmap is the kernel module running? Have you run with sudo?");
-            if (Libc.IOCtl(_fileDescriptor, IOControlCommand.NIOCREGIF, ref request) != 0)
+            if (IOCtl(_fileDescriptor, IOControlCommand.NIOCREGIF, ref request) != 0)
             {
                 throw new InvalidOperationException($"Netmap opened but unable to open the interface {_interfaceName}");
             }
@@ -91,22 +91,29 @@ namespace Magma.NetMap
             }
             var rxHost = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(span);
 
+            var rxTxPairs = new RxTxPair[txOffsets.Length + 1];
+            for(var i = 0; i < rxTxPairs.Length - 1;i++)
+            {
+                rxTxPairs[i] = new RxTxPair(_interfaceName, i, false);
+            }
+            rxTxPairs[rxTxPairs.Length - 1] = new RxTxPair(_interfaceName, rxTxPairs.Length - 1, true);
+
             _transmitRings = new NetMapTransmitRing[txOffsets.Length];
             for (var i = 0; i < txOffsets.Length; i++)
             {
-                _transmitRings[i] = new NetMapTransmitRing(_interfaceName, ishost:false, (byte*)_mappedRegion.ToPointer(), txOffsets[i], _fileDescriptor);
+                _transmitRings[i] = new NetMapTransmitRing(rxTxPairs[i], (byte*)_mappedRegion.ToPointer(), txOffsets[i]);
                 _allRings.Add(_transmitRings[i]);
             }
 
-            _hostRxRing = new NetMapHostRxRing(_interfaceName,(byte*)_mappedRegion.ToPointer(), rxHost, _fileDescriptor, _transmitRings[0]);
-            _hostTxRing = new NetMapTransmitRing(_interfaceName, ishost: true, (byte*)_mappedRegion.ToPointer(), txHost, _fileDescriptor);
+            _hostRxRing = new NetMapHostRxRing(rxTxPairs[rxTxPairs.Length -1],(byte*)_mappedRegion.ToPointer(), rxHost, _transmitRings[0]);
+            _hostTxRing = new NetMapTransmitRing(rxTxPairs[rxTxPairs.Length-1], (byte*)_mappedRegion.ToPointer(), txHost);
             _allRings.Add(_hostRxRing);
             _allRings.Add(_hostTxRing);
             
             _receiveRings = new NetMapReceiveRing<TPacketReceiver>[rxOffsets.Length];
             for(var i = 0; i < rxOffsets.Length;i++)
             {
-                _receiveRings[i] = new NetMapReceiveRing<TPacketReceiver>(_interfaceName,(byte*)_mappedRegion.ToPointer(), rxOffsets[i], _createReceiver(_transmitRings[i]), _hostTxRing);
+                _receiveRings[i] = new NetMapReceiveRing<TPacketReceiver>((byte*)_mappedRegion.ToPointer(), rxTxPairs[i], rxOffsets[i], _createReceiver(_transmitRings[i]), _hostTxRing);
                 _allRings.Add(_transmitRings[i]);
             }
         }
