@@ -5,10 +5,10 @@ namespace Magma.Network
 {
     public static class Checksum
     {
-        public unsafe static bool IsValid(ref byte buffer, int length)
+        public static bool IsValid(ref byte buffer, int length)
             => Calcuate(ref buffer, length) == 0 ? true : false;
 
-        public unsafe static ushort Calcuate(ref byte buffer, int length)
+        public static ushort Calcuate(ref byte buffer, int length)
         {
             var remaining = length;
             ref var ptr = ref buffer;
