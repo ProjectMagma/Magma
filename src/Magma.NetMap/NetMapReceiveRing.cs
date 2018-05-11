@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading;
 using Magma.NetMap.Interop;
 using Magma.Network.Abstractions;
-using static Magma.NetMap.Interop.Libc;
 
 namespace Magma.NetMap
 {
@@ -15,13 +14,12 @@ namespace Magma.NetMap
         private TPacketReceiver _receiver;
         private NetMapTransmitRing _hostTxRing;
 
-        internal unsafe NetMapReceiveRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
+        internal unsafe NetMapReceiveRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
             : base(interfaceName, isTxRing: false, isHost: false, memoryRegion, rxQueueOffset)
         {
             _hostTxRing = hostTxRing;
             _receiver = receiver;
             _worker = new Thread(new ThreadStart(ThreadLoop));
-            _worker.IsBackground = true;
             _worker.Start();
         }
 
@@ -44,7 +42,7 @@ namespace Magma.NetMap
                 while (!IsRingEmpty())
                 {
 
-                    var i = ring.Cursor;
+                    var i = ring.cur;
                     var nexti = RingNext(i);
                     ref var slot = ref GetSlot(i);
                     var buffer = GetBuffer(slot.buf_idx, slot.len);
@@ -55,8 +53,8 @@ namespace Magma.NetMap
                     }
                     else
                     {
-                        ring.Cursor = nexti;
-                        ring.Head = nexti;
+                        ring.cur = nexti;
+                        ring.head = nexti;
                     }
 
                 }

@@ -11,7 +11,7 @@ namespace Magma.NetMap.Interop
         internal extern static int EPollWait(EPollHandle __epfd, ref EPollEvent __events, int __maxevents, int __timeout);
 
         [DllImport("libc", EntryPoint = "epoll_ctl")]
-        internal extern static int EPollControl(EPollHandle __epfd, EPollCommand __op, FileDescriptor __fd, ref EPollEvent __event);
+        internal extern static int EPollControl(EPollHandle __epfd, EPollCommand __op, int __fd, ref EPollEvent __event);
 
         [DllImport("libc", EntryPoint = "epoll_create1")]
         internal extern static EPollHandle EPollCreate(int __flags);
@@ -25,7 +25,7 @@ namespace Magma.NetMap.Interop
         internal struct EPollData
         {
             public IntPtr ptr;
-            public FileDescriptor FileDescriptor;
+            public int FileDescriptor;
             public uint u32;
             public ulong u64;
         }
