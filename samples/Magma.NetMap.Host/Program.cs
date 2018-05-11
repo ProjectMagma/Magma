@@ -115,7 +115,7 @@ namespace Magma.NetMap.Host
 
                                         if (!IcmpV4.IsChecksumValid(ref Unsafe.As<IcmpV4, byte>(ref icmpOutput), ipIn.DataLength))
                                         {
-                                            WriteLine($"Out Icmp (Checksum Invalid) -> {BitConverter.ToString(new Span<byte>(Unsafe.AsPointer(ref icmpOutput), ipIn.DataLength).ToArray())}");
+                                            WriteLine($"Out Icmp (Checksum Invalid) -> {BitConverter.ToString(MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref icmpOutput, ipIn.DataLength)).ToArray())}");
                                         }
 
                                         _transmitter.SendBuffer(txMemory.Slice(0, input.Length));
