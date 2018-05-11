@@ -74,6 +74,7 @@ namespace Magma.NetMap
                 else
                 {
                     //No space so we will spin or backpressure
+                    Console.WriteLine($"---------------------------------------Ring space was {RingSpace(cursor)}");
                     return -1;
                 }
             }
