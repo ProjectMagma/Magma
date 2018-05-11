@@ -51,7 +51,6 @@ namespace Magma.NetMap
             }
             request.nr_flags |= (isTxRing ? NetMapRequestFlags.NR_TX_RINGS_ONLY : NetMapRequestFlags.NR_RX_RINGS_ONLY);
 
-            Console.WriteLine($"Getting FD for Receive RingID {_ringId}");
             var textbytes = Encoding.ASCII.GetBytes(interfaceName + "\0");
             fixed (void* txtPtr = textbytes)
             {
