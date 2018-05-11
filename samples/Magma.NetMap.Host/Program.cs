@@ -147,6 +147,10 @@ namespace Magma.NetMap.Host
                         // Zero checksum and calcaulate
                         ipOuput.HeaderChecksum = 0;
                         ipOuput.HeaderChecksum = Checksum.Calcuate(ref current, Unsafe.SizeOf<IPv4>());
+                        if (!ipOuput.IsChecksumValid())
+                        {
+                            WriteLine($"Out IP (Checksum Invalid) -> {BitConverter.ToString(MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref ipOuput, Unsafe.SizeOf<IPv4>())).ToArray())}");
+                        }
 
                         current = ref Unsafe.Add(ref current, Unsafe.SizeOf<IPv4>());
 
