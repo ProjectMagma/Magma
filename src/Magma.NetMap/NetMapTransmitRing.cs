@@ -79,6 +79,7 @@ namespace Magma.NetMap
                     if (slotIndex == -1)
                     {
                         Thread.SpinWait(SPINCOUNT);
+                        Console.WriteLine($"Spinning because of no available buffer head {RingInfo().Head} cursor {RingInfo().Cursor}");
                         continue;
                     }
                     sourceRing.Cursor = RingNext(sourceRing.Cursor);
