@@ -38,6 +38,7 @@ namespace Magma.NetMap.Host
 
         public unsafe bool TryConsume(ReadOnlySpan<byte> input)
         {
+            WriteLine($"---> Received {input.Length} byte packet");
             bool result;
             if (Ethernet.TryConsume(input, out var etherIn, out var data))
             {
@@ -170,6 +171,12 @@ namespace Magma.NetMap.Host
                             WriteLine($"{ipv4.DataLength}:{ipOuput.DataLength}:{span.Length}");
                             WriteLine($"Out Icmp (Checksum Invalid) -> {BitConverter.ToString(span.ToArray())}");
                         }
+
+                        var length = Unsafe.ByteOffset(ref Unsafe.As<Ethernet, byte>(ref etherOut), ref current).ToInt32() + data.Length;
+                        WriteLine($"<--- Sending {length} byte packet");
+                        WriteLine(etherOut.ToString());
+                        WriteLine(ipOuput.ToString());
+                        WriteLine(icmpOutput.ToString());
 
                         _transmitter.SendBuffer(txMemory.Slice(0, Unsafe.ByteOffset(ref Unsafe.As<Ethernet, byte>(ref etherOut), ref current).ToInt32() + data.Length));
                         _transmitter.ForceFlush();
