@@ -8,8 +8,6 @@ namespace Magma.NetMap.Interop
     public class RxTxPair
     {
         private FileDescriptor _fileDescriptor;
-        private FileDescriptor _eventFD;
-        private EPollHandle _epoll;
         private int _ringId;
         private bool _isHostStack;
 
@@ -17,8 +15,6 @@ namespace Magma.NetMap.Interop
         {
             _ringId = ringId;
             _isHostStack = isHostStack;
-            _eventFD = CreateEventFD(0, EventFDFlags.EFD_NONBLOCK | EventFDFlags.EFD_SEMAPHORE);
-            _epoll = EPollCreate(0);
             _fileDescriptor = Open("/dev/netmap", OpenFlags.O_RDWR);
             if (!_fileDescriptor.IsValid) ExceptionHelper.ThrowInvalidOperation($"Unable to open the /dev/netmap device {_fileDescriptor}");
             var request = new NetMapRequest
