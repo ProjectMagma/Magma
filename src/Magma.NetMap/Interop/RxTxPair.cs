@@ -26,6 +26,7 @@ namespace Magma.NetMap.Interop
             if (_isHostStack)
             {
                 request.nr_flags = NetMapRequestFlags.NR_REG_SW;
+                request.nr_ringid = 0;
             }
             else
             {

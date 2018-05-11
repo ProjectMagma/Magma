@@ -18,7 +18,7 @@ namespace Magma.NetMap
         protected readonly int _ringId;
         private readonly NetmapSlot* _rxRing;
         protected readonly byte* _bufferStart;
-        protected NetMapBufferPool _bufferPool;
+        internal NetMapBufferPool _bufferPool;
         protected RxTxPair _rxTxPair;
 
         protected NetMapRing(RxTxPair rxTxPair, byte* memoryRegion, ulong rxQueueOffset)
