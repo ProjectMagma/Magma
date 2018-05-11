@@ -8,6 +8,7 @@ namespace Magma.Network
         public static bool IsValid(ref byte buffer, int length)
             => Calcuate(ref buffer, length) == 0 ? true : false;
 
+        // Internet Checksum as defined by RFC 791, RFC 793, RFC 1071, RFC 1141, RFC 1624
         public static ushort Calcuate(ref byte buffer, int length)
         {
             ref var current = ref buffer;
