@@ -174,8 +174,6 @@ namespace Magma.NetMap.Host
                 interfaceName = args[0];
             }
 
-            Console.WriteLine($"Ethernet Header length: {Unsafe.SizeOf<Ethernet>()}");
-            Console.WriteLine($"IP Header length: {Unsafe.SizeOf<IPv4>()}");
             Console.WriteLine($"TCP Header length: {Unsafe.SizeOf<Tcp>()}");
 
             var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, log: true, loggingToFile: false));
