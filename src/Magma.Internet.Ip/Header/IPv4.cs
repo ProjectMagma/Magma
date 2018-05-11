@@ -152,23 +152,22 @@ namespace Magma.Network.Header
             set => _destinationIPAdress = value;
         }
 
-        public static bool TryConsume(ref Span<byte> span, out IPv4 ip)
+        public static bool TryConsume(ReadOnlySpan<byte> input, out IPv4 ip, out ReadOnlySpan<byte> data)
         {
-            if (span.Length >= Unsafe.SizeOf<IPv4>())
+            if (input.Length >= Unsafe.SizeOf<IPv4>())
             {
-                ip = Unsafe.As<byte, IPv4>(ref MemoryMarshal.GetReference(span));
+                ip = Unsafe.As<byte, IPv4>(ref MemoryMarshal.GetReference(input));
                 var totalSize = ip.TotalLength;
                 var headerSize = ip.HeaderLength;
-                if ((uint)totalSize < (uint)headerSize || (uint)totalSize > (uint)span.Length)
+                if ((uint)totalSize >= (uint)headerSize && (uint)totalSize == (uint)input.Length && ip.IsChecksumValid())
                 {
-                    return false;
+                    data = input.Slice(headerSize);
+                    return true;
                 }
-                // Checksum check
-                span = span.Slice(headerSize);
-                return true;
             }
 
             ip = default;
+            data = default;
             return false;
         }
 

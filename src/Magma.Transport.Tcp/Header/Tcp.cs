@@ -129,17 +129,18 @@ namespace Magma.Network.Header
         //          The padding is composed of zeros.
 
 
-        public static bool TryConsume(ref Span<byte> span, out Tcp tcp)
+        public static bool TryConsume(ReadOnlySpan<byte> input, out Tcp tcp, out ReadOnlySpan<byte> data)
         {
-            if (span.Length >= Unsafe.SizeOf<Tcp>())
+            if (input.Length >= Unsafe.SizeOf<Tcp>())
             {
-                tcp = Unsafe.As<byte, Tcp>(ref MemoryMarshal.GetReference(span));
+                tcp = Unsafe.As<byte, Tcp>(ref MemoryMarshal.GetReference(input));
                 // Checksum check
-                span = span.Slice(Unsafe.SizeOf<Tcp>(), span.Length - (Unsafe.SizeOf<Tcp>()));
+                data = input.Slice(Unsafe.SizeOf<Tcp>(), input.Length - (Unsafe.SizeOf<Tcp>()));
                 return true;
             }
 
             tcp = default;
+            data = default;
             return false;
         }
 

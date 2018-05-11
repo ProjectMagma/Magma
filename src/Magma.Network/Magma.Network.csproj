@@ -2,9 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Magma.Internet.Ip\Magma.Internet.Ip.csproj" />
+    <ProjectReference Include="..\Magma.Link\Magma.Link.csproj" />
     <ProjectReference Include="..\Magma.Network.Abstractions\Magma.Network.Abstractions.csproj" />
   </ItemGroup>
 

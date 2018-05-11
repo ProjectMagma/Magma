@@ -12,16 +12,17 @@ namespace Magma.Network.Header
         public MacAddress Source;
         public EtherType Ethertype;
 
-        public static bool TryConsume(ref Span<byte> span, out Ethernet ethernet)
+        public static bool TryConsume(ReadOnlySpan<byte> input, out Ethernet ethernetFrame, out ReadOnlySpan<byte> data)
         {
-            if (span.Length >= Unsafe.SizeOf<Ethernet>())
+            if (input.Length >= Unsafe.SizeOf<Ethernet>())
             {
-                ethernet = Unsafe.As<byte, Ethernet>(ref MemoryMarshal.GetReference(span));
-                span = span.Slice(Unsafe.SizeOf<Ethernet>(), span.Length - (Unsafe.SizeOf<Ethernet>()));
+                ethernetFrame = Unsafe.As<byte, Ethernet>(ref MemoryMarshal.GetReference(input));
+                data = input.Slice(Unsafe.SizeOf<Ethernet>(), input.Length - (Unsafe.SizeOf<Ethernet>()));
                 return true; 
             }
-            
-            ethernet = default;
+
+            ethernetFrame = default;
+            data = default;
             return false;
         }
 
