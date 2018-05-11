@@ -162,7 +162,7 @@ namespace Magma.NetMap.Host
                         data.CopyTo(MemoryMarshal.CreateSpan(ref current, data.Length));
                         // Zero checksum and calcaulate
                         icmpOutput.HeaderChecksum = 0;
-                        icmpOutput.HeaderChecksum = Checksum.Calcuate(ref current, ipv4.DataLength);
+                        icmpOutput.HeaderChecksum = Checksum.Calcuate(ref Unsafe.As<IcmpV4, byte>(ref icmpOutput), ipv4.DataLength);
 
                         if (!IcmpV4.IsChecksumValid(ref Unsafe.As<IcmpV4, byte>(ref icmpOutput), ipv4.DataLength))
                         {
