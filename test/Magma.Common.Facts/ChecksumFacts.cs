@@ -19,20 +19,19 @@ namespace Magma.Common.Facts
         [InlineData(new byte[] {0x08, 0x00, 0x32, 0x7B, 0x00, 0x01, 0x00, 0xBD, 0x61, 0x62, 0x63, 0x64})]
         public unsafe void IcpmChecksum(byte[] IcpmPacket)
         {
-            var data = new Span<byte>(IcpmPacket);
+            var input = new Span<byte>(IcpmPacket);
 
-            var parsed = data;
-            Assert.True(IcmpV4.TryConsume(ref parsed, out var icmpIn));
+            Assert.True(IcmpV4.TryConsume(input, out var icmpIn, out var data));
 
             var checksum = icmpIn.HeaderChecksum;
 
-            Assert.Equal(0, Checksum.Calcuate(ref MemoryMarshal.GetReference(data), IcpmPacket.Length));
+            Assert.Equal(0, Checksum.Calcuate(ref MemoryMarshal.GetReference(input), IcpmPacket.Length));
 
             icmpIn.HeaderChecksum = 0;
             var changedData = new Span<byte>(&icmpIn, Unsafe.SizeOf<IcmpV4>());
-            changedData.CopyTo(data);
+            changedData.CopyTo(input);
 
-            var newChecksum = Checksum.Calcuate(ref MemoryMarshal.GetReference(data), IcpmPacket.Length);
+            var newChecksum = Checksum.Calcuate(ref MemoryMarshal.GetReference(input), IcpmPacket.Length);
 
             Assert.Equal(checksum, newChecksum);
         }
