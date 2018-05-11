@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Magma.NetMap.Interop;
+using static Magma.NetMap.Interop.Libc;
 
 namespace Magma.NetMap
 {
@@ -14,7 +15,7 @@ namespace Magma.NetMap
 
         private object _sendBufferLock = new object();
 
-        internal unsafe NetMapTransmitRing(string interfaceName, bool ishost, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor)
+        internal unsafe NetMapTransmitRing(string interfaceName, bool ishost, byte* memoryRegion, ulong rxQueueOffset, FileDescriptor fileDescriptor)
             : base(interfaceName, isTxRing: true, ishost, memoryRegion, rxQueueOffset)
         {
         }
@@ -95,6 +96,6 @@ namespace Magma.NetMap
             return false;
         }
 
-        public unsafe void ForceFlush() => Unix.IOCtl(_fileDescriptor, Consts.NIOCTXSYNC, null);
+        public unsafe void ForceFlush() => IOCtl(_fileDescriptor, IOControlCommand.NIOCTXSYNC, IntPtr.Zero);
     }
 }
