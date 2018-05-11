@@ -171,7 +171,7 @@ namespace Magma.NetMap.Host
                             WriteLine($"Out Icmp (Checksum Invalid) -> {BitConverter.ToString(span.ToArray())}");
                         }
 
-                        _transmitter.SendBuffer(txMemory.Slice(0, input.Length));
+                        _transmitter.SendBuffer(txMemory.Slice(0, Unsafe.ByteOffset(ref Unsafe.As<Ethernet, byte>(ref etherOut), ref current).ToInt32() + data.Length));
                         _transmitter.ForceFlush();
                     }
                     else
