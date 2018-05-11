@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
-using static Magma.NetMap.Interop.Netmap;
 
 namespace Magma.NetMap.Interop
 {
     [StructLayout(LayoutKind.Sequential)]
-    internal unsafe struct NetMapRequest
+    public unsafe struct NetMapRequest
     {
         public fixed byte nr_name[16];
         public uint nr_version;    /* API version */
@@ -20,9 +19,13 @@ namespace Magma.NetMap.Interop
         public ushort nr_ringid; /* ring(s) we care about */
         public nr_cmd nr_cmd;
         public ushort nr_arg1;   /* reserve extra rings in NIOCREGIF */
-        public ushort nr_arg2;
+                                 //#define NETMAP_BDG_HOST		1	/* nr_arg1 value for NETMAP_BDG_ATTACH */
+
+        public ushort nr_arg2;   /* id of the memory allocator */
         public uint nr_arg3;   /* req. extra buffers in NIOCREGIF */
-        public NetMapRequestFlags nr_flags;  
+        public uint nr_flags;  /* specify NR_REG_* mode and other flags */
+                               //#define NR_REG_MASK		0xf /* to extract NR_REG_* mode from nr_flags */
+                               /* various modes, extends nr_ringid */
         public uint spare1;
     };
 }

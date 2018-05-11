@@ -4,8 +4,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Magma.NetMap.Interop;
-using static Magma.NetMap.Interop.Libc;
-using static Magma.NetMap.Interop.Netmap;
 
 namespace Magma.NetMap
 {
@@ -16,7 +14,7 @@ namespace Magma.NetMap
 
         private object _sendBufferLock = new object();
 
-        internal unsafe NetMapTransmitRing(string interfaceName, bool ishost, byte* memoryRegion, ulong rxQueueOffset, FileDescriptor fileDescriptor)
+        internal unsafe NetMapTransmitRing(string interfaceName, bool ishost, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor)
             : base(interfaceName, isTxRing: true, ishost, memoryRegion, rxQueueOffset)
         {
         }
@@ -54,19 +52,19 @@ namespace Magma.NetMap
             lock (_sendBufferLock)
             {
                 ref var ring = ref RingInfo();
-                var newHead = RingNext(ring.Head);
-                ref var slot = ref GetSlot(ring.Head);
+                var newHead = RingNext(ring.head);
+                ref var slot = ref GetSlot(ring.head);
                 if (slot.buf_idx != manager.BufferIndex)
                 {
                     slot.buf_idx = manager.BufferIndex;
-                    slot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
+                    slot.flags = (ushort)(slot.flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
                 }
                 slot.len = (ushort)buffer.Length;
-                ring.Head = newHead;
+                ring.head = newHead;
             }
         }
 
-        internal bool TrySendWithSwap(ref NetmapSlot sourceSlot, ref NetmapRing sourceRing)
+        internal bool TrySendWithSwap(ref Netmap_slot sourceSlot, ref Netmap_ring sourceRing)
         {
             ref var ring = ref RingInfo();
             for (var loop = 0; loop < MAXLOOPTRY; loop++)
@@ -79,17 +77,17 @@ namespace Magma.NetMap
                         Thread.SpinWait(SPINCOUNT);
                         continue;
                     }
-                    sourceRing.Cursor = RingNext(sourceRing.Cursor);
+                    sourceRing.cur = RingNext(sourceRing.cur);
                     ref var slot = ref GetSlot(slotIndex);
                     var buffIndex = slot.buf_idx;
                     slot.buf_idx = sourceSlot.buf_idx;
                     slot.len = sourceSlot.len;
-                    slot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
+                    slot.flags = (ushort)(slot.flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
 
                     sourceSlot.buf_idx = buffIndex;
-                    sourceSlot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
-                    sourceRing.Head = sourceRing.Cursor;
-                    ring.Head = RingNext(slotIndex);
+                    sourceSlot.flags = (ushort)(sourceSlot.flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
+                    sourceRing.head = sourceRing.cur;
+                    ring.head = RingNext(slotIndex);
                     return true;
                 }
             }
@@ -97,6 +95,6 @@ namespace Magma.NetMap
             return false;
         }
 
-        public unsafe void ForceFlush() => Libc.IOCtl(_fileDescriptor, IOControlCommand.NIOCTXSYNC, IntPtr.Zero);
+        public unsafe void ForceFlush() => Unix.IOCtl(_fileDescriptor, Consts.NIOCTXSYNC, null);
     }
 }
