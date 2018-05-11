@@ -8,9 +8,9 @@ namespace Magma.NetMap
     {
         private readonly Thread _worker;
         private readonly NetMapTransmitRing _transmitRing;
-
-        internal unsafe NetMapHostRxRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, FileDescriptor fileDescriptor, NetMapTransmitRing transmitRing)
-            : base(interfaceName, isTxRing : false, isHost:true, memoryRegion, rxQueueOffset)
+        
+        internal unsafe NetMapHostRxRing(RxTxPair rxTxPair, byte* memoryRegion, ulong rxQueueOffset, NetMapTransmitRing transmitRing)
+            : base(rxTxPair, memoryRegion, rxQueueOffset)
         {
             _transmitRing = transmitRing;
             _worker = new Thread(new ThreadStart(ThreadLoop));
@@ -23,17 +23,8 @@ namespace Magma.NetMap
             ref var ring = ref RingInfo();
             while (true)
             {
-                var fd = new PollFileDescriptor()
-                {
-                    Events = PollEvents.POLLIN,
-                    Fd = _fileDescriptor
-                };
+                _rxTxPair.WaitForWork();
 
-                var pollResult = Poll(ref fd, 1, -1);
-                if (pollResult < 0)
-                {
-                    return;
-                }
                 var sentData = false;
                 while (!IsRingEmpty())
                 {
@@ -42,7 +33,7 @@ namespace Magma.NetMap
                     _transmitRing.TrySendWithSwap(ref GetSlot(i), ref ring);
                     sentData = true;
                 }
-                if(sentData) _transmitRing.ForceFlush();
+                if (sentData) _transmitRing.ForceFlush();
             }
         }
     }
