@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Magma.NetMap.Interop;
 using Magma.Network.Abstractions;
+using static Magma.NetMap.Interop.Libc;
+using static Magma.NetMap.Interop.Netmap;
 
 namespace Magma.NetMap
 {
@@ -18,7 +20,7 @@ namespace Magma.NetMap
         private NetMapTransmitRing _hostTxRing;
         private readonly string _interfaceName;
         private NetMapRequest _request;
-        private int _fileDescriptor;
+        private FileDescriptor _fileDescriptor;
         private IntPtr _mappedRegion;
         private NetMapInterface _netmapInterface;
         private Func<NetMapTransmitRing, TPacketReceiver> _createReceiver;
@@ -38,7 +40,7 @@ namespace Magma.NetMap
             var request = new NetMapRequest
             {
                 nr_cmd = 0,
-                nr_flags = (uint)NetMapRequestMode.NR_REG_NIC_SW,
+                nr_flags = NetMapRequestFlags.NR_REG_NIC_SW,
                 nr_ringid = 0,
                 nr_version = Consts.NETMAP_API,
                 
@@ -48,9 +50,9 @@ namespace Magma.NetMap
             {
                 Buffer.MemoryCopy(txtPtr, request.nr_name, textbytes.Length, textbytes.Length);
             }
-            _fileDescriptor = Unix.Open("/dev/netmap", Unix.OpenFlags.O_RDWR);
-            if (_fileDescriptor < 0) throw new InvalidOperationException("Unable to open /dev/netmap is the kernel module running? Have you run with sudo?");
-            if (Unix.IOCtl(_fileDescriptor, Consts.NIOCREGIF, &request) != 0)
+            _fileDescriptor = Libc.Open("/dev/netmap", OpenFlags.O_RDWR);
+            if (!_fileDescriptor.IsValid) throw new InvalidOperationException("Unable to open /dev/netmap is the kernel module running? Have you run with sudo?");
+            if (Libc.IOCtl(_fileDescriptor, Libc.IOControlCommand.NIOCREGIF, ref request) != 0)
             {
                 throw new InvalidOperationException($"Netmap opened but unable to open the interface {_interfaceName}");
             }
@@ -114,7 +116,7 @@ namespace Magma.NetMap
 
         private unsafe void MapMemory()
         {
-            var mapResult = Unix.MMap(IntPtr.Zero, _request.nr_memsize, Unix.MemoryMappedProtections.PROT_READ | Unix.MemoryMappedProtections.PROT_WRITE, Unix.MemoryMappedFlags.MAP_SHARED, _fileDescriptor, offset: 0);
+            var mapResult = MMap(IntPtr.Zero, _request.nr_memsize, MemoryMappedProtections.PROT_READ | MemoryMappedProtections.PROT_WRITE, MemoryMappedFlags.MAP_SHARED, _fileDescriptor, offset: 0);
 
             if ((long)mapResult < 0) throw new InvalidOperationException("Failed to map the memory");
 

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using Magma.NetMap.Interop;
 using Magma.Network.Header;
+using static Magma.NetMap.Interop.Libc;
 
 namespace Magma.NetMap
 {
@@ -14,7 +15,7 @@ namespace Magma.NetMap
         private readonly Thread _worker;
         private readonly NetMapTransmitRing _transmitRing;
 
-        internal unsafe NetMapHostRxRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, int fileDescriptor, NetMapTransmitRing transmitRing)
+        internal unsafe NetMapHostRxRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, FileDescriptor fileDescriptor, NetMapTransmitRing transmitRing)
             : base(interfaceName, isTxRing : false, isHost:true, memoryRegion, rxQueueOffset)
         {
             _transmitRing = transmitRing;
@@ -27,13 +28,13 @@ namespace Magma.NetMap
             ref var ring = ref RingInfo();
             while (true)
             {
-                var fd = new Unix.pollFd()
+                var fd = new PollFileDescriptor()
                 {
-                    Events = Unix.PollEvents.POLLIN,
+                    Events = PollEvents.POLLIN,
                     Fd = _fileDescriptor
                 };
 
-                var pollResult = Unix.poll(ref fd, 1, Consts.POLLTIME);
+                var pollResult = Libc.Poll(ref fd, 1, -1);
                 if (pollResult < 0)
                 {
                     //Console.WriteLine($"Poll failed on ring {_ringId} exiting polling loop");

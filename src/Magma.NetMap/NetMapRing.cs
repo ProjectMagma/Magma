@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using Magma.NetMap.Interop;
+using static Magma.NetMap.Interop.Libc;
+using static Magma.NetMap.Interop.Netmap;
 
 namespace Magma.NetMap
 {
@@ -16,7 +18,7 @@ namespace Magma.NetMap
         protected readonly int _ringId;
         private readonly Netmap_slot* _rxRing;
         protected readonly byte* _bufferStart;
-        protected int _fileDescriptor;
+        internal FileDescriptor _fileDescriptor;
         protected NetMapBufferPool _bufferPool;
 
         protected NetMapRing(string interfaceName, bool isTxRing, bool isHost, byte* memoryRegion, ulong rxQueueOffset)
@@ -31,8 +33,8 @@ namespace Magma.NetMap
 
             _rxRing = (Netmap_slot*)((long)(_memoryRegion + rxQueueOffset + Unsafe.SizeOf<Netmap_ring>() + 127 + 128) & (~0xFF));
 
-            _fileDescriptor = Unix.Open("/dev/netmap", Unix.OpenFlags.O_RDWR);
-            if (_fileDescriptor < 0) throw new InvalidOperationException($"Need to handle properly (release memory etc) error was {_fileDescriptor}");
+            _fileDescriptor = Open("/dev/netmap", OpenFlags.O_RDWR);
+            if (!_fileDescriptor.IsValid) throw new InvalidOperationException($"Need to handle properly (release memory etc) error was {_fileDescriptor}");
             var request = new NetMapRequest
             {
                 nr_cmd = 0,
@@ -41,11 +43,11 @@ namespace Magma.NetMap
             };
             if (isHost)
             {
-                request.nr_flags = (uint)NetMapRequestMode.NR_REG_SW;
+                request.nr_flags = NetMapRequestFlags.NR_REG_SW;
             }
             else
             {
-                request.nr_flags = (uint)NetMapRequestMode.NR_REG_ONE_NIC;
+                request.nr_flags = NetMapRequestFlags.NR_REG_ONE_NIC;
             }
             //request.nr_flags |= (isTxRing ? (uint)NetMapRequestFlags.NR_TX_RINGS_ONLY : (uint)NetMapRequestFlags.NR_RX_RINGS_ONLY);
 
@@ -56,7 +58,7 @@ namespace Magma.NetMap
                 Buffer.MemoryCopy(txtPtr, request.nr_name, textbytes.Length, textbytes.Length);
             }
 
-            if (Unix.IOCtl(_fileDescriptor, Consts.NIOCREGIF, &request) != 0) throw new InvalidOperationException("Failed to open an FD for a single ring");
+            if (IOCtl(_fileDescriptor, IOControlCommand.NIOCREGIF, ref request) != 0) throw new InvalidOperationException("Failed to open an FD for a single ring");
         }
 
         internal NetMapBufferPool BufferPool { set => _bufferPool = value; }
