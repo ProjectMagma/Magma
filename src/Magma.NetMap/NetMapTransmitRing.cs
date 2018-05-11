@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using Magma.NetMap.Interop;
 using static Magma.NetMap.Interop.Libc;
+using static Magma.NetMap.Interop.Netmap;
 
 namespace Magma.NetMap
 {
@@ -53,19 +54,19 @@ namespace Magma.NetMap
             lock (_sendBufferLock)
             {
                 ref var ring = ref RingInfo();
-                var newHead = RingNext(ring.head);
-                ref var slot = ref GetSlot(ring.head);
+                var newHead = RingNext(ring.Head);
+                ref var slot = ref GetSlot(ring.Head);
                 if (slot.buf_idx != manager.BufferIndex)
                 {
                     slot.buf_idx = manager.BufferIndex;
-                    slot.flags = (ushort)(slot.flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
+                    slot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
                 }
                 slot.len = (ushort)buffer.Length;
-                ring.head = newHead;
+                ring.Head = newHead;
             }
         }
 
-        internal bool TrySendWithSwap(ref Netmap_slot sourceSlot, ref Netmap_ring sourceRing)
+        internal bool TrySendWithSwap(ref NetmapSlot sourceSlot, ref NetmapRing sourceRing)
         {
             ref var ring = ref RingInfo();
             for (var loop = 0; loop < MAXLOOPTRY; loop++)
@@ -78,17 +79,17 @@ namespace Magma.NetMap
                         Thread.SpinWait(SPINCOUNT);
                         continue;
                     }
-                    sourceRing.cur = RingNext(sourceRing.cur);
+                    sourceRing.Cursor = RingNext(sourceRing.Cursor);
                     ref var slot = ref GetSlot(slotIndex);
                     var buffIndex = slot.buf_idx;
                     slot.buf_idx = sourceSlot.buf_idx;
                     slot.len = sourceSlot.len;
-                    slot.flags = (ushort)(slot.flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
+                    slot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
 
                     sourceSlot.buf_idx = buffIndex;
-                    sourceSlot.flags = (ushort)(sourceSlot.flags | (uint)netmap_slot_flags.NS_BUF_CHANGED);
-                    sourceRing.head = sourceRing.cur;
-                    ring.head = RingNext(slotIndex);
+                    sourceSlot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
+                    sourceRing.Head = sourceRing.Cursor;
+                    ring.Head = RingNext(slotIndex);
                     return true;
                 }
             }

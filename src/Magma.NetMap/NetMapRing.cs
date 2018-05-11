@@ -16,7 +16,7 @@ namespace Magma.NetMap
         protected readonly int _bufferSize;
         protected readonly int _numberOfSlots;
         protected readonly int _ringId;
-        private readonly Netmap_slot* _rxRing;
+        private readonly NetmapSlot* _rxRing;
         protected readonly byte* _bufferStart;
         internal FileDescriptor _fileDescriptor;
         protected NetMapBufferPool _bufferPool;
@@ -26,12 +26,12 @@ namespace Magma.NetMap
             _queueOffset = (long)rxQueueOffset;
             _memoryRegion = memoryRegion;
             var ringInfo = RingInfo();
-            _bufferSize = (int)ringInfo.nr_buf_size;
-            _numberOfSlots = (int)ringInfo.num_slots;
-            _bufferStart = _memoryRegion + _queueOffset + ringInfo.buf_ofs;
-            _ringId = ringInfo.ringid & (ushort)nr_ringid.NETMAP_RING_MASK;
+            _bufferSize = (int)ringInfo.BufferSize;
+            _numberOfSlots = (int)ringInfo.NumberOfSlotsPerRing;
+            _bufferStart = _memoryRegion + _queueOffset + ringInfo.BuffersOffset;
+            _ringId = ringInfo.RingId & (ushort)nr_ringid.NETMAP_RING_MASK;
 
-            _rxRing = (Netmap_slot*)((long)(_memoryRegion + rxQueueOffset + Unsafe.SizeOf<Netmap_ring>() + 127 + 128) & (~0xFF));
+            _rxRing = (NetmapSlot*)((long)(_memoryRegion + rxQueueOffset + Unsafe.SizeOf<NetmapRing>() + 127 + 128) & (~0xFF));
 
             _fileDescriptor = Open("/dev/netmap", OpenFlags.O_RDWR);
             if (!_fileDescriptor.IsValid) throw new InvalidOperationException($"Need to handle properly (release memory etc) error was {_fileDescriptor}");
@@ -62,10 +62,10 @@ namespace Magma.NetMap
         }
 
         internal NetMapBufferPool BufferPool { set => _bufferPool = value; }
-        internal unsafe ref Netmap_ring RingInfo() => ref Unsafe.AsRef<Netmap_ring>((_memoryRegion + _queueOffset));
+        internal unsafe ref NetmapRing RingInfo() => ref Unsafe.AsRef<NetmapRing>((_memoryRegion + _queueOffset));
 
         internal Span<byte> GetBuffer(uint bufferIndex) => GetBuffer(bufferIndex, (ushort)_bufferSize);
-        internal ref Netmap_slot GetSlot(int index) => ref _rxRing[index]; 
+        internal ref NetmapSlot GetSlot(int index) => ref _rxRing[index]; 
         internal unsafe IntPtr BufferStart => (IntPtr)_bufferStart;
 
         internal int BufferSize => _bufferSize;
@@ -80,7 +80,7 @@ namespace Magma.NetMap
         internal bool IsRingEmpty()
         {
             var ring = RingInfo();
-            return (ring.cur == ring.tail);
+            return (ring.Cursor == ring.Tail);
         }
 
         internal int GetCursor()
@@ -88,11 +88,11 @@ namespace Magma.NetMap
             ref var ring = ref RingInfo();
             while (true)
             {
-                var cursor = ring.cur;
+                var cursor = ring.Cursor;
                 if (RingSpace(cursor) > 0)
                 {
                     var newIndex = RingNext(cursor);
-                    if (Interlocked.CompareExchange(ref ring.cur, newIndex, cursor) == cursor)
+                    if (Interlocked.CompareExchange(ref ring.Cursor, newIndex, cursor) == cursor)
                     {
                         return cursor;
                     }
@@ -108,7 +108,7 @@ namespace Magma.NetMap
         public int RingSpace(int cursor)
         {
             var ring = RingInfo();
-            var ret = (int)ring.tail - cursor;
+            var ret = (int)ring.Tail - cursor;
             if (ret < 0)
                 ret += _numberOfSlots;
             return ret;
