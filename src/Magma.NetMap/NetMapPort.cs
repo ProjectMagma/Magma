@@ -122,7 +122,7 @@ namespace Magma.NetMap
         {
             var mapResult = MMap(IntPtr.Zero, _request.nr_memsize, MemoryMappedProtections.PROT_READ | MemoryMappedProtections.PROT_WRITE, MemoryMappedFlags.MAP_SHARED, _fileDescriptor, 0);
 
-            if ((ulong)mapResult > 0)  ExceptionHelper.ThrowInvalidOperation("Failed to map the memory");
+            if ((ulong)mapResult <= 0)  ExceptionHelper.ThrowInvalidOperation("Failed to map the memory");
 
             _mappedRegion = mapResult;
             _netmapInterface = Unsafe.Read<NetMapInterface>(NetMapInterfaceAddress.ToPointer());
