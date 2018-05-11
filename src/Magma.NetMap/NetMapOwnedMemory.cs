@@ -3,7 +3,7 @@ using System.Buffers;
 
 namespace Magma.NetMap
 {
-    public class NetMapOwnedMemory : MemoryManager<byte>
+    internal class NetMapOwnedMemory : MemoryManager<byte>
     {
         private IntPtr _pointer;
         private ushort _length;

@@ -13,8 +13,10 @@ namespace Magma.NetMap
             : base(rxTxPair, memoryRegion, rxQueueOffset)
         {
             _transmitRing = transmitRing;
-            _worker = new Thread(new ThreadStart(ThreadLoop));
-            _worker.IsBackground = true;
+            _worker = new Thread(new ThreadStart(ThreadLoop))
+            {
+                IsBackground = true
+            };
             _worker.Start();
         }
 

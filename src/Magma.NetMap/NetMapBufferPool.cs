@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Magma.NetMap
 {
-    public class NetMapBufferPool
+    internal class NetMapBufferPool
     {
         private NetMapOwnedMemory[] _memoryPool;
 
