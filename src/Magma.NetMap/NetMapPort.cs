@@ -94,22 +94,30 @@ namespace Magma.NetMap
             }
             var rxHost = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(span);
 
+            var rxTxPairs = new RxTxPair[txOffsets.Length];
+            for(var i = 0; i < rxTxPairs.Length;i++)
+            {
+                rxTxPairs[i] = new RxTxPair(_interfaceName, i, false);
+            }
+            var rxTxPairHost = new RxTxPair(_interfaceName, txOffsets.Length, true);
+
             _transmitRings = new NetMapTransmitRing[txOffsets.Length];
             for (var i = 0; i < txOffsets.Length; i++)
             {
-                _transmitRings[i] = new NetMapTransmitRing(_interfaceName, ishost:false, (byte*)_mappedRegion.ToPointer(), txOffsets[i], _fileDescriptor);
+                _transmitRings[i] = new NetMapTransmitRing(rxTxPairs[i], (byte*)_mappedRegion.ToPointer(), txOffsets[i]);
                 _allRings.Add(_transmitRings[i]);
             }
 
-            _hostRxRing = new NetMapHostRxRing(_interfaceName,(byte*)_mappedRegion.ToPointer(), rxHost, _fileDescriptor, _transmitRings[0]);
-            _hostTxRing = new NetMapTransmitRing(_interfaceName, ishost: true, (byte*)_mappedRegion.ToPointer(), txHost, _fileDescriptor);
+            
+            _hostRxRing = new NetMapHostRxRing(rxTxPairHost,(byte*)_mappedRegion.ToPointer(), rxHost, _transmitRings[0]);
+            _hostTxRing = new NetMapTransmitRing(rxTxPairHost, (byte*)_mappedRegion.ToPointer(), txHost);
             _allRings.Add(_hostRxRing);
             _allRings.Add(_hostTxRing);
             
             _receiveRings = new NetMapReceiveRing<TPacketReceiver>[rxOffsets.Length];
             for(var i = 0; i < rxOffsets.Length;i++)
             {
-                _receiveRings[i] = new NetMapReceiveRing<TPacketReceiver>(_interfaceName,(byte*)_mappedRegion.ToPointer(), rxOffsets[i], _fileDescriptor, _createReceiver(_transmitRings[i]), _hostTxRing);
+                _receiveRings[i] = new NetMapReceiveRing<TPacketReceiver>(rxTxPairs[i],(byte*)_mappedRegion.ToPointer(), rxOffsets[i], _createReceiver(_transmitRings[i]), _hostTxRing);
                 _allRings.Add(_transmitRings[i]);
             }
         }

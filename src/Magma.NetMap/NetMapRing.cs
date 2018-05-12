@@ -18,11 +18,12 @@ namespace Magma.NetMap
         protected readonly int _ringId;
         private readonly NetmapSlot* _rxRing;
         protected readonly byte* _bufferStart;
-        internal FileDescriptor _fileDescriptor;
+        internal RxTxPair _rxTxPair;
         protected NetMapBufferPool _bufferPool;
 
-        protected NetMapRing(string interfaceName, bool isTxRing, bool isHost, byte* memoryRegion, ulong rxQueueOffset)
+        protected NetMapRing(RxTxPair rxTxPair, byte* memoryRegion, ulong rxQueueOffset)
         {
+            _rxTxPair = rxTxPair;
             _queueOffset = (long)rxQueueOffset;
             _memoryRegion = memoryRegion;
             var ringInfo = RingInfo();
@@ -32,32 +33,6 @@ namespace Magma.NetMap
             _ringId = ringInfo.RingId & (ushort)NetmapRingID.NETMAP_RING_MASK;
 
             _rxRing = (NetmapSlot*)((long)(_memoryRegion + rxQueueOffset + Unsafe.SizeOf<NetmapRing>() + 127 + 128) & (~0xFF));
-
-            _fileDescriptor = Open("/dev/netmap", OpenFlags.O_RDWR);
-            if (!_fileDescriptor.IsValid) throw new InvalidOperationException($"Need to handle properly (release memory etc) error was {_fileDescriptor}");
-            var request = new NetMapRequest
-            {
-                nr_cmd = 0,
-                nr_ringid = (ushort)_ringId,
-                nr_version = NETMAP_API,
-            };
-            if (isHost)
-            {
-                request.nr_flags = NetMapRequestFlags.NR_REG_SW;
-            }
-            else
-            {
-                request.nr_flags = NetMapRequestFlags.NR_REG_ONE_NIC;
-            }
-            
-            Console.WriteLine($"Getting FD for Receive RingID {_ringId}");
-            var textbytes = Encoding.ASCII.GetBytes(interfaceName + "\0");
-            fixed (void* txtPtr = textbytes)
-            {
-                Buffer.MemoryCopy(txtPtr, request.nr_name, textbytes.Length, textbytes.Length);
-            }
-
-            if (IOCtl(_fileDescriptor, IOControlCommand.NIOCREGIF, ref request) != 0) throw new InvalidOperationException("Failed to open an FD for a single ring");
         }
 
         internal NetMapBufferPool BufferPool { set => _bufferPool = value; }

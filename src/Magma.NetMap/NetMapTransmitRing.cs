@@ -16,8 +16,8 @@ namespace Magma.NetMap
 
         private object _sendBufferLock = new object();
 
-        internal unsafe NetMapTransmitRing(string interfaceName, bool ishost, byte* memoryRegion, ulong rxQueueOffset, FileDescriptor fileDescriptor)
-            : base(interfaceName, isTxRing: true, ishost, memoryRegion, rxQueueOffset)
+        internal unsafe NetMapTransmitRing(RxTxPair rxTxPair, byte* memoryRegion, ulong rxQueueOffset)
+            : base(rxTxPair, memoryRegion, rxQueueOffset)
         {
         }
 
@@ -97,6 +97,6 @@ namespace Magma.NetMap
             return false;
         }
 
-        public unsafe void ForceFlush() => IOCtl(_fileDescriptor, IOControlCommand.NIOCTXSYNC, IntPtr.Zero);
+        public unsafe void ForceFlush() => _rxTxPair.ForceFlush();
     }
 }
