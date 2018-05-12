@@ -38,7 +38,7 @@ namespace Magma.NetMap
                     buffer.RingId = _ringId;
                     buffer.Length = slot.len;
                     Console.WriteLine($"Received data on ring {_ringId} slot id {i} length {slot.len}");
-                    ring.Cursor = i;
+                    ring.Cursor = RingNext(i);
                     if (!_receiver.TryConsume(buffer))
                     {
                         _hostTxRing.TrySendWithSwap(ref slot);
