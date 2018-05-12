@@ -36,6 +36,7 @@ namespace Magma.NetMap
                     var buffer = _bufferPool.GetBuffer(slot.buf_idx);
                     buffer.RingId = _ringId;
                     buffer.Length = slot.len;
+                    Console.WriteLine($"Received data on ring {_ringId} slot id {i} length {slot.len}");
                     ring.Cursor = i;
                     if (!_receiver.TryConsume(buffer))
                     {
