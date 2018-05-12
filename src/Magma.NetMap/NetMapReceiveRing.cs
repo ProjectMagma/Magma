@@ -1,6 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
+using Magma.NetMap.Interop;
 using Magma.Network.Abstractions;
 using static Magma.NetMap.Interop.Libc;
 
@@ -20,8 +22,9 @@ namespace Magma.NetMap
             _hostTxRing = hostTxRing;
             _receiver = receiver;
             _worker = new Thread(new ThreadStart(ThreadLoop));
-            _worker.Start();
         }
+
+        public void Start() => _worker.Start();
 
         private void ThreadLoop()
         {
