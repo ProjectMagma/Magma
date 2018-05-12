@@ -68,6 +68,14 @@ namespace Magma.NetMap
             foreach(var ring in _allRings)
             {
                 ring.BufferPool = pool;
+                if(ring is NetMapReceiveRing<TPacketReceiver> receiver)
+                {
+                    receiver.Start();
+                }
+                if(ring is NetMapHostRxRing hostRing)
+                {
+                    hostRing.Start();
+                }
             }
         }
 

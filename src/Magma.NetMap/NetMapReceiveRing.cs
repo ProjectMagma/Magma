@@ -18,8 +18,10 @@ namespace Magma.NetMap
             _hostTxRing = hostTxRing;
             _receiver = receiver;
             _worker = new Thread(new ThreadStart(ThreadLoop));
-            _worker.Start();
+            _worker.IsBackground = true;
         }
+
+        public void Start() => _worker.Start();
 
         private void ThreadLoop()
         {

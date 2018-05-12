@@ -20,8 +20,10 @@ namespace Magma.NetMap
         {
             _transmitRing = transmitRing;
             _worker = new Thread(new ThreadStart(ThreadLoop));
-            _worker.Start();
+            _worker.IsBackground = true;
         }
+
+        public void Start() => _worker.Start();
 
         private void ThreadLoop()
         {
