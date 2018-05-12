@@ -45,18 +45,12 @@ namespace Magma.NetMap.Interop
 
         public unsafe void WaitForWork()
         {
-            var pfdArray = stackalloc PollFileDescriptor[2];
-            pfdArray[0] = new PollFileDescriptor()
+            var pfd = new PollFileDescriptor()
             {
                 Events = PollEvents.POLLIN,
                 Fd = _fileDescriptor,
             };
-            pfdArray[0] = new PollFileDescriptor()
-            {
-                Events = PollEvents.POLLIN,
-                Fd = _eventDescriptor,
-            };
-            var result = Poll(pfdArray, 2, 1000);
+            var result = Poll(ref pfd, 1, 1000);
             if (result < 0) ExceptionHelper.ThrowInvalidOperation("Error on poll");
 
         }
