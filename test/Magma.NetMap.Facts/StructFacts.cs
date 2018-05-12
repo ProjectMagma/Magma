@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using Magma.NetMap.Interop;
 using Xunit;
+using static Magma.NetMap.Interop.Netmap;
 
 namespace Magma.NetMap.Facts
 {

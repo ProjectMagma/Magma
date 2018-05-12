@@ -43,7 +43,7 @@ namespace Magma.NetMap
                 while (!IsRingEmpty())
                 {
 
-                    var i = ring.cur;
+                    var i = ring.Cursor;
                     var nexti = RingNext(i);
                     ref var slot = ref GetSlot(i);
                     var buffer = GetBuffer(slot.buf_idx, slot.len);
@@ -54,8 +54,8 @@ namespace Magma.NetMap
                     }
                     else
                     {
-                        ring.cur = nexti;
-                        ring.head = nexti;
+                        ring.Cursor = nexti;
+                        ring.Head = nexti;
                     }
 
                 }

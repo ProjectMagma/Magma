@@ -42,7 +42,7 @@ namespace Magma.NetMap
                 nr_cmd = 0,
                 nr_flags = NetMapRequestFlags.NR_REG_NIC_SW,
                 nr_ringid = 0,
-                nr_version = Consts.NETMAP_API,
+                nr_version = NETMAP_API,
                 
             };
             var textbytes = Encoding.ASCII.GetBytes(_interfaceName + "\0");

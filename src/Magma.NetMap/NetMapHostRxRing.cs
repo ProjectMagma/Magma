@@ -44,7 +44,7 @@ namespace Magma.NetMap
                 while (!IsRingEmpty())
                 {
                     //Console.WriteLine("Received data on host ring");
-                    var i = ring.cur;
+                    var i = ring.Cursor;
                     
                     _transmitRing.TrySendWithSwap(ref GetSlot(i), ref ring);
                     //RingInfo[0].flags = (ushort)(RingInfo[0].flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
