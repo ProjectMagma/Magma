@@ -156,7 +156,12 @@ namespace Magma.NetMap.Host
             WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
 
             Flush();
-            return result ? default : buffer;
+            if(result)
+            {
+                buffer.Dispose();
+                return default;
+            }
+            return buffer;
         }
 
         private void WriteLine(string output) => _streamWriter?.WriteLine(output);
