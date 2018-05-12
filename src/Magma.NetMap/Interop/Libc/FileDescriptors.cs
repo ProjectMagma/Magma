@@ -8,6 +8,12 @@ namespace Magma.NetMap.Interop
 {
     internal static partial class Libc
     {
+        [DllImport("libc", EntryPoint = "read")]
+        internal unsafe static extern int Read(FileDescriptor fileDescriptor, void* buffer, long size);
+
+        [DllImport("libc", EntryPoint = "write")]
+        internal unsafe static extern int Write(FileDescriptor fileDescriptor, void* buffer, long size);
+
         [DllImport("libc", EntryPoint = "open")]
         internal static extern FileDescriptor Open([MarshalAs(UnmanagedType.LPStr)] string fileName, OpenFlags flags);
 

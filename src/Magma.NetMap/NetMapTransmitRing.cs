@@ -31,7 +31,7 @@ namespace Magma.NetMap
                 }
                 var slot = GetSlot(slotIndex);
                 var manager = _bufferPool.GetBuffer(slot.buf_idx);
-                manager.RingId = _ringId;
+                manager.RingId = this;
                 manager.Length = (ushort)_bufferSize;
                 buffer = manager.Memory;
                 return true;
@@ -47,7 +47,7 @@ namespace Magma.NetMap
                 ExceptionHelper.ThrowInvalidOperation("Invalid buffer used for sendbuffer");
             }
             if (start != 0) ExceptionHelper.ThrowInvalidOperation("Invalid start for buffer");
-            if (manager.RingId != _ringId) ExceptionHelper.ThrowInvalidOperation($"Invalid ring id, expected {_ringId} actual {manager.RingId}");
+            if (manager.RingId != this) ExceptionHelper.ThrowInvalidOperation($"Invalid ring id, expected {_ringId} actual {manager.RingId}");
 
             lock (_sendBufferLock)
             {
