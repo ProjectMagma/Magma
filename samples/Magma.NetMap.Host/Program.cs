@@ -223,7 +223,7 @@ namespace Magma.NetMap.Host
             Console.WriteLine($"IP Header length: {Unsafe.SizeOf<IPv4>()}");
             Console.WriteLine($"TCP Header length: {Unsafe.SizeOf<Tcp>()}");
 
-            var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, log: false, loggingToFile: false));
+            var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, log: true, loggingToFile: false));
             netmap.Open();
             netmap.PrintPortInfo();
 
