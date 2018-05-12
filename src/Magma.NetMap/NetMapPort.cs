@@ -95,9 +95,7 @@ namespace Magma.NetMap
             }
             var rxHost = span[0];
 
-            _hostRxRing = new NetMapHostRxRing(rxTxPairHost, (byte*)_mappedRegion.ToPointer(), rxHost, _transmitRings[0]);
             _hostTxRing = new NetMapTransmitRing(rxTxPairHost, (byte*)_mappedRegion.ToPointer(), txHost);
-            _allRings.Add(_hostRxRing);
             _allRings.Add(_hostTxRing);
             _transmitRings = new NetMapTransmitRing[txOffsets.Length];
             _receiveRings = new NetMapReceiveRing<TPacketReceiver>[rxOffsets.Length];
@@ -108,6 +106,8 @@ namespace Magma.NetMap
                 _receiveRings[i] = new NetMapReceiveRing<TPacketReceiver>(rxTxPairs[i], (byte*)_mappedRegion.ToPointer(), rxOffsets[i], _createReceiver(_transmitRings[i]), _hostTxRing);
                 _allRings.Add(_transmitRings[i]);
             }
+            _hostRxRing = new NetMapHostRxRing(rxTxPairHost, (byte*)_mappedRegion.ToPointer(), rxHost, _transmitRings[0]);
+            _allRings.Add(_hostRxRing);
         }
 
         private unsafe void MapMemory()
