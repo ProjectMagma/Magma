@@ -17,8 +17,7 @@ namespace Magma.NetMap
         {
             _hostTxRing = hostTxRing;
             _receiver = receiver;
-            _worker = new Thread(new ThreadStart(ThreadLoop));
-            _worker.IsBackground = true;
+            _worker = new Thread(new ThreadStart(ThreadLoop)) { IsBackground = true };
         }
 
         public void Start() => _worker.Start();
@@ -26,7 +25,6 @@ namespace Magma.NetMap
         private void ThreadLoop()
         {
             ref var ring = ref RingInfo();
-            Console.WriteLine("Receive Ring Started");
             while (true)
             {
                 while (!IsRingEmpty())
@@ -37,13 +35,11 @@ namespace Magma.NetMap
                     var buffer = _bufferPool.GetBuffer(slot.buf_idx);
                     buffer.RingId = _ringId;
                     buffer.Length = slot.len;
-                    Console.WriteLine($"Received data on ring {_ringId} slot id {i} length {slot.len}");
                     ring.Cursor = RingNext(i);
                     if (!_receiver.TryConsume(buffer))
                     {
                         _hostTxRing.TrySendWithSwap(ref slot);
                         _hostTxRing.ForceFlush();
-                        Console.WriteLine("Received buffer and passed it on");
                     }
                     ring.Head = RingNext(ring.Head);
                 }

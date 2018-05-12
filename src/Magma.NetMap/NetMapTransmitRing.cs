@@ -89,7 +89,6 @@ namespace Magma.NetMap
                     return true;
                 }
             }
-            Console.WriteLine("Dropped packet on swap");
             return false;
         }
 
