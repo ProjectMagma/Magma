@@ -26,6 +26,7 @@ namespace Magma.NetMap
         private void ThreadLoop()
         {
             ref var ring = ref RingInfo();
+            Console.WriteLine("Receive Ring Started");
             while (true)
             {
                 while (!IsRingEmpty())
