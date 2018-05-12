@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using Magma.NetMap.Interop;
-using static Magma.NetMap.Interop.Libc;
 using static Magma.NetMap.Interop.Netmap;
 
 namespace Magma.NetMap
@@ -14,10 +11,10 @@ namespace Magma.NetMap
         private const int SPINCOUNT = 100;
         private const int MAXLOOPTRY = 2;
 
-        private object _sendBufferLock = new object();
+        private readonly object _sendBufferLock = new object();
 
-        internal unsafe NetMapTransmitRing(RxTxPair rxTxPair, byte* memoryRegion, ulong rxQueueOffset)
-            : base(rxTxPair, memoryRegion, rxQueueOffset)
+        internal unsafe NetMapTransmitRing(RxTxPair rxTxPair, byte* memoryRegion, long queueOffset)
+            : base(rxTxPair, memoryRegion, queueOffset)
         {
         }
 
@@ -34,7 +31,8 @@ namespace Magma.NetMap
                 }
                 var slot = GetSlot(slotIndex);
                 var manager = _bufferPool.GetBuffer(slot.buf_idx);
-                manager.RingId = _ringId;
+                manager.RingId = this;
+                manager.Length = (ushort)_bufferSize;
                 buffer = manager.Memory;
                 return true;
             }
@@ -49,7 +47,7 @@ namespace Magma.NetMap
                 ExceptionHelper.ThrowInvalidOperation("Invalid buffer used for sendbuffer");
             }
             if (start != 0) ExceptionHelper.ThrowInvalidOperation("Invalid start for buffer");
-            if (manager.RingId != _ringId) ExceptionHelper.ThrowInvalidOperation($"Invalid ring id, expected {_ringId} actual {manager.RingId}");
+            if (manager.RingId != this) ExceptionHelper.ThrowInvalidOperation($"Invalid ring id, expected {_ringId} actual {manager.RingId}");
 
             lock (_sendBufferLock)
             {
@@ -66,7 +64,7 @@ namespace Magma.NetMap
             }
         }
 
-        internal bool TrySendWithSwap(ref NetmapSlot sourceSlot, ref NetmapRing sourceRing)
+        internal bool TrySendWithSwap(ref NetmapSlot sourceSlot)
         {
             ref var ring = ref RingInfo();
             for (var loop = 0; loop < MAXLOOPTRY; loop++)
@@ -79,7 +77,6 @@ namespace Magma.NetMap
                         Thread.SpinWait(SPINCOUNT);
                         continue;
                     }
-                    sourceRing.Cursor = RingNext(sourceRing.Cursor);
                     ref var slot = ref GetSlot(slotIndex);
                     var buffIndex = slot.buf_idx;
                     slot.buf_idx = sourceSlot.buf_idx;
@@ -88,15 +85,15 @@ namespace Magma.NetMap
 
                     sourceSlot.buf_idx = buffIndex;
                     sourceSlot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
-                    sourceRing.Head = sourceRing.Cursor;
                     ring.Head = RingNext(slotIndex);
                     return true;
                 }
             }
-            Console.WriteLine("Dropped packet on swap");
             return false;
         }
 
         public unsafe void ForceFlush() => _rxTxPair.ForceFlush();
+
+        internal override void Return(int buffer_index) => throw new NotImplementedException();
     }
 }

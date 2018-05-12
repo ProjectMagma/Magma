@@ -1,9 +1,7 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Magma.NetMap.Interop;
 using Magma.Network.Abstractions;
-using static Magma.NetMap.Interop.Libc;
 
 namespace Magma.NetMap
 {
@@ -13,15 +11,17 @@ namespace Magma.NetMap
         private readonly Thread _worker;
         private TPacketReceiver _receiver;
         private NetMapTransmitRing _hostTxRing;
+        private object _lock = new object();
 
-        internal unsafe NetMapReceiveRing(RxTxPair rxTxPair, byte* memoryRegion, ulong rxQueueOffset, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
-            : base(rxTxPair, memoryRegion, rxQueueOffset)
+        internal unsafe NetMapReceiveRing(RxTxPair rxTxPair, byte* memoryRegion, long queueOffset, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
+            : base(rxTxPair, memoryRegion, queueOffset)
         {
             _hostTxRing = hostTxRing;
             _receiver = receiver;
-            _worker = new Thread(new ThreadStart(ThreadLoop));
-            _worker.Start();
+            _worker = new Thread(new ThreadStart(ThreadLoop)) { IsBackground = true };
         }
+
+        public void Start() => _worker.Start();
 
         private void ThreadLoop()
         {
@@ -32,22 +32,34 @@ namespace Magma.NetMap
                 {
 
                     var i = ring.Cursor;
-                    var nexti = RingNext(i);
                     ref var slot = ref GetSlot(i);
-                    var buffer = GetBuffer(slot.buf_idx, slot.len);
-                    if (!_receiver.TryConsume(buffer))
+                    var buffer = _bufferPool.GetBuffer(slot.buf_idx);
+                    buffer.RingId = this;
+                    buffer.Length = slot.len;
+                    ring.Cursor = RingNext(i);
+                    if (!_receiver.TryConsume(new NetMapMemoryWrapper(buffer)).IsEmpty)
                     {
-                        _hostTxRing.TrySendWithSwap(ref slot, ref ring);
+                        _hostTxRing.TrySendWithSwap(ref slot);
                         _hostTxRing.ForceFlush();
+                        MoveHeadForward(slot.buf_idx);
                     }
-                    else
-                    {
-                        ring.Cursor = nexti;
-                        ring.Head = nexti;
-                    }
-
                 }
                 _rxTxPair.WaitForWork();
+            }
+        }
+
+        private void MoveHeadForward(uint bufferIndex)
+        {
+            lock(_lock)
+            {
+                ref var ring = ref RingInfo();
+                ref var slot = ref GetSlot(ring.Head);
+                if(slot.buf_idx != bufferIndex)
+                {
+                    slot.buf_idx = bufferIndex;
+                    slot.flags |= Netmap.NetmapSlotFlags.NS_BUF_CHANGED;
+                }
+                ring.Head = RingNext(ring.Head);
             }
         }
 
@@ -56,5 +68,7 @@ namespace Magma.NetMap
             var slot = GetSlot(index);
             Console.WriteLine($"Slot {index} bufferIndex {slot.buf_idx} flags {slot.flags} length {slot.len} pointer {slot.ptr}");
         }
+
+        internal override void Return(int buffer_index) => MoveHeadForward((uint)buffer_index);
     }
 }

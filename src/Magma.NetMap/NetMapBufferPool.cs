@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Magma.NetMap
 {
-    public class NetMapBufferPool
+    internal class NetMapBufferPool
     {
-        private NetMapOwnedMemory[] _memoryPool;
+        private readonly NetMapOwnedMemory[] _memoryPool;
 
         public unsafe NetMapBufferPool(ushort bufferLength, IntPtr bufferStart, uint numberOfBuffers)
         {

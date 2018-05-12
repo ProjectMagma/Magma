@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -36,8 +37,9 @@ namespace Magma.NetMap.Host
             _ringId = ringId;
         }
 
-        public unsafe bool TryConsume(ReadOnlySpan<byte> input)
+        public unsafe T TryConsume<T>(T buffer) where T : IMemoryOwner<byte>
         {
+            var input = buffer.Memory.Span;
             WriteLine($"---> Received {input.Length} byte packet");
             bool result;
             if (Ethernet.TryConsume(input, out var etherIn, out var data))
@@ -64,7 +66,12 @@ namespace Magma.NetMap.Host
             WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
 
             Flush();
-            return result;
+            if (result)
+            {
+                buffer.Dispose();
+                return default;
+            }
+            return buffer;
         }
 
         public unsafe bool TryConsumeIPv4(in Ethernet ethernetFrame, ReadOnlySpan<byte> input)
@@ -186,6 +193,7 @@ namespace Magma.NetMap.Host
                     {
                         WriteLine($"TryGetNextBuffer returned false");
                     }
+
                     return true;
                 }
                 else
@@ -223,7 +231,7 @@ namespace Magma.NetMap.Host
             Console.WriteLine($"IP Header length: {Unsafe.SizeOf<IPv4>()}");
             Console.WriteLine($"TCP Header length: {Unsafe.SizeOf<Tcp>()}");
 
-            var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, log: true, loggingToFile: false));
+            var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, log: false, loggingToFile: false));
             netmap.Open();
             netmap.PrintPortInfo();
 

@@ -8,6 +8,7 @@ namespace Magma.NetMap.Interop
     public class RxTxPair
     {
         private FileDescriptor _fileDescriptor;
+        private FileDescriptor _eventDescriptor;
         private int _ringId;
         private bool _isHostStack;
 
@@ -38,9 +39,11 @@ namespace Magma.NetMap.Interop
                 Buffer.MemoryCopy(txtPtr, request.nr_name, textbytes.Length, textbytes.Length);
             }
             if (IOCtl(_fileDescriptor, IOControlCommand.NIOCREGIF, ref request) != 0) ExceptionHelper.ThrowInvalidOperation("Failed to open an FD for a single ring");
+
+            _eventDescriptor = CreateEventFD(0, EventFDFlags.EFD_SEMAPHORE | EventFDFlags.EFD_NONBLOCK);
         }
 
-        public void WaitForWork()
+        public unsafe void WaitForWork()
         {
             var pfd = new PollFileDescriptor()
             {
@@ -49,6 +52,7 @@ namespace Magma.NetMap.Interop
             };
             var result = Poll(ref pfd, 1, 1000);
             if (result < 0) ExceptionHelper.ThrowInvalidOperation("Error on poll");
+
         }
 
         public unsafe void ForceFlush() => IOCtl(_fileDescriptor, IOControlCommand.NIOCTXSYNC, IntPtr.Zero);

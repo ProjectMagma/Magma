@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using Magma.Network.Abstractions;
 using Magma.Network.Header;
 
@@ -8,13 +9,13 @@ namespace Magma.Network
     {
         private PacketReceiver _packetReceiver;
 
-        public static DefaultPacketReceiver CreateDefault() => 
+        public static DefaultPacketReceiver CreateDefault() =>
             new DefaultPacketReceiver()
             {
                 _packetReceiver = PacketReceiver.CreateDefault()
             };
 
-        public bool TryConsume(ReadOnlySpan<byte> input) => _packetReceiver.TryConsume(input);
+        public T TryConsume<T>(T input) where T : IMemoryOwner<byte> => _packetReceiver.TryConsume(input);
     }
 
     internal class PacketReceiver : IPacketReceiver
@@ -39,28 +40,40 @@ namespace Magma.Network
             ArpConsumer = _arpConsumer
         };
 
-        public bool TryConsume(ReadOnlySpan<byte> input)
+        public T TryConsume<T>(T owner) where T : IMemoryOwner<byte>
         {
+            var input = owner.Memory.Span;
+            var result = false;
             if (Ethernet.TryConsume(input, out var ethernetFrame, out var data))
             {
                 switch (ethernetFrame.Ethertype)
                 {
                     case EtherType.IPv4:
-                        return IPv4Consumer?.Invoke(in ethernetFrame, data) ?? false;
+                        result = IPv4Consumer?.Invoke(in ethernetFrame, data) ?? false;
+                        break;
                     case EtherType.IPv6:
-                        return IPv6Consumer?.Invoke(in ethernetFrame, data) ?? false;
+                        result = IPv6Consumer?.Invoke(in ethernetFrame, data) ?? false;
+                        break;
                     case EtherType.Arp:
-                        return ArpConsumer?.Invoke(in ethernetFrame, data) ?? false;
+                        result = ArpConsumer?.Invoke(in ethernetFrame, data) ?? false;
+                        break;
                     default:
                         // Unsupported protocol pass to host OS networking
-                        return false;
+                        result = false;
+                        break;
                 }
             }
             else
             {
                 // Couldn't parse, consume the invalid packet
-                return true;
+                result = true;
             }
+            if(result)
+            {
+                owner.Dispose();
+                return default;
+            }
+            return owner;
         }
 
         private static bool TryConsumeIPv4(in Ethernet ethernetFrame, ReadOnlySpan<byte> input)
