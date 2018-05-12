@@ -112,7 +112,7 @@ namespace Magma.NetMap
                 _transmitRings[i] = new NetMapTransmitRing(rxTxPairs[i], (byte*)_mappedRegion.ToPointer(), txOffsets[i]);
                 _allRings.Add(_transmitRings[i]);
                 _receiveRings[i] = new NetMapReceiveRing<TPacketReceiver>(rxTxPairs[i], (byte*)_mappedRegion.ToPointer(), rxOffsets[i], _createReceiver(_transmitRings[i]), _hostTxRing);
-                _allRings.Add(_transmitRings[i]);
+                _allRings.Add(_receiveRings[i]);
             }
             _hostRxRing = new NetMapHostRxRing(rxTxPairHost, (byte*)_mappedRegion.ToPointer(), rxHost, _transmitRings[0]);
             _allRings.Add(_hostRxRing);
