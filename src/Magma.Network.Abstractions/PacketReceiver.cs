@@ -1,9 +1,10 @@
 using System;
+using System.Buffers;
 
 namespace Magma.Network.Abstractions
 {
     public interface IPacketReceiver
     {
-        bool TryConsume(int ringId, Span<byte> buffer);
+        T TryConsume<T>(T buffer) where T : struct, IMemoryOwner<byte>;
     }
 }

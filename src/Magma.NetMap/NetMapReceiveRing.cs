@@ -1,8 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using Magma.NetMap.Interop;
 using Magma.Network.Abstractions;
 using static Magma.NetMap.Interop.Libc;
 
@@ -14,6 +12,7 @@ namespace Magma.NetMap
         private readonly Thread _worker;
         private TPacketReceiver _receiver;
         private NetMapTransmitRing _hostTxRing;
+        private object _headLock = new object();
 
         internal unsafe NetMapReceiveRing(string interfaceName, byte* memoryRegion, ulong rxQueueOffset, FileDescriptor fileDescriptor, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
             : base(interfaceName, isTxRing: false, isHost: false, memoryRegion, rxQueueOffset)
@@ -27,16 +26,16 @@ namespace Magma.NetMap
         private void ThreadLoop()
         {
             ref var ring = ref RingInfo();
-            var epoll = Libc.EPollCreate(0);
+            var epoll = EPollCreate(0);
             if (epoll.Pointer < 0) ExceptionHelper.ThrowInvalidOperation("Failed to get Epoll handle");
-            var epollEvent = new Libc.EPollEvent()
+            var epollEvent = new EPollEvent()
             {
-                data = new Libc.EPollData() { FileDescriptor = _fileDescriptor, },
-                events = Libc.EPollEvents.EPOLLIN ,
+                data = new EPollData() { FileDescriptor = _fileDescriptor, },
+                events = EPollEvents.EPOLLIN,
             };
-            if (Libc.EPollControl(epoll, Libc.EPollCommand.EPOLL_CTL_ADD, _fileDescriptor, ref epollEvent) != 0) ExceptionHelper.ThrowInvalidOperation("Epoll failed");
+            if (EPollControl(epoll, EPollCommand.EPOLL_CTL_ADD, _fileDescriptor, ref epollEvent) != 0) ExceptionHelper.ThrowInvalidOperation("Epoll failed");
 
-            Span<Libc.EPollEvent> events = stackalloc Libc.EPollEvent[4];
+            Span<EPollEvent> events = stackalloc EPollEvent[4];
 
             while (true)
             {
@@ -46,8 +45,8 @@ namespace Magma.NetMap
                     var i = ring.Cursor;
                     var nexti = RingNext(i);
                     ref var slot = ref GetSlot(i);
-                    var buffer = GetBuffer(slot.buf_idx, slot.len);
-                    if (!_receiver.TryConsume(_ringId, buffer))
+                    var buffer = _bufferPool.GetBuffer(slot.buf_idx);
+                    if (!_receiver.TryConsume(new NetmapMemoryWrapper( buffer)).IsEmpty)
                     {
                         _hostTxRing.TrySendWithSwap(ref slot, ref ring);
                         _hostTxRing.ForceFlush();
@@ -55,12 +54,10 @@ namespace Magma.NetMap
                     else
                     {
                         ring.Cursor = nexti;
-                        ring.Head = nexti;
                     }
-
                 }
 
-                var numberOfEvents = Libc.EPollWait(epoll, ref MemoryMarshal.GetReference(events), 4, -1);
+                var numberOfEvents = EPollWait(epoll, ref MemoryMarshal.GetReference(events), 4, -1);
             }
         }
 
@@ -68,6 +65,17 @@ namespace Magma.NetMap
         {
             var slot = GetSlot(index);
             Console.WriteLine($"Slot {index} bufferIndex {slot.buf_idx} flags {slot.flags} length {slot.len} pointer {slot.ptr}");
+        }
+
+        internal override void ReturnMemory(NetMapOwnedMemory ownedMemory)
+        {
+            lock(_headLock)
+            {
+                ref var ring = ref RingInfo();
+                var head = GetSlot(ring.Head);
+                head.buf_idx = ownedMemory.BufferIndex;
+                ring.Head = RingNext(ring.Head);
+            }
         }
     }
 }

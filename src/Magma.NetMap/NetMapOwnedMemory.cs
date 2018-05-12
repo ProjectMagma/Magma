@@ -3,7 +3,7 @@ using System.Buffers;
 
 namespace Magma.NetMap
 {
-    public class NetMapOwnedMemory : MemoryManager<byte>
+    internal sealed class NetMapOwnedMemory : MemoryManager<byte>
     {
         private IntPtr _pointer;
         private ushort _length;
@@ -16,7 +16,7 @@ namespace Magma.NetMap
         }
 
         internal uint BufferIndex { get; }
-        internal int RingId { get; set; }
+        internal NetMapRing RingId { get; set; }
 
         public override Memory<byte> Memory => CreateMemory(_length);
 
@@ -25,6 +25,12 @@ namespace Magma.NetMap
         public unsafe override MemoryHandle Pin(int elementIndex = 0) => new MemoryHandle(IntPtr.Add(_pointer, elementIndex).ToPointer());
        
         public override void Unpin() { }
+
+        internal void Return()
+        {
+            RingId.ReturnMemory(this);
+            RingId = null;
+        }
 
         protected override void Dispose(bool disposing) { }
     }

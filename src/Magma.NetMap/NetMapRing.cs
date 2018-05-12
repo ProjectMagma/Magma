@@ -19,7 +19,7 @@ namespace Magma.NetMap
         private readonly NetmapSlot* _rxRing;
         protected readonly byte* _bufferStart;
         internal FileDescriptor _fileDescriptor;
-        protected NetMapBufferPool _bufferPool;
+        internal NetMapBufferPool _bufferPool;
 
         protected NetMapRing(string interfaceName, bool isTxRing, bool isHost, byte* memoryRegion, ulong rxQueueOffset)
         {
@@ -122,5 +122,7 @@ namespace Magma.NetMap
             }
             return max;
         }
+
+        internal abstract void ReturnMemory(NetMapOwnedMemory ownedMemory);
     }
 }

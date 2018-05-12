@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -36,10 +37,10 @@ namespace Magma.NetMap.Host
             _ringId = ringId;
         }
 
-        public unsafe bool TryConsume(int ringId, Span<byte> input)
+        public unsafe T TryConsume<T>(T buffer) where T : struct, IMemoryOwner<byte>
         {
             var result = false;
-            var data = input;
+            var data = buffer.Memory.Span;
             if (Ethernet.TryConsume(ref data, out var etherIn))
             {
                 WriteLine($"{etherIn.ToString()}");
@@ -55,7 +56,7 @@ namespace Magma.NetMap.Host
                             WriteLine($"Invalid IPv4 Checksum");
                             WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
                             // Consume packets with invalid checksums; but don't do further processing
-                            return true;
+                            return default;
                         }
 
                         var protocol = ipIn.Protocol;
@@ -88,7 +89,7 @@ namespace Magma.NetMap.Host
                                     if (_transmitter.TryGetNextBuffer(out var txMemory))
                                     {
                                         var output = txMemory.Span;
-                                        input.CopyTo(output);
+                                        buffer.Memory.Span.CopyTo(output);
 
                                         // Swap destinations
                                         ref byte current = ref MemoryMarshal.GetReference(output);
@@ -118,7 +119,7 @@ namespace Magma.NetMap.Host
                                             WriteLine($"Out Icmp (Checksum Invalid) -> {BitConverter.ToString(MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref icmpOutput, ipIn.DataLength)).ToArray())}");
                                         }
 
-                                        _transmitter.SendBuffer(txMemory.Slice(0, input.Length));
+                                        _transmitter.SendBuffer(txMemory.Slice(0, buffer.Memory.Length));
                                         _transmitter.ForceFlush();
                                         result = true;
                                     }
@@ -155,7 +156,7 @@ namespace Magma.NetMap.Host
             WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
 
             Flush();
-            return result;
+            return result ? default : buffer;
         }
 
         private void WriteLine(string output) => _streamWriter?.WriteLine(output);
