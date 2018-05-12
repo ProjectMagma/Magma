@@ -11,8 +11,8 @@ namespace Magma.NetMap.Interop
         public fixed byte Name[16];
         public uint Version;
         public uint Flags;
-        public uint NumberOfTXRings;
-        public uint NumberOfRXRings;
+        public int NumberOfTXRings;
+        public int NumberOfRXRings;
         public uint ni_bufs_head;
         public uint spare1;
         public uint spare2;
