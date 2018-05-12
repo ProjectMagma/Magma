@@ -37,7 +37,7 @@ namespace Magma.NetMap.Host
             _ringId = ringId;
         }
 
-        public unsafe bool TryConsume<T>(T buffer) where T : IMemoryOwner<byte>
+        public unsafe T TryConsume<T>(T buffer) where T : IMemoryOwner<byte>
         {
             var input = buffer.Memory.Span;
             WriteLine($"---> Received {input.Length} byte packet");
@@ -66,7 +66,12 @@ namespace Magma.NetMap.Host
             WriteLine("+--------------------------------------------------------------------------------------+" + Environment.NewLine);
 
             Flush();
-            return result;
+            if (result)
+            {
+                buffer.Dispose();
+                return default;
+            }
+            return buffer;
         }
 
         public unsafe bool TryConsumeIPv4(in Ethernet ethernetFrame, ReadOnlySpan<byte> input)
@@ -188,6 +193,7 @@ namespace Magma.NetMap.Host
                     {
                         WriteLine($"TryGetNextBuffer returned false");
                     }
+
                     return true;
                 }
                 else

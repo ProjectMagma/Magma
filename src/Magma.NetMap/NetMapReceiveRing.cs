@@ -37,12 +37,12 @@ namespace Magma.NetMap
                     buffer.RingId = this;
                     buffer.Length = slot.len;
                     ring.Cursor = RingNext(i);
-                    if (!_receiver.TryConsume(buffer))
+                    if (!_receiver.TryConsume(new NetMapMemoryWrapper(buffer)).IsEmpty)
                     {
                         _hostTxRing.TrySendWithSwap(ref slot);
                         _hostTxRing.ForceFlush();
+                        MoveHeadForward(slot.buf_idx);
                     }
-                    MoveHeadForward(slot.buf_idx);
                 }
                 _rxTxPair.WaitForWork();
             }
@@ -68,5 +68,7 @@ namespace Magma.NetMap
             var slot = GetSlot(index);
             Console.WriteLine($"Slot {index} bufferIndex {slot.buf_idx} flags {slot.flags} length {slot.len} pointer {slot.ptr}");
         }
+
+        internal override void Return(int buffer_index) => MoveHeadForward((uint)buffer_index);
     }
 }

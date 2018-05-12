@@ -15,6 +15,8 @@ namespace Magma.NetMap
             BufferIndex = index;
         }
 
+        internal void Return() => RingId.Return((int)BufferIndex);
+
         internal uint BufferIndex { get; }
         internal NetMapRing RingId { get; set; }
 

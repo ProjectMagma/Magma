@@ -25,6 +25,11 @@ namespace Magma.NetMap
 
         public void Start() => _worker.Start();
 
+        internal override void Return(int buffer_index)
+        {
+            throw new NotImplementedException();
+        }
+
         private void ThreadLoop()
         {
             ref var ring = ref RingInfo();

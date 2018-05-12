@@ -14,6 +14,7 @@ namespace Magma.NetMap
         protected readonly byte* _memoryRegion;
         protected readonly long _queueOffset;
         protected readonly int _bufferSize;
+        
         protected readonly int _numberOfSlots;
         protected readonly int _ringId;
         private readonly NetmapSlot* _rxRing;
@@ -97,5 +98,7 @@ namespace Magma.NetMap
             }
             return max;
         }
+
+        abstract internal void Return(int buffer_index);
     }
 }

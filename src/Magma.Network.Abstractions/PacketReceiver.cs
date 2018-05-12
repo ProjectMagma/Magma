@@ -5,6 +5,6 @@ namespace Magma.Network.Abstractions
 {
     public interface IPacketReceiver
     {
-        bool TryConsume<T>(T input) where T : IMemoryOwner<byte>;
+        T TryConsume<T>(T input) where T : IMemoryOwner<byte>;
     }
 }

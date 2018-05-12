@@ -93,5 +93,7 @@ namespace Magma.NetMap
         }
 
         public unsafe void ForceFlush() => _rxTxPair.ForceFlush();
+
+        internal override void Return(int buffer_index) => throw new NotImplementedException();
     }
 }
