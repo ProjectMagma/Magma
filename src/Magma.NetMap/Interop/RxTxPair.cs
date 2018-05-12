@@ -21,7 +21,7 @@ namespace Magma.NetMap.Interop
             {
                 nr_cmd = 0,
                 nr_ringid = (ushort)_ringId,
-                nr_version = Consts.NETMAP_API,
+                nr_version = NETMAP_API,
             };
             if (_isHostStack)
             {

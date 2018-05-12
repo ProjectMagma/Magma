@@ -29,7 +29,7 @@ namespace Magma.NetMap
             _bufferSize = (int)ringInfo.BufferSize;
             _numberOfSlots = (int)ringInfo.NumberOfSlotsPerRing;
             _bufferStart = _memoryRegion + _queueOffset + ringInfo.BuffersOffset;
-            _ringId = ringInfo.RingId & (ushort)nr_ringid.NETMAP_RING_MASK;
+            _ringId = ringInfo.RingId & (ushort)NetmapRingID.NETMAP_RING_MASK;
 
             _rxRing = (NetmapSlot*)((long)(_memoryRegion + rxQueueOffset + Unsafe.SizeOf<NetmapRing>() + 127 + 128) & (~0xFF));
 
@@ -39,7 +39,7 @@ namespace Magma.NetMap
             {
                 nr_cmd = 0,
                 nr_ringid = (ushort)_ringId,
-                nr_version = Consts.NETMAP_API,
+                nr_version = NETMAP_API,
             };
             if (isHost)
             {
@@ -49,8 +49,7 @@ namespace Magma.NetMap
             {
                 request.nr_flags = NetMapRequestFlags.NR_REG_ONE_NIC;
             }
-            //request.nr_flags |= (isTxRing ? (uint)NetMapRequestFlags.NR_TX_RINGS_ONLY : (uint)NetMapRequestFlags.NR_RX_RINGS_ONLY);
-
+            
             Console.WriteLine($"Getting FD for Receive RingID {_ringId}");
             var textbytes = Encoding.ASCII.GetBytes(interfaceName + "\0");
             fixed (void* txtPtr = textbytes)
