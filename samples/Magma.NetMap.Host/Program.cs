@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -36,8 +37,9 @@ namespace Magma.NetMap.Host
             _ringId = ringId;
         }
 
-        public unsafe bool TryConsume(ReadOnlySpan<byte> input)
+        public unsafe bool TryConsume<T>(T buffer) where T : IMemoryOwner<byte>
         {
+            var input = buffer.Memory.Span;
             WriteLine($"---> Received {input.Length} byte packet");
             bool result;
             if (Ethernet.TryConsume(input, out var etherIn, out var data))

@@ -1,9 +1,7 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Magma.NetMap.Interop;
 using Magma.Network.Abstractions;
-using static Magma.NetMap.Interop.Libc;
 
 namespace Magma.NetMap
 {
@@ -14,8 +12,8 @@ namespace Magma.NetMap
         private TPacketReceiver _receiver;
         private NetMapTransmitRing _hostTxRing;
 
-        internal unsafe NetMapReceiveRing(RxTxPair rxTxPair, byte* memoryRegion, ulong rxQueueOffset, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
-            : base(rxTxPair, memoryRegion, rxQueueOffset)
+        internal unsafe NetMapReceiveRing(RxTxPair rxTxPair, byte* memoryRegion, long queueOffset, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
+            : base(rxTxPair, memoryRegion, queueOffset)
         {
             _hostTxRing = hostTxRing;
             _receiver = receiver;
@@ -32,20 +30,17 @@ namespace Magma.NetMap
                 {
 
                     var i = ring.Cursor;
-                    var nexti = RingNext(i);
                     ref var slot = ref GetSlot(i);
-                    var buffer = GetBuffer(slot.buf_idx, slot.len);
+                    var buffer = _bufferPool.GetBuffer(slot.buf_idx);
+                    buffer.RingId = _ringId;
+                    buffer.Length = slot.len;
+                    ring.Cursor = i;
                     if (!_receiver.TryConsume(buffer))
                     {
-                        _hostTxRing.TrySendWithSwap(ref slot, ref ring);
+                        _hostTxRing.TrySendWithSwap(ref slot);
                         _hostTxRing.ForceFlush();
                     }
-                    else
-                    {
-                        ring.Cursor = nexti;
-                        ring.Head = nexti;
-                    }
-
+                    ring.Head = RingNext(ring.Head);
                 }
                 _rxTxPair.WaitForWork();
             }

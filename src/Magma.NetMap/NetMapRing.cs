@@ -19,12 +19,12 @@ namespace Magma.NetMap
         private readonly NetmapSlot* _rxRing;
         protected readonly byte* _bufferStart;
         internal RxTxPair _rxTxPair;
-        protected NetMapBufferPool _bufferPool;
+        internal NetMapBufferPool _bufferPool;
 
-        protected NetMapRing(RxTxPair rxTxPair, byte* memoryRegion, ulong rxQueueOffset)
+        protected NetMapRing(RxTxPair rxTxPair, byte* memoryRegion, long queueOffset)
         {
             _rxTxPair = rxTxPair;
-            _queueOffset = (long)rxQueueOffset;
+            _queueOffset = queueOffset;
             _memoryRegion = memoryRegion;
             var ringInfo = RingInfo();
             _bufferSize = (int)ringInfo.BufferSize;
@@ -32,7 +32,7 @@ namespace Magma.NetMap
             _bufferStart = _memoryRegion + _queueOffset + ringInfo.BuffersOffset;
             _ringId = ringInfo.RingId & (ushort)NetmapRingID.NETMAP_RING_MASK;
 
-            _rxRing = (NetmapSlot*)((long)(_memoryRegion + rxQueueOffset + Unsafe.SizeOf<NetmapRing>() + 127 + 128) & (~0xFF));
+            _rxRing = (NetmapSlot*)((long)(_memoryRegion + queueOffset + Unsafe.SizeOf<NetmapRing>() + 127 + 128) & (~0xFF));
         }
 
         internal NetMapBufferPool BufferPool { set => _bufferPool = value; }

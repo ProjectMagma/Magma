@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using Magma.Network.Abstractions;
 using Magma.Network.Header;
 
@@ -8,13 +9,13 @@ namespace Magma.Network
     {
         private PacketReceiver _packetReceiver;
 
-        public static DefaultPacketReceiver CreateDefault() => 
+        public static DefaultPacketReceiver CreateDefault() =>
             new DefaultPacketReceiver()
             {
                 _packetReceiver = PacketReceiver.CreateDefault()
             };
 
-        public bool TryConsume(ReadOnlySpan<byte> input) => _packetReceiver.TryConsume(input);
+        public bool TryConsume<T>(T input) where T : IMemoryOwner<byte> => _packetReceiver.TryConsume(input);
     }
 
     internal class PacketReceiver : IPacketReceiver
@@ -39,8 +40,9 @@ namespace Magma.Network
             ArpConsumer = _arpConsumer
         };
 
-        public bool TryConsume(ReadOnlySpan<byte> input)
+        public bool TryConsume<T>(T owner) where T : IMemoryOwner<byte>
         {
+            var input = owner.Memory.Span;
             if (Ethernet.TryConsume(input, out var ethernetFrame, out var data))
             {
                 switch (ethernetFrame.Ethertype)

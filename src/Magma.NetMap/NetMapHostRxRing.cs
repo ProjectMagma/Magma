@@ -15,7 +15,7 @@ namespace Magma.NetMap
         private readonly Thread _worker;
         private readonly NetMapTransmitRing _transmitRing;
 
-        internal unsafe NetMapHostRxRing(RxTxPair rxTxPair, byte* memoryRegion, ulong rxQueueOffset, NetMapTransmitRing transmitRing)
+        internal unsafe NetMapHostRxRing(RxTxPair rxTxPair, byte* memoryRegion, long rxQueueOffset, NetMapTransmitRing transmitRing)
             : base(rxTxPair, memoryRegion, rxQueueOffset)
         {
             _transmitRing = transmitRing;
@@ -33,9 +33,9 @@ namespace Magma.NetMap
                 {
                     //Console.WriteLine("Received data on host ring");
                     var i = ring.Cursor;
-                    
-                    _transmitRing.TrySendWithSwap(ref GetSlot(i), ref ring);
-                    //RingInfo[0].flags = (ushort)(RingInfo[0].flags | (ushort)netmap_slot_flags.NS_BUF_CHANGED);
+                    ring.Cursor = RingNext(i);
+                    _transmitRing.TrySendWithSwap(ref GetSlot(i));
+                    ring.Head = RingNext(ring.Head);
                     sentData = true;
                 }
                 if(sentData) _transmitRing.ForceFlush();
