@@ -41,6 +41,7 @@ namespace Magma.NetMap
                     {
                         _hostTxRing.TrySendWithSwap(ref slot);
                         _hostTxRing.ForceFlush();
+                        Console.WriteLine("Received buffer and passed it on");
                     }
                     ring.Head = RingNext(ring.Head);
                 }
