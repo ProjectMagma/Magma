@@ -10,12 +10,29 @@ namespace Magma.NetMap
     {
         private const int SPINCOUNT = 100;
         private const int MAXLOOPTRY = 2;
-
+        private ManualResetEventSlim _sendEvent = new ManualResetEventSlim(true);
         private readonly object _sendBufferLock = new object();
+        private Thread _flushThread;
 
         internal unsafe NetMapTransmitRing(RxTxPair rxTxPair, byte* memoryRegion, long queueOffset)
             : base(rxTxPair, memoryRegion, queueOffset)
         {
+            _flushThread = new Thread(FlushLoop);
+            _flushThread.IsBackground = true;
+        }
+
+        public override void Start() => _flushThread.Start();
+
+        // While there is a "race" between getting signaled and resetting it won't matter because we flush after
+        // so would include any changes that need to be flushed in something that sends between Wait and Reset
+        private void FlushLoop()
+        {
+            while(true)
+            {
+                _sendEvent.Wait();
+                _sendEvent.Reset();
+                _rxTxPair.ForceFlush();
+            }
         }
 
         public bool TryGetNextBuffer(out Memory<byte> buffer)
@@ -92,7 +109,7 @@ namespace Magma.NetMap
             return false;
         }
 
-        public unsafe void ForceFlush() => _rxTxPair.ForceFlush();
+        public void ForceFlush() => _sendEvent.Set();
 
         internal override void Return(int buffer_index) => throw new NotImplementedException();
     }

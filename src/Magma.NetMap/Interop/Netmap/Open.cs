@@ -2,12 +2,34 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using static Magma.NetMap.Interop.Libc;
 
 namespace Magma.NetMap.Interop
 {
     internal static partial class Netmap
     {
         internal const ushort NETMAP_API = 12;
+
+        public unsafe static FileDescriptor OpenNetMap(string interfaceName, int ringId, NetMapRequestFlags flags, out NetMapRequest returnedRequest)
+        {
+            var fd = Open("/dev/netmap", OpenFlags.O_RDWR);
+            if (!fd.IsValid) ExceptionHelper.ThrowInvalidOperation($"Unable to open the /dev/netmap device {fd}");
+            var request = new NetMapRequest
+            {
+                nr_cmd = 0,
+                nr_ringid = (ushort)ringId,
+                nr_version = NETMAP_API,
+                nr_flags = flags,
+            };
+            var textbytes = Encoding.ASCII.GetBytes(interfaceName + "\0");
+            fixed (void* txtPtr = textbytes)
+            {
+                Buffer.MemoryCopy(txtPtr, request.nr_name, textbytes.Length, textbytes.Length);
+            }
+            if (IOCtl(fd, IOControlCommand.NIOCREGIF, ref request) != 0) ExceptionHelper.ThrowInvalidOperation("Failed to open an FD for a single ring");
+            returnedRequest = request;
+            return fd;
+        }
 
         [StructLayout(LayoutKind.Sequential)]
         internal unsafe struct NetMapRequest
@@ -44,14 +66,24 @@ namespace Magma.NetMap.Interop
             NETMAP_BDG_POLLING_OFF = 11,/* delete polling kthread */
             NETMAP_VNET_HDR_GET = 12, /* get the port virtio-net-hdr length */
         }
-
-        internal enum NetmapRingID : ushort
+                
+        [Flags]
+        internal enum NetMapRequestFlags : uint
         {
-            NETMAP_HW_RING = 0x4000,    /* single NIC ring pair */
-            NETMAP_SW_RING = 0x2000,    /* only host ring pair */
-            NETMAP_RING_MASK = 0x0fff,  /* the ring number */
-            NETMAP_NO_TX_POLL = 0x1000, /* no automatic txsync on poll */
-            NETMAP_DO_RX_POLL = 0x8000, /* DO automatic rxsync on poll */
+            NR_REG_ALL_NIC = 1,
+            NR_REG_SW = 2,
+            NR_REG_NIC_SW = 3,
+            NR_REG_ONE_NIC = 4,
+            NR_MONITOR_TX = 0x100,
+            NR_MONITOR_RX = 0x200,
+            NR_ZCOPY_MON = 0x400,
+            NR_EXCLUSIVE = 0x800,
+            NR_PTNETMAP_HOST = 0x1000,
+            NR_RX_RINGS_ONLY = 0x2000,
+            NR_TX_RINGS_ONLY = 0x4000,
+            NR_ACCEPT_VNET_HDR = 0x8000,
+            NR_DO_RX_POLL = 0x10000,
+            NR_NO_TX_POLL = 0x20000,
         }
     }
 }

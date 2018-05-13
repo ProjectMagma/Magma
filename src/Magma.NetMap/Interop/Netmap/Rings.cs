@@ -42,26 +42,7 @@ namespace Magma.NetMap.Interop
             NS_PORT_SHIFT = 8,
             NS_PORT_MASK = (0xff << NS_PORT_SHIFT),
         }
-
-        [Flags]
-        internal enum NetMapRequestFlags : uint
-        {
-            NR_REG_ALL_NIC = 1,
-            NR_REG_SW = 2,
-            NR_REG_NIC_SW = 3,
-            NR_REG_ONE_NIC = 4,
-            NR_MONITOR_TX = 0x100,
-            NR_MONITOR_RX = 0x200,
-            NR_ZCOPY_MON = 0x400,
-            NR_EXCLUSIVE = 0x800,
-            NR_PTNETMAP_HOST = 0x1000,
-            NR_RX_RINGS_ONLY = 0x2000,
-            NR_TX_RINGS_ONLY = 0x4000,
-            NR_ACCEPT_VNET_HDR = 0x8000,
-            NR_DO_RX_POLL = 0x10000,
-            NR_NO_TX_POLL = 0x20000,
-        }
-
+                
         internal enum NetmapRingDirection : ushort
         {
             tx = 1,
