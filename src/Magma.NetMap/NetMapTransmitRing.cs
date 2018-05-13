@@ -10,7 +10,7 @@ namespace Magma.NetMap
     {
         private const int SPINCOUNT = 100;
         private const int MAXLOOPTRY = 2;
-        private ManualResetEventSlim _sendEvent = new ManualResetEventSlim(false);
+        private ManualResetEventSlim _sendEvent = new ManualResetEventSlim(true);
         private readonly object _sendBufferLock = new object();
         private Thread _flushThread;
 
@@ -23,13 +23,15 @@ namespace Magma.NetMap
 
         public override void Start() => _flushThread.Start();
 
+        // While there is a "race" between getting signaled and resetting it won't matter because we flush after
+        // so would include any changes that need to be flushed in something that sends between Wait and Reset
         private void FlushLoop()
         {
             while(true)
             {
-                _rxTxPair.ForceFlush();
                 _sendEvent.Wait();
                 _sendEvent.Reset();
+                _rxTxPair.ForceFlush();
             }
         }
 
