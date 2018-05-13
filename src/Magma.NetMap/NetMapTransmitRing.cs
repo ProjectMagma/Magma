@@ -10,7 +10,7 @@ namespace Magma.NetMap
     {
         private const int SPINCOUNT = 100;
         private const int MAXLOOPTRY = 2;
-        private AutoResetEvent _sendEvent = new AutoResetEvent(false);
+        private ManualResetEventSlim _sendEvent = new ManualResetEventSlim(false);
         private readonly object _sendBufferLock = new object();
         private Thread _flushThread;
 
@@ -28,7 +28,8 @@ namespace Magma.NetMap
             while(true)
             {
                 _rxTxPair.ForceFlush();
-                _sendEvent.WaitOne();
+                _sendEvent.Wait();
+                _sendEvent.Reset();
             }
         }
 
