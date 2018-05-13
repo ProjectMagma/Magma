@@ -31,7 +31,7 @@ namespace Magma.NetMap
             _bufferSize = (int)ringInfo.BufferSize;
             _numberOfSlots = (int)ringInfo.NumberOfSlotsPerRing;
             _bufferStart = _memoryRegion + _queueOffset + ringInfo.BuffersOffset;
-            _ringId = ringInfo.RingId & (ushort)NetmapRingID.NETMAP_RING_MASK;
+            _ringId = ringInfo.RingId;
 
             _rxRing = (NetmapSlot*)((long)(_memoryRegion + queueOffset + Unsafe.SizeOf<NetmapRing>() + 127 + 128) & (~0xFF));
         }
@@ -99,6 +99,7 @@ namespace Magma.NetMap
             return max;
         }
 
-        abstract internal void Return(int buffer_index);
+        internal abstract void Return(int buffer_index);
+        public abstract void Start();
     }
 }

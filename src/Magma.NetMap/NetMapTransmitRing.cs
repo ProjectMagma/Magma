@@ -10,12 +10,26 @@ namespace Magma.NetMap
     {
         private const int SPINCOUNT = 100;
         private const int MAXLOOPTRY = 2;
-
+        private AutoResetEvent _sendEvent = new AutoResetEvent(false);
         private readonly object _sendBufferLock = new object();
+        private Thread _flushThread;
 
         internal unsafe NetMapTransmitRing(RxTxPair rxTxPair, byte* memoryRegion, long queueOffset)
             : base(rxTxPair, memoryRegion, queueOffset)
         {
+            _flushThread = new Thread(FlushLoop);
+            _flushThread.IsBackground = true;
+        }
+
+        public override void Start() => _flushThread.Start();
+
+        private void FlushLoop()
+        {
+            while(true)
+            {
+                _rxTxPair.ForceFlush();
+                _sendEvent.WaitOne();
+            }
         }
 
         public bool TryGetNextBuffer(out Memory<byte> buffer)
@@ -92,7 +106,7 @@ namespace Magma.NetMap
             return false;
         }
 
-        public unsafe void ForceFlush() => _rxTxPair.ForceFlush();
+        public void ForceFlush() => _sendEvent.Set();
 
         internal override void Return(int buffer_index) => throw new NotImplementedException();
     }

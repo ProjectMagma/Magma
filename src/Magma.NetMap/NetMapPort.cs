@@ -19,8 +19,8 @@ namespace Magma.NetMap
         private NetMapHostRxRing _hostRxRing;
         private NetMapTransmitRing _hostTxRing;
         private readonly string _interfaceName;
-        private NetMapRequest _request;
         private FileDescriptor _fileDescriptor;
+        private NetMapRequest _request;
         private IntPtr _mappedRegion;
         private NetMapInterface _netmapInterface;
         private readonly Func<NetMapTransmitRing, TPacketReceiver> _createReceiver;
@@ -37,27 +37,8 @@ namespace Magma.NetMap
 
         public unsafe void Open()
         {
-            var request = new NetMapRequest
-            {
-                nr_cmd = 0,
-                nr_flags = NetMapRequestFlags.NR_REG_NIC_SW,
-                nr_ringid = 0,
-                nr_version = NETMAP_API,
-                
-            };
-            var textbytes = Encoding.ASCII.GetBytes(_interfaceName + "\0");
-            fixed (void* txtPtr = textbytes)
-            {
-                Buffer.MemoryCopy(txtPtr, request.nr_name, textbytes.Length, textbytes.Length);
-            }
-            _fileDescriptor = Libc.Open("/dev/netmap", OpenFlags.O_RDWR);
-            if (!_fileDescriptor.IsValid) throw new InvalidOperationException("Unable to open /dev/netmap is the kernel module running? Have you run with sudo?");
-            if (IOCtl(_fileDescriptor, IOControlCommand.NIOCREGIF, ref request) != 0)
-            {
-                throw new InvalidOperationException($"Netmap opened but unable to open the interface {_interfaceName}");
-            }
-            _request = request;
-            
+            _fileDescriptor = OpenNetMap(_interfaceName, 0, NetMapRequestFlags.NR_REG_NIC_SW, out _request);
+                        
             MapMemory();
             SetupRings();
 
@@ -68,14 +49,7 @@ namespace Magma.NetMap
             foreach(var ring in _allRings)
             {
                 ring.BufferPool = pool;
-                if(ring is NetMapReceiveRing<TPacketReceiver> receiver)
-                {
-                    receiver.Start();
-                }
-                if(ring is NetMapHostRxRing hostRing)
-                {
-                    hostRing.Start();
-                }
+                ring.Start();
             }
         }
 

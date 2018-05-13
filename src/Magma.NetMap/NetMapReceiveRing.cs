@@ -21,7 +21,7 @@ namespace Magma.NetMap
             _worker = new Thread(new ThreadStart(ThreadLoop)) { IsBackground = true };
         }
 
-        public void Start() => _worker.Start();
+        public override void Start() => _worker.Start();
 
         private void ThreadLoop()
         {

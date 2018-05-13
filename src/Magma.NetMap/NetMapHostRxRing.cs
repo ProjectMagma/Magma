@@ -23,12 +23,9 @@ namespace Magma.NetMap
             _worker.IsBackground = true;
         }
 
-        public void Start() => _worker.Start();
+        public override void Start() => _worker.Start();
 
-        internal override void Return(int buffer_index)
-        {
-            throw new NotImplementedException();
-        }
+        internal override void Return(int buffer_index) => throw new NotImplementedException();
 
         private void ThreadLoop()
         {
