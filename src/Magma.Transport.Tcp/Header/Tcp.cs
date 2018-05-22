@@ -22,11 +22,11 @@ namespace Magma.Network.Header
         /// <summary>
         /// Identifies the sending port.
         /// </summary>
-        public ushort SourcePort => (ushort)IPAddress.NetworkToHostOrder((short)_sourcePort);
+        public ushort SourcePort => (ushort)System.Net.IPAddress.NetworkToHostOrder((short)_sourcePort);
         /// <summary>
         /// Identifies the receiving port.
         /// </summary>
-        public ushort DestinationPort => (ushort)IPAddress.NetworkToHostOrder((short)_destinationPort);
+        public ushort DestinationPort => (ushort)System.Net.IPAddress.NetworkToHostOrder((short)_destinationPort);
 
         /// <summary>
         /// Has a dual role: If the SYN flag is set(1), then this is the initial sequence number. 
