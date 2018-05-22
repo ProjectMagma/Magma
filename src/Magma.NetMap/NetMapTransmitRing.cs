@@ -37,7 +37,7 @@ namespace Magma.NetMap
 
         public bool TryGetNextBuffer(out Memory<byte> buffer)
         {
-            ref var ring = ref RingInfo();
+            ref var ring = ref RingInfo;
             for (var loop = 0; loop < MAXLOOPTRY; loop++)
             {
                 var slotIndex = GetCursor();
@@ -68,7 +68,7 @@ namespace Magma.NetMap
 
             lock (_sendBufferLock)
             {
-                ref var ring = ref RingInfo();
+                ref var ring = ref RingInfo;
                 var newHead = RingNext(ring.Head);
                 ref var slot = ref GetSlot(ring.Head);
                 if (slot.buf_idx != manager.BufferIndex)
@@ -83,7 +83,7 @@ namespace Magma.NetMap
 
         internal bool TrySendWithSwap(ref NetmapSlot sourceSlot)
         {
-            ref var ring = ref RingInfo();
+            ref var ring = ref RingInfo;
             for (var loop = 0; loop < MAXLOOPTRY; loop++)
             {
                 lock (_sendBufferLock)
