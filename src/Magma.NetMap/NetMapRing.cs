@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using Magma.NetMap.Interop;
-using static Magma.NetMap.Interop.Libc;
 using static Magma.NetMap.Interop.Netmap;
 
 namespace Magma.NetMap
@@ -27,7 +24,7 @@ namespace Magma.NetMap
             _rxTxPair = rxTxPair;
             _queueOffset = queueOffset;
             _memoryRegion = memoryRegion;
-            var ringInfo = RingInfo();
+            var ringInfo = RingInfo;
             _bufferSize = (int)ringInfo.BufferSize;
             _numberOfSlots = (int)ringInfo.NumberOfSlotsPerRing;
             _bufferStart = _memoryRegion + _queueOffset + ringInfo.BuffersOffset;
@@ -37,7 +34,7 @@ namespace Magma.NetMap
         }
 
         internal NetMapBufferPool BufferPool { set => _bufferPool = value; }
-        internal unsafe ref NetmapRing RingInfo() => ref Unsafe.AsRef<NetmapRing>((_memoryRegion + _queueOffset));
+        internal unsafe ref NetmapRing RingInfo => ref Unsafe.AsRef<NetmapRing>((_memoryRegion + _queueOffset));
 
         internal Span<byte> GetBuffer(uint bufferIndex) => GetBuffer(bufferIndex, (ushort)_bufferSize);
         internal ref NetmapSlot GetSlot(int index) => ref _rxRing[index]; 
@@ -54,13 +51,13 @@ namespace Magma.NetMap
         internal int RingNext(int i) => (i + 1 == _numberOfSlots) ? 0 : i + 1;
         internal bool IsRingEmpty()
         {
-            var ring = RingInfo();
+            ref var ring = ref RingInfo;
             return (ring.Cursor == ring.Tail);
         }
 
         internal int GetCursor()
         {
-            ref var ring = ref RingInfo();
+            ref var ring = ref RingInfo;
             while (true)
             {
                 var cursor = ring.Cursor;
@@ -82,8 +79,8 @@ namespace Magma.NetMap
 
         public int RingSpace(int cursor)
         {
-            var ring = RingInfo();
-            var ret = (int)ring.Tail - cursor;
+            ref var ring = ref RingInfo;
+            var ret = ring.Tail - cursor;
             if (ret < 0)
                 ret += _numberOfSlots;
             return ret;

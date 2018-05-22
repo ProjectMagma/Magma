@@ -29,7 +29,7 @@ namespace Magma.NetMap
 
         private void ThreadLoop()
         {
-            ref var ring = ref RingInfo();
+            ref var ring = ref RingInfo;
             while (true)
             {
                 var sentData = false;

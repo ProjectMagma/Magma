@@ -25,7 +25,7 @@ namespace Magma.NetMap
 
         private void ThreadLoop()
         {
-            ref var ring = ref RingInfo();
+            ref var ring = ref RingInfo;
             while (true)
             {
                 while (!IsRingEmpty())
@@ -52,7 +52,7 @@ namespace Magma.NetMap
         {
             lock(_lock)
             {
-                ref var ring = ref RingInfo();
+                ref var ring = ref RingInfo;
                 ref var slot = ref GetSlot(ring.Head);
                 if(slot.buf_idx != bufferIndex)
                 {
