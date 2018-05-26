@@ -74,13 +74,13 @@ namespace Magma.NetMap.TcpHost
             var span = memory.Span.Slice(0, totalSize);
             ref var pointer = ref MemoryMarshal.GetReference(span);
 
-            var ethHeader = Unsafe.As<byte, Ethernet>(ref pointer);
+            ref var ethHeader = ref Unsafe.As<byte, Ethernet>(ref pointer);
             ethHeader.Destination = _remoteMac;
             ethHeader.Ethertype = Network.EtherType.IPv4;
             ethHeader.Source = _localMac;
             pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Ethernet>());
 
-            var ipHeader = Unsafe.As<byte, IPv4>(ref pointer);
+            ref var ipHeader = ref Unsafe.As<byte, IPv4>(ref pointer);
             ipHeader.DestinationAddress = _remoteAddress;
             ipHeader.SourceAddress = _localAddress;
             ipHeader.Protocol = Internet.Ip.ProtocolNumber.Tcp;
