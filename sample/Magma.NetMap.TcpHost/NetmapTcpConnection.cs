@@ -88,7 +88,7 @@ namespace Magma.NetMap.TcpHost
             ipHeader.SourceAddress = _localAddress;
             ipHeader.Protocol = Internet.Ip.ProtocolNumber.Tcp;
             ipHeader.TimeToLive = 128;
-            ipHeader.Dont
+            ipHeader.DontFragment = true;
 
             Console.WriteLine($"Packet written ----> IP Working? {BitConverter.ToString(span.ToArray())}");
             // -----> Help?? ipHeader.DataLength = totalSize - Unsafe.SizeOf<Ethernet>() - Unsafe.SizeOf<IPv4>();
