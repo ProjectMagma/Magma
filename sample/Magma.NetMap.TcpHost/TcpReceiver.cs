@@ -40,7 +40,10 @@ namespace Magma.NetMap.TcpHost
         public T TryConsume<T>(T input) where T : IMemoryOwner<byte>
         {
             var span = input.Memory.Span;
-            if (!IPv4.TryConsume(span, out var ipHeader, out var data, false)) return input;
+
+            if (!Ethernet.TryConsume(span, out var etherHeader, out var data)) return input;
+
+            if (!IPv4.TryConsume(data, out var ipHeader, out data, false)) return input;
 
             // Now we will check the IP Checksum because we actually care
             if (ipHeader.Protocol != Internet.Ip.ProtocolNumber.Tcp
@@ -63,7 +66,7 @@ namespace Magma.NetMap.TcpHost
                 }
 
                 // So looks like we need to create a connection then
-                connection = new NetmapTcpConnection(this);
+                connection = new NetmapTcpConnection(ipHeader.SourceAddress, ipHeader.DestinationAddress, etherHeader.Source, etherHeader.Destination, this);
                 _connections[(ipHeader.SourceAddress, tcp.SourcePort)] = connection;
                 _connectionDispatcher.OnConnection(connection.Connection);
             }
