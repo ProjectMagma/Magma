@@ -24,14 +24,17 @@ namespace Magma.NetMap.TcpHost
         private MacAddress _remoteMac;
         private MacAddress _localMac;
 
-        public NetmapTcpConnection(V4Address remoteAddress, V4Address localAddress, MacAddress remoteMac, MacAddress localMac, TcpReceiver tcpReceiver)
+        public NetmapTcpConnection(Ethernet ethHeader, IPv4 ipHeader,TcpReceiver tcpReceiver)
         {
-            _remoteAddress = remoteAddress;
-            _localAddress = localAddress;
-            _remoteMac = remoteMac;
-            _localMac = localMac;
+            _remoteAddress = ipHeader.SourceAddress;
+            _localAddress = ipHeader.DestinationAddress;
+            _remoteMac = ethHeader.Source;
+            _localMac = ethHeader.Destination;
             _tcpReceiver = tcpReceiver;
             _connection = new TransportConnection();
+
+            Console.WriteLine("Connection created");
+            Console.WriteLine($"Dont Fragment is {ipHeader.DontFragment}");
         }
 
         public TransportConnection Connection => _connection;
@@ -85,6 +88,7 @@ namespace Magma.NetMap.TcpHost
             ipHeader.SourceAddress = _localAddress;
             ipHeader.Protocol = Internet.Ip.ProtocolNumber.Tcp;
             ipHeader.TimeToLive = 128;
+            ipHeader.Dont
 
             Console.WriteLine($"Packet written ----> IP Working? {BitConverter.ToString(span.ToArray())}");
             // -----> Help?? ipHeader.DataLength = totalSize - Unsafe.SizeOf<Ethernet>() - Unsafe.SizeOf<IPv4>();

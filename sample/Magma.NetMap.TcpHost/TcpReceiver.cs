@@ -21,7 +21,7 @@ namespace Magma.NetMap.TcpHost
         private ushort _port;
         private Dictionary<(V4Address address, ushort port), NetmapTcpConnection> _connections = new Dictionary<(V4Address address, ushort port), NetmapTcpConnection>();
         private Random _randomSequenceNumber = new Random();
-
+        
         public TcpReceiver(IPEndPoint ipEndPoint, NetMapTransmitRing transmitRing, IConnectionDispatcher connectionDispatcher)
         {
             _ipEndPoint = ipEndPoint;

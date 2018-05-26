@@ -92,6 +92,22 @@ namespace Magma.Network.Header
         /// </remarks>
         public byte Flags => (byte)(_flagsAndFragmentOffset >> 13);
 
+        public bool DontFragment
+        {
+            get => (_flagsAndFragmentOffset & 0b_0100_0000) > 0;
+            set
+            {
+                if(value)
+                {
+                    _flagsAndFragmentOffset |= 0b_0100_0000;
+                }
+                else
+                {
+                    _flagsAndFragmentOffset &= 0b_1011_1111;
+                }
+            }
+        }
+
         /// <summary>
         /// The fragment offset field is measured in units of eight-byte blocks.
         /// </summary>
