@@ -152,14 +152,14 @@ namespace Magma.Network.Header
             set => _destinationIPAdress = value;
         }
 
-        public static bool TryConsume(ReadOnlySpan<byte> input, out IPv4 ip, out ReadOnlySpan<byte> data)
+        public static bool TryConsume(ReadOnlySpan<byte> input, out IPv4 ip, out ReadOnlySpan<byte> data, bool doChecksum = true)
         {
             if (input.Length >= Unsafe.SizeOf<IPv4>())
             {
                 ip = Unsafe.As<byte, IPv4>(ref MemoryMarshal.GetReference(input));
                 var totalSize = ip.TotalLength;
                 var headerSize = ip.HeaderLength;
-                if ((uint)totalSize >= (uint)headerSize && (uint)totalSize == (uint)input.Length && ip.IsChecksumValid())
+                if ((uint)totalSize >= (uint)headerSize && (uint)totalSize == (uint)input.Length && (doChecksum || ip.IsChecksumValid()))
                 {
                     data = input.Slice(headerSize);
                     return true;

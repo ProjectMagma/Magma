@@ -22,24 +22,24 @@ namespace Magma.Network.Header
         /// <summary>
         /// Identifies the sending port.
         /// </summary>
-        public ushort SourcePort => (ushort)IPAddress.NetworkToHostOrder((short)_sourcePort);
+        public ushort SourcePort { get => (ushort)System.Net.IPAddress.NetworkToHostOrder((short)_sourcePort); set => _sourcePort = (ushort)System.Net.IPAddress.HostToNetworkOrder((short)value); }
         /// <summary>
         /// Identifies the receiving port.
         /// </summary>
-        public ushort DestinationPort => (ushort)IPAddress.NetworkToHostOrder((short)_destinationPort);
+        public ushort DestinationPort { get => (ushort)System.Net.IPAddress.NetworkToHostOrder((short)_destinationPort); set => _destinationPort = (ushort)System.Net.IPAddress.HostToNetworkOrder((short)value); }
 
         /// <summary>
         /// Has a dual role: If the SYN flag is set(1), then this is the initial sequence number. 
         /// The sequence number of the actual first data byte and the acknowledged number in the corresponding ACK are then this sequence number plus 1.
         /// If the SYN flag is clear (0), then this is the accumulated sequence number of the first data byte of this segment for the current session.
         /// </summary>
-        public uint SequenceNumber => _sequenceNumber;
+        public uint SequenceNumber { get => _sequenceNumber; set => _sequenceNumber = value; }
 
         /// <summary>
         /// If the ACK flag is set then the value of this field is the next sequence number that the sender of the ACK is expecting.
         /// This acknowledges receipt of all prior bytes (if any). The first ACK sent by each end acknowledges the other end's initial sequence number itself, but no data.
         /// </summary>
-        public uint AcknowledgmentNumber => _acknowledgmentNumber;
+        public uint AcknowledgmentNumber { get => _acknowledgmentNumber; set => _acknowledgmentNumber = value; }
 
         /// <summary>
         /// Specifies the size of the TCP header in 32-bit words.
@@ -81,7 +81,21 @@ namespace Magma.Network.Header
         /// Indicates that the Acknowledgment field is significant.
         /// All packets after the initial SYN packet sent by the client should have this flag set.
         /// </summary>
-        public bool ACK => (_flags1 & 0b_0001_0000) == 0 ? false : true;
+        public bool ACK
+        {
+            get => (_flags1 & 0b_0001_0000) == 0 ? false : true;
+            set
+            {
+                if (value)
+                {
+                    _flags1 |= 0b_0001_0000;
+                }
+                else
+                {
+                    _flags1 &= 0b1110_1111;
+                }
+            }
+        }
 
         /// <summary>
         /// Push function. Asks to push the buffered data to the receiving application.
@@ -98,7 +112,21 @@ namespace Magma.Network.Header
         /// Only the first packet sent from each end should have this flag set.
         /// Some other flags and fields change meaning based on this flag, and some are only valid when it is set, and others when it is clear.
         /// </summary>
-        public bool SYN => (_flags1 & 0b_0000_0010) == 0 ? false : true;
+        public bool SYN
+        {
+            get => (_flags1 & 0b_0000_0010) == 0 ? false : true;
+            set
+            {
+                if (value)
+                {
+                    _flags1 |= 0b_0000_0010;
+                }
+                else
+                {
+                    _flags1 &= 0b_1111_1101;
+                }
+            }
+        }
 
         /// <summary>
         /// Last packet from sender.
