@@ -108,7 +108,7 @@ namespace Magma.Network.Header
         /// This field limits a datagram's lifetime and is a hop count - 
         /// when the datagram arrives at a router, the router decrements the TTL field by one. 
         /// </summary>
-        public byte TimeToLive => _ttl;
+        public byte TimeToLive { get => _ttl; set => _ttl = value; }
 
         /// <summary>
         /// This field defines the protocol used in the data portion of the IP datagram.
