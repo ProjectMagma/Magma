@@ -116,7 +116,7 @@ namespace Magma.Network.Header
         /// <remarks>
         /// The Internet Assigned Numbers Authority maintains a list of IP protocol numbers which was originally defined in RFC 790
         /// </remarks>
-        public ProtocolNumber Protocol => _protocol;
+        public ProtocolNumber Protocol { get => _protocol; set => _protocol = value; }
 
         /// <summary>
         /// The 16-bit checksum field is used for error-checking of the header.
