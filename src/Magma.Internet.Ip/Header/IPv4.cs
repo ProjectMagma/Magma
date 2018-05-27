@@ -225,7 +225,7 @@ namespace Magma.Network.Header
             header.DataLength = dataSize;
             header.HeaderChecksum = 0;
             header.Identification = identification;
-            header.HeaderChecksum = Checksum.Calcuate(ref Unsafe.As<IPv4, byte>(ref header), Unsafe.SizeOf<IPv4>());
+            header.HeaderChecksum = Checksum.Calculate(ref Unsafe.As<IPv4, byte>(ref header), Unsafe.SizeOf<IPv4>());
         }
 
         public unsafe override string ToString()

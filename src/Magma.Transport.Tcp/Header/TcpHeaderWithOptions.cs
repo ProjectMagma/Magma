@@ -13,6 +13,10 @@ namespace Magma.Transport.Tcp.Header
         private ushort _maximumSegmentSize;
         private bool _sackPermitted;
 
+        public bool SackPermitted => _sackPermitted;
+        public ushort MaximumSegmentSize => _maximumSegmentSize;
+        public byte WindowScale => _windowScale;
+
         public static bool TryConsume(ReadOnlySpan<byte> input, out TcpHeaderWithOptions headerWithOps, out ReadOnlySpan<byte> data)
         {
             if (!Network.Header.Tcp.TryConsume(input, out var tcpHeader, out var options, out data))

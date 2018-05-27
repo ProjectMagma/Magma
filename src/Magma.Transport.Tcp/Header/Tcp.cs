@@ -47,7 +47,15 @@ namespace Magma.Network.Header
         /// allowing for up to 40 bytes of options in the header. 
         /// This field gets its name from the fact that it is also the offset from the start of the TCP segment to the actual data.
         /// </summary>
-        public byte DataOffset => (byte)(_dataOffsetAndReservedAndFlags0 >> 4);
+        public byte DataOffset
+        {
+            get => (byte)(_dataOffsetAndReservedAndFlags0 >> 4);
+            set
+            {
+                value = (byte)(value << 4);
+                _dataOffsetAndReservedAndFlags0 = (byte)(value | (_dataOffsetAndReservedAndFlags0 & 0b0000_0001));
+            }
+        }
         /// <summary>
         /// For future use and should be set to zero. (3 bits)
         /// </summary>
@@ -56,13 +64,41 @@ namespace Magma.Network.Header
         /// <summary>
         /// ECN-nonce - concealment protection(experimental: see RFC 3540)
         /// </summary>
-        public bool NS => (_dataOffsetAndReservedAndFlags0 & 0b1) == 0 ? false : true;
+        public bool NS
+        {
+            get => (_dataOffsetAndReservedAndFlags0 & 0b1) == 0 ? false : true;
+            set
+            {
+                if (value)
+                {
+                    _dataOffsetAndReservedAndFlags0 |= 0b0000_0001;
+                }
+                else
+                {
+                    _dataOffsetAndReservedAndFlags0 &= 0b1111_1110;
+                }
+            }
+        }
 
         /// <summary>
         /// Congestion Window Reduced flag is set by the sending host to indicate that it received a TCP segment 
         /// with the ECE flag set and had responded in congestion control mechanism (added to header by RFC 3168).
         /// </summary>
-        public bool CWR => (_flags1 & 0b_1000_0000) == 0 ? false : true;
+        public bool CWR
+        {
+            get => (_flags1 & 0b_1000_0000) == 0 ? false : true;
+            set
+            {
+                if (value)
+                {
+                    _flags1 |= 0b_1000_0000;
+                }
+                else
+                {
+                    _flags1 &= 0b_0111_1111;
+                }
+            }
+        }
 
         /// <summary>
         /// ECN-Echo has a dual role, depending on the value of the SYN flag.
@@ -71,12 +107,40 @@ namespace Magma.Network.Header
         /// during normal transmission(added to header by RFC 3168). 
         /// This serves as an indication of network congestion (or impending congestion) to the TCP sender.
         /// </summary>
-        public bool ECE => (_flags1 & 0b_0100_0000) == 0 ? false : true;
+        public bool ECE
+        {
+            get => (_flags1 & 0b_0100_0000) == 0 ? false : true;
+            set
+            {
+                if (value)
+                {
+                    _flags1 |= 0b_0100_0000;
+                }
+                else
+                {
+                    _flags1 &= 0b_1011_1111;
+                }
+            }
+        }
 
         /// <summary>
         /// Indicates that the Urgent pointer field is significant
         /// </summary>
-        public bool URG => (_flags1 & 0b_0010_0000) == 0 ? false : true;
+        public bool URG
+        {
+            get => (_flags1 & 0b_0010_0000) == 0 ? false : true;
+            set
+            {
+                if (value)
+                {
+                    _flags1 |= 0b_0010_0000;
+                }
+                else
+                {
+                    _flags1 &= 0b_1101_1111;
+                }
+            }
+        }
         /// <summary>
         /// Indicates that the Acknowledgment field is significant.
         /// All packets after the initial SYN packet sent by the client should have this flag set.
@@ -100,13 +164,40 @@ namespace Magma.Network.Header
         /// <summary>
         /// Push function. Asks to push the buffered data to the receiving application.
         /// </summary>
-        public bool PSH => (_flags1 & 0b_0000_1000) == 0 ? false : true;
+        public bool PSH
+        {
+            get => (_flags1 & 0b_0000_1000) == 0 ? false : true;
+            set
+            {
+                if (value)
+                {
+                    _flags1 |= 0b_0000_1000;
+                }
+                else
+                {
+                    _flags1 &= 0b_1111_0111;
+                }
+            }
+        }
 
         /// <summary>
         /// Reset the connection
         /// </summary>
-        public bool RST => (_flags1 & 0b_0000_0100) == 0 ? false : true;
-
+        public bool RST
+        {
+            get => (_flags1 & 0b_0000_0100) == 0 ? false : true;
+            set
+            {
+                if (value)
+                {
+                    _flags1 |= 0b_0000_0100;
+                }
+                else
+                {
+                    _flags1 &= 0b_1111_1011;
+                }
+            }
+        }
         /// <summary>
         /// Synchronize sequence numbers.
         /// Only the first packet sent from each end should have this flag set.
@@ -131,26 +222,40 @@ namespace Magma.Network.Header
         /// <summary>
         /// Last packet from sender.
         /// </summary>
-        public bool FIN => (_flags1 & 0b_0000_0001) == 0 ? false : true;
+        public bool FIN
+        {
+            get => (_flags1 & 0b_0000_0001) == 0 ? false : true;
+            set
+            {
+                if (value)
+                {
+                    _flags1 |= 0b_0000_0001;
+                }
+                else
+                {
+                    _flags1 &= 0b_1111_1110;
+                }
+            }
+        }
 
         /// <summary>
         /// The size of the receive window, which specifies the number of bytes that 
         /// the sender of this segment is currently willing to receive.
         /// </summary>
-        public ushort WindowSize => _windowSize;
+        public ushort WindowSize { get => (ushort)System.Net.IPAddress.NetworkToHostOrder((short)_windowSize); set => _windowSize = (ushort)System.Net.IPAddress.HostToNetworkOrder((short)value); }
 
         /// <summary>
         /// The 16-bit checksum field is used for error-checking of the header, the Payload and a Pseudo-Header.
         /// The Pseudo-Header consists of the Source IP Address, the Destination IP Address, 
         /// the protocol number for the TCP-Protocol (0x0006) and the length of the TCP-Headers including Payload (in Bytes).
         /// </summary>
-        public ushort Checksum => _checksum;
+        public ushort Checksum { get => _checksum; set => _checksum = value; }
 
         /// <summary>
         /// If the URG flag is set, then this 16-bit field is an offset from the sequence number indicating the last urgent data byte.
         /// </summary>
         /// <returns></returns>
-        public ushort UrgentPointer => _urgentPointer;
+        public ushort UrgentPointer { get => _urgentPointer; set => _urgentPointer = value; }
 
         // Options: (Variable 0–320 bits, divisible by 32)
         // Padding: The TCP header padding is used to ensure that the TCP header ends, and data begins, on a 32 bit boundary.

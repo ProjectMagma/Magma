@@ -5,7 +5,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Magma.Link;
+using Magma.Network;
 using Magma.Network.Header;
+using Magma.Transport.Tcp.Header;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 using static Magma.Network.IPAddress;
 
@@ -24,6 +26,7 @@ namespace Magma.NetMap.TcpHost
         private V4Address _localAddress;
         private MacAddress _remoteMac;
         private MacAddress _localMac;
+        private byte _windowScale;
 
         public NetMapTcpConnection(Ethernet ethHeader, IPv4 ipHeader,TcpReceiver tcpReceiver)
         {
@@ -37,20 +40,20 @@ namespace Magma.NetMap.TcpHost
 
         public TransportConnection Connection => _connection;
 
-        public void ProcessPacket(Tcp header, ReadOnlySpan<byte> data)
+        public void ProcessPacket(TcpHeaderWithOptions header, ReadOnlySpan<byte> data)
         {
             switch(_state)
             {
                 case TcpConnectionState.Listen:
                     // We know we checked for syn in the upper layer so we can ignore that for now
-                    _receiveSequenceNumber = header.SequenceNumber;
+                    _receiveSequenceNumber = header.Header.SequenceNumber;
                     _sendSequenceNumber = _tcpReceiver.RandomSeqeunceNumber();
-                    _remotePort = header.SourcePort;
-                    _localPort = header.DestinationPort;
-
+                    _remotePort = header.Header.SourcePort;
+                    _localPort = header.Header.DestinationPort;
+                    _windowScale = header.WindowScale == 0 ? (byte)0x01 : header.WindowScale;
                     Tcp tcpHeader = default;
-
-                    if(!WriteEthernetPacket(0, ref tcpHeader, out var dataSpan, out var memory))
+                    
+                    if(!WriteEthernetPacket(0, ref tcpHeader, out var dataSpan, out var memory, out var tcpLength))
                     {
                         throw new NotImplementedException("Need to handle this we don't have anyway to ack cause we have back pressure");
                     }
@@ -58,6 +61,8 @@ namespace Magma.NetMap.TcpHost
                     tcpHeader.AcknowledgmentNumber = _receiveSequenceNumber+1;
                     tcpHeader.SequenceNumber = _sendSequenceNumber;
                     tcpHeader.SYN = true;
+                    tcpHeader.Checksum = 0;
+                    tcpHeader.Checksum = Checksum.Calculate(ref Unsafe.As<Tcp, byte>(ref tcpHeader), tcpLength);
                     _tcpReceiver.Transmitter.SendBuffer(memory);
                     _tcpReceiver.Transmitter.ForceFlush();
 
@@ -69,12 +74,13 @@ namespace Magma.NetMap.TcpHost
             }
         }
 
-        private bool WriteEthernetPacket(int dataSize, ref Tcp tcpHeader, out Span<byte> dataSpan, out Memory<byte> memory)
+        private bool WriteEthernetPacket(int dataSize, ref Tcp tcpHeader, out Span<byte> dataSpan, out Memory<byte> memory, out int tcpLength)
         {
             if(!_tcpReceiver.Transmitter.TryGetNextBuffer(out memory))
             {
                 dataSpan = default;
                 tcpHeader = default;
+                tcpLength = default;
                 return false;
             }
 
@@ -100,6 +106,7 @@ namespace Magma.NetMap.TcpHost
             tcpHeader.SourcePort = _localPort;
             memory = memory.Slice(0, totalSize);
             dataSpan = span.Slice(Unsafe.SizeOf<Ethernet>() + Unsafe.SizeOf<IPv4>() + Unsafe.SizeOf<Tcp>());
+            tcpLength = ipHeader.DataLength;
             return true;
 
         }
