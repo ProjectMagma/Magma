@@ -154,7 +154,7 @@ namespace Magma.NetMap.Host
                         ipOuput.DestinationAddress = ipv4.SourceAddress;
                         // Zero checksum and calcaulate
                         ipOuput.HeaderChecksum = 0;
-                        ipOuput.HeaderChecksum = Checksum.Calcuate(ref current, Unsafe.SizeOf<IPv4>());
+                        ipOuput.HeaderChecksum = Checksum.Calculate(ref current, Unsafe.SizeOf<IPv4>());
                         if (!ipOuput.IsChecksumValid())
                         {
                             WriteLine($"Out IP (Checksum Invalid) -> {BitConverter.ToString(MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref ipOuput, Unsafe.SizeOf<IPv4>())).ToArray())}");
@@ -171,7 +171,7 @@ namespace Magma.NetMap.Host
                         data.CopyTo(MemoryMarshal.CreateSpan(ref current, data.Length));
                         // Zero checksum and calcaulate
                         icmpOutput.HeaderChecksum = 0;
-                        icmpOutput.HeaderChecksum = Checksum.Calcuate(ref Unsafe.As<IcmpV4, byte>(ref icmpOutput), ipv4.DataLength);
+                        icmpOutput.HeaderChecksum = Checksum.Calculate(ref Unsafe.As<IcmpV4, byte>(ref icmpOutput), ipv4.DataLength);
 
                         if (!IcmpV4.IsChecksumValid(ref Unsafe.As<IcmpV4, byte>(ref icmpOutput), ipv4.DataLength))
                         {

@@ -62,7 +62,7 @@ namespace Magma.NetMap.TcpHost
                     tcpHeader.SequenceNumber = _sendSequenceNumber;
                     tcpHeader.SYN = true;
                     tcpHeader.Checksum = 0;
-                    tcpHeader.Checksum = Checksum.Calcuate(ref Unsafe.As<Tcp, byte>(ref tcpHeader), tcpLength);
+                    tcpHeader.Checksum = Checksum.Calculate(ref Unsafe.As<Tcp, byte>(ref tcpHeader), tcpLength);
                     _tcpReceiver.Transmitter.SendBuffer(memory);
                     _tcpReceiver.Transmitter.ForceFlush();
 

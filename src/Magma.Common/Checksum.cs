@@ -6,14 +6,77 @@ namespace Magma.Network
     public static class Checksum
     {
         public static bool IsValid(ref byte buffer, int length)
-            => Calcuate(ref buffer, length) == 0 ? true : false;
+            => Calculate(ref buffer, length, 0) == 0 ? true : false;
 
-        // Internet Checksum as defined by RFC 791, RFC 793, RFC 1071, RFC 1141, RFC 1624
-        public static ushort Calcuate(ref byte buffer, int length)
+
+        public static ushort Calculate(ref byte buffer, int length) => Calculate(ref buffer, length, 0u);
+
+        public static ulong PartialCalculate(ref byte buffer, int length) => PartialCalculate(ref buffer, length, 0u);
+
+        public static ulong PartialCalculate(ref byte buffer, int length, ulong sum)
         {
             ref var current = ref buffer;
-            ulong sum = 0;
 
+            while (length >= sizeof(ulong))
+            {
+                length -= sizeof(ulong);
+
+                var ulong0 = Unsafe.As<byte, ulong>(ref current);
+                current = ref Unsafe.Add(ref current, sizeof(ulong));
+
+                // Add with carry
+                sum += ulong0;
+                if (sum < ulong0)
+                {
+                    sum++;
+                }
+            }
+
+            if ((length & sizeof(uint)) != 0)
+            {
+                var uint0 = Unsafe.As<byte, uint>(ref current);
+                current = ref Unsafe.Add(ref current, sizeof(uint));
+
+                // Add with carry
+                sum += uint0;
+                if (sum < uint0)
+                {
+                    sum++;
+                }
+            }
+
+            if ((length & sizeof(ushort)) != 0)
+            {
+                var ushort0 = Unsafe.As<byte, ushort>(ref current);
+                current = ref Unsafe.Add(ref current, sizeof(ushort));
+
+                // Add with carry
+                sum += ushort0;
+                if (sum < ushort0)
+                {
+                    sum++;
+                }
+            }
+
+            if ((length & sizeof(byte)) != 0)
+            {
+                var byte0 = current;
+
+                // Add with carry
+                sum += byte0;
+                if (sum < byte0)
+                {
+                    sum++;
+                }
+            }
+            return sum;
+        }
+
+        // Internet Checksum as defined by RFC 791, RFC 793, RFC 1071, RFC 1141, RFC 1624
+        public static ushort Calculate(ref byte buffer, int length, ulong sum)
+        {
+            ref var current = ref buffer;
+            
             while (length >= sizeof(ulong))
             {
                 length -= sizeof(ulong);

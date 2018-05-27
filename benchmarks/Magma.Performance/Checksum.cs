@@ -13,7 +13,7 @@ namespace Magma.Performance
         public int Bytes { get; set; }
 
         [Benchmark]
-        public ushort GenerateChecksum() => Checksum.Calcuate(ref _bytes[0], _bytes.Length);
+        public ushort GenerateChecksum() => Checksum.Calculate(ref _bytes[0], _bytes.Length);
 
         [Benchmark]
         public bool ValidateChecksum() => Checksum.IsValid(ref _bytes[0], _bytes.Length);

@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Magma.Common\Magma.Common.csproj" />
+    <ProjectReference Include="..\Magma.Internet.Ip\Magma.Internet.Ip.csproj" />
   </ItemGroup>
 
 </Project>
