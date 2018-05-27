@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Magma.Internet.Ip\Magma.Internet.Ip.csproj" />
+    <ProjectReference Include="..\..\src\Magma.Transport.Tcp\Magma.Transport.Tcp.csproj" />
   </ItemGroup>
 
 </Project>

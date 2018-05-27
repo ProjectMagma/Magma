@@ -1,0 +1,59 @@
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
+
+namespace Magma.Transport.Tcp.Header
+{
+    public struct TcpHeaderWithOptions
+    {
+        public Network.Header.Tcp Header;
+        private byte _windowScale;
+        private ushort _maximumSegmentSize;
+        private bool _sackPermitted;
+
+        public static bool TryConsume(ReadOnlySpan<byte> input, out TcpHeaderWithOptions headerWithOps, out ReadOnlySpan<byte> data)
+        {
+            if (!Network.Header.Tcp.TryConsume(input, out var tcpHeader, out var options, out data))
+            {
+                headerWithOps = default;
+                return false;
+            }
+
+            headerWithOps = new TcpHeaderWithOptions() { Header = tcpHeader };
+
+            var exit = false;
+
+            while (options.Length > 0 && !exit)
+            {
+                var optionKind = (TcpOptionKind)options[0];
+                switch (optionKind)
+                {
+                    case TcpOptionKind.WindowScale:
+                        headerWithOps._windowScale = options[2];
+                        options = options.Slice(3);
+                        break;
+                    case TcpOptionKind.MaximumSegmentSize:
+                        headerWithOps._maximumSegmentSize = (ushort)(options[2] << 8 | options[3]);
+                        options = options.Slice(4);
+                        break;
+                    case TcpOptionKind.NoOp:
+                        options = options.Slice(1);
+                        break;
+                    case TcpOptionKind.SackPermitted:
+                        headerWithOps._sackPermitted = true;
+                        options = options.Slice(2);
+                        break;
+                    case TcpOptionKind.EndOfOptions:
+                        exit = true;
+                        break;
+                    default:
+                        throw new NotImplementedException($"Unknown option kind {optionKind}");
+                }
+            }
+
+            return true;
+        }
+    }
+}
