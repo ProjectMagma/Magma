@@ -156,6 +156,16 @@ namespace Magma.Network.Header
         // Padding: The TCP header padding is used to ensure that the TCP header ends, and data begins, on a 32 bit boundary.
         //          The padding is composed of zeros.
 
+        public static bool TryConsume(ReadOnlySpan<byte> input, out Tcp tcp, out ReadOnlySpan<byte> options, out ReadOnlySpan<byte> data)
+        {
+            if (!TryConsume(input, out tcp, out data))
+            {
+                options = default;
+                return false;
+            }
+            options = input.Slice(5 * 4);
+            return true;
+        }
 
         public static bool TryConsume(ReadOnlySpan<byte> input, out Tcp tcp, out ReadOnlySpan<byte> data)
         {
@@ -163,7 +173,7 @@ namespace Magma.Network.Header
             {
                 tcp = Unsafe.As<byte, Tcp>(ref MemoryMarshal.GetReference(input));
                 // Checksum check
-                data = input.Slice(Unsafe.SizeOf<Tcp>(), input.Length - (Unsafe.SizeOf<Tcp>()));
+                data = input.Slice(tcp.DataOffset * 4, input.Length - (tcp.DataOffset * 4));
                 return true;
             }
 
