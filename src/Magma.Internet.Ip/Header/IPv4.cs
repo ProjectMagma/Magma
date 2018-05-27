@@ -26,7 +26,7 @@ namespace Magma.Network.Header
         /// <summary>
         /// The first header field in an IP packet is the four-bit version field. For IPv4, this is always equal to 4.
         /// </summary>
-        public byte Version => (byte)(_versionAndHeaderLength & 0b_0000_1111);
+        public byte Version => (byte)(_versionAndHeaderLength >> 4);
 
         /// <summary>
         /// The Internet Header Length (IHL) field has 4 bits, which is the number of 32-bit words. 
@@ -36,21 +36,27 @@ namespace Magma.Network.Header
         /// The minimum value for this field is 5, which indicates a length of 5 × 32 bits = 160 bits = 20 bytes. 
         /// As a 4-bit field, the maximum value is 15 words (15 × 32 bits, or 480 bits = 60 bytes).
         /// </remarks>
-        public byte InternetHeaderLength => (byte)(_versionAndHeaderLength >> 4);
+        public byte InternetHeaderLength
+        {
+            get => (byte)(_versionAndHeaderLength & 0b0000_1111);
+            set => _versionAndHeaderLength = (byte)((value) | (Version << 4));
+        }
 
         /// <summary>
         /// This field is defined by RFC 2474 (updated by RFC 3168 and RFC 3260) for Differentiated services (DiffServ). 
         /// New technologies are emerging that require real-time data streaming and therefore make use of the DSCP field. 
         /// An example is Voice over IP (VoIP), which is used for interactive data voice exchange.
         /// </summary>
-        public byte DifferentiatedServicesCodePoint => (byte)(_versionAndHeaderLength & 0x3f);
+        public byte DifferentiatedServicesCodePoint => (byte)(_dscpAndEcn & 0b1111_1100);
 
         /// <summary>
         /// This field is defined in RFC 3168 and allows end-to-end notification of network congestion without dropping packets. 
         /// ECN is an optional feature that is only used when both endpoints support it and are willing to use it.
         /// It is only effective when supported by the underlying network.
         /// </summary>
-        public byte ExplicitCongestionNotification => (byte)(_versionAndHeaderLength >> 6);
+        public byte ExplicitCongestionNotification => (byte)(_dscpAndEcn >> 6);
+
+        public byte DscpAndEcn { get => _dscpAndEcn; set => _dscpAndEcn = value; }
 
         /// <summary>
         /// This 16-bit field defines the entire packet size in bytes, including header and data.
@@ -63,7 +69,7 @@ namespace Magma.Network.Header
         /// </remarks>
         public ushort TotalLength => (ushort)System.Net.IPAddress.NetworkToHostOrder((short)_totalLength);
 
-        public ushort HeaderLength => (ushort)((_versionAndHeaderLength & 0xf) * 4);
+        public ushort HeaderLength => (ushort)(InternetHeaderLength * 4);
         public ushort DataLength => (ushort)(TotalLength - HeaderLength);
 
         /// <summary>
@@ -97,7 +103,7 @@ namespace Magma.Network.Header
             get => (_flagsAndFragmentOffset & 0b_0100_0000) > 0;
             set
             {
-                if(value)
+                if (value)
                 {
                     _flagsAndFragmentOffset |= 0b_0100_0000;
                 }
@@ -175,7 +181,7 @@ namespace Magma.Network.Header
                 ip = Unsafe.As<byte, IPv4>(ref MemoryMarshal.GetReference(input));
                 var totalSize = ip.TotalLength;
                 var headerSize = ip.HeaderLength;
-                if ((uint)totalSize >= (uint)headerSize && (uint)totalSize == (uint)input.Length && (doChecksum || ip.IsChecksumValid()))
+                if (ip.Version == 4 && (uint)totalSize >= (uint)headerSize && (uint)totalSize == (uint)input.Length && (doChecksum || ip.IsChecksumValid()))
                 {
                     data = input.Slice(headerSize);
                     return true;

@@ -84,11 +84,14 @@ namespace Magma.NetMap.TcpHost
             pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Ethernet>());
 
             ref var ipHeader = ref Unsafe.As<byte, IPv4>(ref pointer);
+            ipHeader.DscpAndEcn = 0;
+            ipHeader.InternetHeaderLength = 5;
             ipHeader.DestinationAddress = _remoteAddress;
             ipHeader.SourceAddress = _localAddress;
             ipHeader.Protocol = Internet.Ip.ProtocolNumber.Tcp;
             ipHeader.TimeToLive = 128;
             ipHeader.DontFragment = true;
+
 
             Console.WriteLine($"Packet written ----> IP Working? {BitConverter.ToString(span.ToArray())}");
             // -----> Help?? ipHeader.DataLength = totalSize - Unsafe.SizeOf<Ethernet>() - Unsafe.SizeOf<IPv4>();

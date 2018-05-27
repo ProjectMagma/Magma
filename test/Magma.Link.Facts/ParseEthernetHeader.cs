@@ -14,7 +14,7 @@ namespace Magma.Link.Facts
 
             Assert.True(Network.Header.Ethernet.TryConsume(frame, out var ethernet, out var data));
 
-            Assert.Equal(72, data.Length);
+            Assert.Equal(76, data.Length);
         }
 
         [Fact]
