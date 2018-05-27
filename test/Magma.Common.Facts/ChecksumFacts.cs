@@ -35,5 +35,30 @@ namespace Magma.Common.Facts
             Assert.Equal(checksum, newChecksum);
         }
 
+        [Theory]
+        [InlineData(new byte[] { 0x08, 0x00, 0x32, 0x7B, 0x00, 0x01, 0x00, 0xBD, 0x61, 0x62, 0x63, 0x64 })]
+        public unsafe void SplitChecksum(byte[] IcpmPacket)
+        {
+            var input = new Span<byte>(IcpmPacket);
+
+            Assert.True(IcmpV4.TryConsume(input, out var icmpIn, out var data));
+
+            var checksum = icmpIn.HeaderChecksum;
+
+            Assert.Equal(0, Checksum.Calculate(ref MemoryMarshal.GetReference(input), IcpmPacket.Length));
+
+            icmpIn.HeaderChecksum = 0;
+            var changedData = new Span<byte>(&icmpIn, Unsafe.SizeOf<IcmpV4>());
+            changedData.CopyTo(input);
+
+            input = input.Slice(0, 6);
+            var input2 = input.Slice(6);
+
+            var temp = Checksum.PartialCalculate(ref MemoryMarshal.GetReference(input), input.Length);
+            var newChecksum = Checksum.Calculate(ref MemoryMarshal.GetReference(input2), input2.Length, temp);
+
+            Assert.Equal(checksum, newChecksum);
+        }
+
     }
 }
