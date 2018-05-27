@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using Magma.Link;
 using Magma.Network.Header;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
@@ -55,9 +56,12 @@ namespace Magma.NetMap.TcpHost
                     tcpHeader.SequenceNumber = _sendSequenceNumber;
                     tcpHeader.SYN = true;
                     _tcpReceiver.Transmitter.SendBuffer(memory);
+                    _tcpReceiver.Transmitter.ForceFlush();
+
                     _state = TcpConnectionState.Syn_Rcvd;
                     break;
                 default:
+                    Thread.Sleep(1000);
                     throw new NotImplementedException($"Unknown tcp state?? {_state}");
             }
         }
