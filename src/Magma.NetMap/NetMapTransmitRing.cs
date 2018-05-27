@@ -15,11 +15,7 @@ namespace Magma.NetMap
         private Thread _flushThread;
 
         internal unsafe NetMapTransmitRing(RxTxPair rxTxPair, byte* memoryRegion, long queueOffset)
-            : base(rxTxPair, memoryRegion, queueOffset)
-        {
-            _flushThread = new Thread(FlushLoop);
-            _flushThread.IsBackground = true;
-        }
+            : base(rxTxPair, memoryRegion, queueOffset) => _flushThread = new Thread(FlushLoop) { IsBackground = true };
 
         public override void Start() => _flushThread.Start();
 
@@ -27,7 +23,7 @@ namespace Magma.NetMap
         // so would include any changes that need to be flushed in something that sends between Wait and Reset
         private void FlushLoop()
         {
-            while(true)
+            while (true)
             {
                 _sendEvent.Wait();
                 _sendEvent.Reset();

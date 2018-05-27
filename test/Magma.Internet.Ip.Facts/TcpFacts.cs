@@ -18,6 +18,7 @@ namespace Magma.Internet.Ip.Facts
         private static readonly ushort _destPort = 6667;
         private static readonly byte[] _tcpSynPacketWithOptions = "e0 fe 1a 0b 7b 2b 85 36 00 00 00 00 80 02 fa f0 1b 94 00 00 02 04 05 b4 01 03 03 08 01 01 04 02".HexToByteArray();
                                                                 //"E0-FE-1A-0B-7B-2B-85-36-00-00-00-00-80-02-FA-F0-78-DA-00-00-02-04-05-B4-01-03-03-08-01-01-04-02"
+                                                                //Wireshark says the checksum is wrong on this and should be 0x520c so either will do me
         private static readonly byte[] _tcpSynPacket = _tcpSynPacketWithOptions.AsSpan().Slice(0, 20).ToArray();
         private static readonly uint _synSequenceNumber = 0x36852b7b;
         private static readonly V4Address _sourceAddress = new V4Address(172, 18, 225, 161);
