@@ -50,7 +50,9 @@ namespace Magma.Internet.Ip.Facts
             var span = _tcpSynPacket.HexToByteArray().AsSpan();
 
             Assert.True(TcpHeaderWithOptions.TryConsume(span, out var header, out var data));
-
+            Assert.True(header.SackPermitted);
+            Assert.Equal(1460, header.MaximumSegmentSize);
+            Assert.Equal(8, header.WindowScale);
         }
     }
 }
