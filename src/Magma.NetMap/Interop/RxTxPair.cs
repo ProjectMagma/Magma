@@ -35,6 +35,10 @@ namespace Magma.NetMap.Interop
 
         }
 
-        public unsafe void ForceFlush() => IOCtl(_txFileDescriptor, IOControlCommand.NIOCTXSYNC, IntPtr.Zero);
+        public unsafe void ForceFlush()
+        {
+            Console.WriteLine("Forcing flush on TX pair");
+            IOCtl(_txFileDescriptor, IOControlCommand.NIOCTXSYNC, IntPtr.Zero);
+        }
     }
 }
