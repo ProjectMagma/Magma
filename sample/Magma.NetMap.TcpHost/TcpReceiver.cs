@@ -19,7 +19,7 @@ namespace Magma.NetMap.TcpHost
         private V4Address _address;
         private bool _isAny;
         private ushort _port;
-        private Dictionary<(V4Address address, ushort port), NetmapTcpConnection> _connections = new Dictionary<(V4Address address, ushort port), NetmapTcpConnection>();
+        private Dictionary<(V4Address address, ushort port), NetMapTcpConnection> _connections = new Dictionary<(V4Address address, ushort port), NetMapTcpConnection>();
         private Random _randomSequenceNumber = new Random();
 
         public TcpReceiver(IPEndPoint ipEndPoint, NetMapTransmitRing transmitRing, IConnectionDispatcher connectionDispatcher)
@@ -66,7 +66,7 @@ namespace Magma.NetMap.TcpHost
                 }
 
                 // So looks like we need to create a connection then
-                connection = new NetmapTcpConnection(etherHeader, ipHeader, this);
+                connection = new NetMapTcpConnection(etherHeader, ipHeader, this);
                 _connections[(ipHeader.SourceAddress, tcp.SourcePort)] = connection;
                 _connectionDispatcher.OnConnection(connection.Connection);
             }

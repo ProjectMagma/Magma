@@ -8,7 +8,7 @@ namespace Magma.Internet.Ip.Facts
 {
     public class IPFacts
     {
-        private static readonly string _ipHeader = "45 00 00 34 1f a2 40 00 80 06 00 00 ac 12 e1 a1 ac 12 e1 a6"; // cd 11 1a 0b 7e 03 d3 f1 00 00 00 00 80 02 fa f0 1b 94 00 00 02 04 05 b4 01 03 03 08 01 01 04 02";
+        private static readonly string _ipHeader = "45 00 00 34 1f a2 40 00 80 06 00 00 ac 12 e1 a1 ac 12 e1 a6";
 
         [Fact]
         public void CanReadIPHeader()
@@ -20,7 +20,6 @@ namespace Magma.Internet.Ip.Facts
             Assert.Equal(4, ipHeader.Version);
             Assert.Equal(5, ipHeader.InternetHeaderLength);
             Assert.Equal(20, ipHeader.HeaderLength);
-
         }
 
         [Fact]
@@ -33,6 +32,31 @@ namespace Magma.Internet.Ip.Facts
 
             Assert.Equal(5, ipHeader.InternetHeaderLength);
             Assert.Equal(20, ipHeader.HeaderLength);
+        }
+
+        [Fact]
+        public void HeaderLength()
+        {
+            var ipHeader = new IPv4()
+            {
+                HeaderLength = 20,
+            };
+
+            Assert.Equal(5, ipHeader.InternetHeaderLength);
+            Assert.Equal(20, ipHeader.HeaderLength);
+        }
+
+        [Fact]
+        public void HeaderAndVersionWorkTogether()
+        {
+            var ipHeader = new IPv4()
+            {
+                InternetHeaderLength = 5,
+                Version = 4,
+            };
+
+            Assert.Equal(4, ipHeader.Version);
+            Assert.Equal(5, ipHeader.InternetHeaderLength);
         }
     }
 }
