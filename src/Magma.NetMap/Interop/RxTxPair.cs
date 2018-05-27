@@ -9,8 +9,8 @@ namespace Magma.NetMap.Interop
     {
         private FileDescriptor _rxFileDescriptor;
         //private FileDescriptor _txFileDescriptor;
-        private int _ringId;
-        private bool _isHostStack;
+        private readonly int _ringId;
+        private readonly bool _isHostStack;
 
         internal unsafe RxTxPair(string interfaceName, int ringId, bool isHostStack)
         {
@@ -35,9 +35,6 @@ namespace Magma.NetMap.Interop
 
         }
 
-        public unsafe void ForceFlush()
-        {
-            IOCtl(_rxFileDescriptor, IOControlCommand.NIOCTXSYNC, IntPtr.Zero);
-        }
+        public unsafe void ForceFlush() => IOCtl(_rxFileDescriptor, IOControlCommand.NIOCTXSYNC, IntPtr.Zero);
     }
 }

@@ -11,7 +11,7 @@ namespace Magma.NetMap
         private readonly Thread _worker;
         private TPacketReceiver _receiver;
         private NetMapTransmitRing _hostTxRing;
-        private object _lock = new object();
+        private readonly object _lock = new object();
 
         internal unsafe NetMapReceiveRing(RxTxPair rxTxPair, byte* memoryRegion, long queueOffset, TPacketReceiver receiver, NetMapTransmitRing hostTxRing)
             : base(rxTxPair, memoryRegion, queueOffset)
