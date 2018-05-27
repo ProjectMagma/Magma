@@ -144,7 +144,7 @@ namespace Magma.Network.Header
         /// The Pseudo-Header consists of the Source IP Address, the Destination IP Address, 
         /// the protocol number for the TCP-Protocol (0x0006) and the length of the TCP-Headers including Payload (in Bytes).
         /// </summary>
-        public ushort Checksum => _checksum;
+        public ushort Checksum { get => _checksum; set => _checksum = value; }
 
         /// <summary>
         /// If the URG flag is set, then this 16-bit field is an offset from the sequence number indicating the last urgent data byte.

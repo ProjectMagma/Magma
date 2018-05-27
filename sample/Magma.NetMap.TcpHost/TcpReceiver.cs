@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Magma.Network.Abstractions;
 using Magma.Network.Header;
+using Magma.Transport.Tcp.Header;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 using static Magma.Network.IPAddress;
 
@@ -51,15 +52,15 @@ namespace Magma.NetMap.TcpHost
                 || !ipHeader.IsChecksumValid()) return input;
 
             // So we have TCP lets parse out the header
-            if (!Tcp.TryConsume(data, out var tcp, out data)
-                || tcp.DestinationPort != _port) return input;
+            if (!TcpHeaderWithOptions.TryConsume(data, out var tcp, out data)
+                || tcp.Header.DestinationPort != _port) return input;
 
             // okay we now have some data we care about all the rest has been ditched to the host rings
-            if (!_connections.TryGetValue((ipHeader.SourceAddress, tcp.SourcePort), out var connection))
+            if (!_connections.TryGetValue((ipHeader.SourceAddress, tcp.Header.SourcePort), out var connection))
             {
                 // We need to create a connection because we don't know this one but only if the packet is a syn
                 // otherwise this is garbage and we should just swallow it
-                if (!tcp.SYN)
+                if (!tcp.Header.SYN)
                 {
                     input.Dispose();
                     return default;
@@ -67,7 +68,7 @@ namespace Magma.NetMap.TcpHost
 
                 // So looks like we need to create a connection then
                 connection = new NetMapTcpConnection(etherHeader, ipHeader, this);
-                _connections[(ipHeader.SourceAddress, tcp.SourcePort)] = connection;
+                _connections[(ipHeader.SourceAddress, tcp.Header.SourcePort)] = connection;
                 _connectionDispatcher.OnConnection(connection.Connection);
             }
 
