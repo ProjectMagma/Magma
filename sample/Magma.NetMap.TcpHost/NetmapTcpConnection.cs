@@ -90,7 +90,7 @@ namespace Magma.NetMap.TcpHost
             pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Ethernet>());
 
             ref var ipHeader = ref Unsafe.As<byte, IPv4>(ref pointer);
-            IPv4.InitHeader(ref ipHeader, _localAddress, _remoteAddress, (ushort)(Unsafe.SizeOf<Tcp>() + dataSize), Internet.Ip.ProtocolNumber.Tcp);
+            IPv4.InitHeader(ref ipHeader, _localAddress, _remoteAddress, (ushort)(Unsafe.SizeOf<Tcp>() + dataSize), Internet.Ip.ProtocolNumber.Tcp, 41503);
             pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<IPv4>());
 
             // IP V4 done time to do the TCP packet;
