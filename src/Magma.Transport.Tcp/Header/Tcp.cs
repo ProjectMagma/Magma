@@ -150,7 +150,7 @@ namespace Magma.Network.Header
         /// If the URG flag is set, then this 16-bit field is an offset from the sequence number indicating the last urgent data byte.
         /// </summary>
         /// <returns></returns>
-        public ushort UrgentPointer => _urgentPointer;
+        public ushort UrgentPointer { get => _urgentPointer; set => _urgentPointer = value; }
 
         // Options: (Variable 0–320 bits, divisible by 32)
         // Padding: The TCP header padding is used to ensure that the TCP header ends, and data begins, on a 32 bit boundary.

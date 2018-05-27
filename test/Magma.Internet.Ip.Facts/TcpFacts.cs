@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -53,6 +54,22 @@ namespace Magma.Internet.Ip.Facts
             Assert.True(header.SackPermitted);
             Assert.Equal(1460, header.MaximumSegmentSize);
             Assert.Equal(8, header.WindowScale);
+        }
+
+        [Fact]
+        public void CanWriteTcpSyn()
+        {
+            var span = Enumerable.Repeat<byte>(0xFF, 20).ToArray().AsSpan();
+            ref var tcpHeader = ref Unsafe.As<byte, Tcp>(ref MemoryMarshal.GetReference(span));
+            tcpHeader.ACK = false;
+            tcpHeader.AcknowledgmentNumber = 0;
+            tcpHeader.Checksum = 0;
+            tcpHeader.DestinationPort = _destPort;
+            tcpHeader.SourcePort = _sourcePort;
+            tcpHeader.SYN = true;
+            tcpHeader.UrgentPointer = 0;
+
+
         }
     }
 }
