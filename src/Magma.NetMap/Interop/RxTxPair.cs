@@ -8,7 +8,7 @@ namespace Magma.NetMap.Interop
     public class RxTxPair
     {
         private FileDescriptor _rxFileDescriptor;
-        private FileDescriptor _txFileDescriptor;
+        //private FileDescriptor _txFileDescriptor;
         private int _ringId;
         private bool _isHostStack;
 
@@ -19,8 +19,8 @@ namespace Magma.NetMap.Interop
             var flags = isHostStack ? NetMapRequestFlags.NR_REG_SW : NetMapRequestFlags.NR_REG_ONE_NIC;
             ringId = isHostStack ? 0 : ringId;
             
-            _rxFileDescriptor = OpenNetMap(interfaceName, ringId, flags | NetMapRequestFlags.NR_RX_RINGS_ONLY, out var request);
-            _txFileDescriptor = OpenNetMap(interfaceName, ringId, flags | NetMapRequestFlags.NR_TX_RINGS_ONLY, out request);
+            _rxFileDescriptor = OpenNetMap(interfaceName, ringId, flags, out var request);
+            //_txFileDescriptor = OpenNetMap(interfaceName, ringId, flags | NetMapRequestFlags.NR_TX_RINGS_ONLY, out request);
         }
 
         public unsafe void WaitForWork()
@@ -37,8 +37,7 @@ namespace Magma.NetMap.Interop
 
         public unsafe void ForceFlush()
         {
-            Console.WriteLine("Forcing flush on TX pair");
-            IOCtl(_txFileDescriptor, IOControlCommand.NIOCTXSYNC, IntPtr.Zero);
+            IOCtl(_rxFileDescriptor, IOControlCommand.NIOCTXSYNC, IntPtr.Zero);
         }
     }
 }
