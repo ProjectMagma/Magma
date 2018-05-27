@@ -69,6 +69,11 @@ namespace Magma.NetMap.TcpHost
                     _state = TcpConnectionState.Syn_Rcvd;
                     break;
                 case TcpConnectionState.Syn_Rcvd:
+                    if(header.Header.SYN)
+                    {
+                        Console.WriteLine("Another Syn made");
+                        return;
+                    }
                     Console.WriteLine($"Got a syn received with sequence number {header.Header.SequenceNumber} is it correct? {header.Header.SequenceNumber == _receiveSequenceNumber}");
                     Console.WriteLine($"Also the ack was {header.Header.AcknowledgmentNumber} is it correct? {header.Header.AcknowledgmentNumber == _sendSequenceNumber}");
                     _state = TcpConnectionState.Established;
