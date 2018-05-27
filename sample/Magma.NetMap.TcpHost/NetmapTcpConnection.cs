@@ -45,6 +45,9 @@ namespace Magma.NetMap.TcpHost
                     // We know we checked for syn in the upper layer so we can ignore that for now
                     _receiveSequenceNumber = header.SequenceNumber;
                     _sendSequenceNumber = _tcpReceiver.RandomSeqeunceNumber();
+                    _remotePort = header.SourcePort;
+                    _localPort = header.DestinationPort;
+
                     Tcp tcpHeader = default;
 
                     if(!WriteEthernetPacket(0, ref tcpHeader, out var dataSpan, out var memory))
