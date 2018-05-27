@@ -26,7 +26,11 @@ namespace Magma.Network.Header
         /// <summary>
         /// The first header field in an IP packet is the four-bit version field. For IPv4, this is always equal to 4.
         /// </summary>
-        public byte Version => (byte)(_versionAndHeaderLength >> 4);
+        public byte Version
+        {
+            get => (byte)(_versionAndHeaderLength >> 4);
+            set => _versionAndHeaderLength = (byte)(InternetHeaderLength | (value << 4));
+        }
 
         /// <summary>
         /// The Internet Header Length (IHL) field has 4 bits, which is the number of 32-bit words. 
@@ -39,7 +43,11 @@ namespace Magma.Network.Header
         public byte InternetHeaderLength
         {
             get => (byte)(_versionAndHeaderLength & 0b0000_1111);
-            set => _versionAndHeaderLength = (byte)((value) | (Version << 4));
+            set
+            {
+                TotalLength = (ushort)(value + DataLength);
+                _versionAndHeaderLength = (byte)((value) | (Version << 4));
+            }
         }
 
         /// <summary>
@@ -67,10 +75,18 @@ namespace Magma.Network.Header
         /// Sometimes links impose further restrictions on the packet size, in which case datagrams must be fragmented.
         /// Fragmentation in IPv4 is handled in either the host or in routers.
         /// </remarks>
-        public ushort TotalLength => (ushort)System.Net.IPAddress.NetworkToHostOrder((short)_totalLength);
+        public ushort TotalLength
+        {
+            get => (ushort)System.Net.IPAddress.NetworkToHostOrder((short)_totalLength);
+            set => _totalLength = (ushort)System.Net.IPAddress.HostToNetworkOrder((short)value);
+        }
 
-        public ushort HeaderLength => (ushort)(InternetHeaderLength * 4);
-        public ushort DataLength => (ushort)(TotalLength - HeaderLength);
+        public ushort HeaderLength { get => (ushort)(InternetHeaderLength * 4); set => InternetHeaderLength = (byte)(value / 4); }
+        public ushort DataLength
+        {
+            get => (ushort)(TotalLength - HeaderLength);
+            set => TotalLength = (ushort)(value + HeaderLength);
+        }
 
         /// <summary>
         /// This field is an identification field and is primarily used for uniquely identifying the group of fragments of a single IP datagram. 
@@ -97,7 +113,7 @@ namespace Magma.Network.Header
         /// The last fragment has a non-zero Fragment Offset field, differentiating it from an unfragmented packet.
         /// </remarks>
         public byte Flags => (byte)(_flagsAndFragmentOffset >> 13);
-
+        
         public bool DontFragment
         {
             get => (_flagsAndFragmentOffset & 0b_0100_0000) > 0;
@@ -124,6 +140,8 @@ namespace Magma.Network.Header
         /// which would exceed the maximum IP packet length of 65,535 bytes with the header length included (65,528 + 20 = 65,548 bytes).
         /// </remarks>
         public ushort FragmentOffset => (ushort)(_flagsAndFragmentOffset & 0b_0001_1111_1111_1111);
+
+        public ushort FlagsAndFragmentOffset { get => _flagsAndFragmentOffset; set => _flagsAndFragmentOffset = value; }
 
         /// <summary>
         /// An eight-bit time to live field helps prevent datagrams from persisting n an internet. 
@@ -191,6 +209,22 @@ namespace Magma.Network.Header
             ip = default;
             data = default;
             return false;
+        }
+
+        public static void InitHeader(ref IPv4 header, V4Address source, V4Address destination, ushort dataSize, ProtocolNumber protocol)
+        {
+            header.Version = 4;
+            header.HeaderLength = 20;
+            header.DscpAndEcn = 0;
+            header.DestinationAddress = destination;
+            header.SourceAddress = source;
+            header.Protocol = protocol;
+            header.TimeToLive = 128;
+            header.FlagsAndFragmentOffset = 0;
+            header.DontFragment = true;
+            header.DataLength = dataSize;
+            header.HeaderChecksum = 0;
+            header.HeaderChecksum = Checksum.Calcuate(ref Unsafe.As<IPv4, byte>(ref header), Unsafe.SizeOf<IPv4>());
         }
 
         public unsafe override string ToString()

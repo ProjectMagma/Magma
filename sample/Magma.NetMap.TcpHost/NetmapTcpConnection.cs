@@ -10,7 +10,7 @@ using static Magma.Network.IPAddress;
 
 namespace Magma.NetMap.TcpHost
 {
-    public class NetmapTcpConnection
+    public class NetMapTcpConnection
     {
         private TcpReceiver _tcpReceiver;
         private TransportConnection _connection;
@@ -24,7 +24,7 @@ namespace Magma.NetMap.TcpHost
         private MacAddress _remoteMac;
         private MacAddress _localMac;
 
-        public NetmapTcpConnection(Ethernet ethHeader, IPv4 ipHeader,TcpReceiver tcpReceiver)
+        public NetMapTcpConnection(Ethernet ethHeader, IPv4 ipHeader,TcpReceiver tcpReceiver)
         {
             _remoteAddress = ipHeader.SourceAddress;
             _localAddress = ipHeader.DestinationAddress;
@@ -32,9 +32,6 @@ namespace Magma.NetMap.TcpHost
             _localMac = ethHeader.Destination;
             _tcpReceiver = tcpReceiver;
             _connection = new TransportConnection();
-
-            Console.WriteLine("Connection created");
-            Console.WriteLine($"Dont Fragment is {ipHeader.DontFragment}");
         }
 
         public TransportConnection Connection => _connection;
@@ -47,7 +44,9 @@ namespace Magma.NetMap.TcpHost
                     // We know we checked for syn in the upper layer so we can ignore that for now
                     _receiveSequenceNumber = header.SequenceNumber;
                     _sendSequenceNumber = _tcpReceiver.RandomSeqeunceNumber();
-                    if(!WriteEthernetPacket(0, out var tcpHeader, out var dataSpan, out var memory))
+                    Tcp tcpHeader = default;
+
+                    if(!WriteEthernetPacket(0, ref tcpHeader, out var dataSpan, out var memory))
                     {
                         throw new NotImplementedException("Need to handle this we don't have anyway to ack cause we have back pressure");
                     }
@@ -63,7 +62,7 @@ namespace Magma.NetMap.TcpHost
             }
         }
 
-        private bool WriteEthernetPacket(int dataSize, out Tcp tcpHeader, out Span<byte> dataSpan, out Memory<byte> memory)
+        private bool WriteEthernetPacket(int dataSize, ref Tcp tcpHeader, out Span<byte> dataSpan, out Memory<byte> memory)
         {
             if(!_tcpReceiver.Transmitter.TryGetNextBuffer(out memory))
             {
@@ -84,22 +83,12 @@ namespace Magma.NetMap.TcpHost
             pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Ethernet>());
 
             ref var ipHeader = ref Unsafe.As<byte, IPv4>(ref pointer);
-            ipHeader.DscpAndEcn = 0;
-            ipHeader.InternetHeaderLength = 5;
-            ipHeader.DestinationAddress = _remoteAddress;
-            ipHeader.SourceAddress = _localAddress;
-            ipHeader.Protocol = Internet.Ip.ProtocolNumber.Tcp;
-            ipHeader.TimeToLive = 128;
-            ipHeader.DontFragment = true;
-
-
-            Console.WriteLine($"Packet written ----> IP Working? {BitConverter.ToString(span.ToArray())}");
-            // -----> Help?? ipHeader.DataLength = totalSize - Unsafe.SizeOf<Ethernet>() - Unsafe.SizeOf<IPv4>();
-            // What else needs to be set?
-            throw new NotImplementedException();
+            IPv4.InitHeader(ref ipHeader, _localAddress, _remoteAddress, (ushort)(Unsafe.SizeOf<Tcp>() + dataSize), Internet.Ip.ProtocolNumber.Tcp);
             pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<IPv4>());
 
-            tcpHeader = Unsafe.As<byte, Tcp>(ref pointer);
+            // IP V4 done time to do the TCP packet;
+
+            tcpHeader = ref Unsafe.As<byte, Tcp>(ref pointer);
             tcpHeader.DestinationPort = _remotePort;
             tcpHeader.SourcePort = _localPort;
             memory = memory.Slice(0, totalSize);
