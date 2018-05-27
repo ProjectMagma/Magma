@@ -10,6 +10,8 @@ namespace Magma.Network
         {
             public uint Address;
 
+            public V4Address(byte byte1, byte byte2, byte byte3, byte byte4) => Address = (uint)(byte1 | (byte2 << 8) | (byte3 << 16) | (byte4 << 24));
+
             public override string ToString() => $"{Address & 0xff}.{(Address >> 8) & 0xff}.{(Address >> 16) & 0xff}.{(Address >> 24) & 0xff}";
 
             public static bool operator ==(V4Address address1, V4Address address2) => address1.Address == address2.Address;

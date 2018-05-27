@@ -96,7 +96,7 @@ namespace Magma.Network.Header
         /// such as for adding packet-tracing information to help trace datagrams with spoofed source addresses, 
         /// but RFC 6864 now prohibits any such use.
         /// </remarks>
-        public ushort Identification => _identification;
+        public ushort Identification { get => _identification; set => _identification = value; }
 
         /// <summary>
         /// A three-bit field follows and is used to control or identify fragments. They are (in order, from most significant to least significant):
@@ -211,7 +211,7 @@ namespace Magma.Network.Header
             return false;
         }
 
-        public static void InitHeader(ref IPv4 header, V4Address source, V4Address destination, ushort dataSize, ProtocolNumber protocol)
+        public static void InitHeader(ref IPv4 header, V4Address source, V4Address destination, ushort dataSize, ProtocolNumber protocol, ushort identification)
         {
             header.Version = 4;
             header.HeaderLength = 20;
@@ -224,6 +224,7 @@ namespace Magma.Network.Header
             header.DontFragment = true;
             header.DataLength = dataSize;
             header.HeaderChecksum = 0;
+            header.Identification = identification;
             header.HeaderChecksum = Checksum.Calcuate(ref Unsafe.As<IPv4, byte>(ref header), Unsafe.SizeOf<IPv4>());
         }
 
