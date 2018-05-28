@@ -17,9 +17,14 @@ namespace Magma.Internet.Ip.Facts
         [Fact]
         public void ThreeWayHandshakeWorks()
         {
-            var span = s_synPacket.AsSpan();
+            var synSpan = s_synPacket.AsSpan();
+            var synAckSpan = s_synAckPacket.AsSpan();
 
-            Assert.True(Ethernet.TryConsume(span, out var etherHeader, out var data));
+            Assert.True(Ethernet.TryConsume(synAckSpan, out var synAckEthHeader, out var data));
+            Assert.True(IPv4.TryConsume(data, out var synAckIpHeader, out data));
+            Assert.True(TcpHeaderWithOptions.TryConsume(data, out var synAckTcpHeader, out data));
+
+            Assert.True(Ethernet.TryConsume(synSpan, out var etherHeader, out data));
             Assert.True(IPv4.TryConsume(data, out var ipHeader, out data, true));
             Assert.True(TcpHeaderWithOptions.TryConsume(data, out var tcpHeader, out data));
 
@@ -35,19 +40,22 @@ namespace Magma.Internet.Ip.Facts
             {
             }
 
-            protected override uint GetRandomSequenceStart()
-            {
-                throw new NotImplementedException();
-            }
+            protected override uint GetRandomSequenceStart() => 697411256;
+
+            protected override uint GetTimestamp() => 1315092752;
 
             protected override bool TryGetMemory(out Memory<byte> memory)
             {
-                throw new NotImplementedException();
+                memory = (new byte[2048]).AsMemory();
+                return true;
             }
 
             protected override void WriteMemory(Memory<byte> memory)
             {
-                throw new NotImplementedException();
+                for(var i = 0; i < memory.Length;i++)
+                {
+                    Assert.Equal(s_synAckPacket[i], memory.Span[i]);
+                }
             }
         }
     }
