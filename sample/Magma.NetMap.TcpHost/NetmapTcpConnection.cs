@@ -27,6 +27,7 @@ namespace Magma.NetMap.TcpHost
         private MacAddress _remoteMac;
         private MacAddress _localMac;
         private byte _windowScale;
+        private ushort _windowSize;
 
         public NetMapTcpConnection(Ethernet ethHeader, IPv4 ipHeader,TcpReceiver tcpReceiver)
         {
@@ -51,22 +52,31 @@ namespace Magma.NetMap.TcpHost
                     _remotePort = header.Header.SourcePort;
                     _localPort = header.Header.DestinationPort;
                     _windowScale = header.WindowScale == 0 ? (byte)0x01 : header.WindowScale;
+                    _windowSize = header.Header.WindowSize;
                     Tcp tcpHeader = default;
                     
                     if(!WriteEthernetPacket(0, ref tcpHeader, out var dataSpan, out var memory, out var tcpLength))
                     {
                         throw new NotImplementedException("Need to handle this we don't have anyway to ack cause we have back pressure");
                     }
-                    tcpHeader.ACK = true;
-                    tcpHeader.AcknowledgmentNumber = _receiveSequenceNumber+1;
-                    tcpHeader.SequenceNumber = _sendSequenceNumber;
+                    tcpHeader.AcknowledgmentNumber = ++_receiveSequenceNumber;
+                    tcpHeader.SequenceNumber = _sendSequenceNumber ++;
                     tcpHeader.SYN = true;
-                    tcpHeader.Checksum = 0;
                     tcpHeader.Checksum = Checksum.Calculate(ref Unsafe.As<Tcp, byte>(ref tcpHeader), tcpLength);
                     _tcpReceiver.Transmitter.SendBuffer(memory);
                     _tcpReceiver.Transmitter.ForceFlush();
 
                     _state = TcpConnectionState.Syn_Rcvd;
+                    break;
+                case TcpConnectionState.Syn_Rcvd:
+                    if(header.Header.SYN)
+                    {
+                        Console.WriteLine("Another Syn made");
+                        return;
+                    }
+                    Console.WriteLine($"Got a syn received with sequence number {header.Header.SequenceNumber} is it correct? {header.Header.SequenceNumber == _receiveSequenceNumber}");
+                    Console.WriteLine($"Also the ack was {header.Header.AcknowledgmentNumber} is it correct? {header.Header.AcknowledgmentNumber == _sendSequenceNumber}");
+                    _state = TcpConnectionState.Established;
                     break;
                 default:
                     Thread.Sleep(1000);
@@ -104,6 +114,19 @@ namespace Magma.NetMap.TcpHost
             tcpHeader = ref Unsafe.As<byte, Tcp>(ref pointer);
             tcpHeader.DestinationPort = _remotePort;
             tcpHeader.SourcePort = _localPort;
+            tcpHeader.ACK = true;
+            tcpHeader.Checksum = 0;
+            tcpHeader.CWR = false;
+            tcpHeader.DataOffset = 5;
+            tcpHeader.ECE = false;
+            tcpHeader.FIN = false;
+            tcpHeader.NS = false;
+            tcpHeader.PSH = true;
+            tcpHeader.RST = false;
+            tcpHeader.SYN = false;
+            tcpHeader.URG = false;
+            tcpHeader.UrgentPointer = 0;
+            tcpHeader.WindowSize = _windowSize;
             memory = memory.Slice(0, totalSize);
             dataSpan = span.Slice(Unsafe.SizeOf<Ethernet>() + Unsafe.SizeOf<IPv4>() + Unsafe.SizeOf<Tcp>());
             tcpLength = ipHeader.DataLength;

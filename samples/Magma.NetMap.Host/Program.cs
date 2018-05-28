@@ -108,6 +108,7 @@ namespace Magma.NetMap.Host
             if (Tcp.TryConsume(input, out var tcpIn, out var data))
             {
                 WriteLine($"{tcpIn.ToString()}");
+                WriteLine($"Full packet data {BitConverter.ToString(input.ToArray())}");
                 // Pass to host to deal with
                 return false;
             }
@@ -231,7 +232,7 @@ namespace Magma.NetMap.Host
             Console.WriteLine($"IP Header length: {Unsafe.SizeOf<IPv4>()}");
             Console.WriteLine($"TCP Header length: {Unsafe.SizeOf<Tcp>()}");
 
-            var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, log: true, loggingToFile: false));
+            var netmap = new NetMapPort<PacketReceiver>(interfaceName, transmitter => new PacketReceiver(RingId++, transmitter, log: true, loggingToFile: true));
             netmap.Open();
             netmap.PrintPortInfo();
 

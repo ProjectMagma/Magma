@@ -49,6 +49,9 @@ namespace Magma.Transport.Tcp.Header
                         headerWithOps._sackPermitted = true;
                         options = options.Slice(2);
                         break;
+                    case TcpOptionKind.Timestamps:
+                        options = options.Slice(options[1]);
+                        break;
                     case TcpOptionKind.EndOfOptions:
                         exit = true;
                         break;
