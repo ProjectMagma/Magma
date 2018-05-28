@@ -37,7 +37,6 @@ namespace Magma.Transport.Tcp
             _outboundEthernetHeader = new Ethernet() { Destination = _remoteMac, Ethertype = EtherType.IPv4, Source = _localMac };
             var pseudo = new TcpV4PseudoHeader() { Destination = _remoteAddress, Source = _localAddress, ProtocolNumber = Internet.Ip.ProtocolNumber.Tcp, Reserved = 0 };
             _pseudoPartialSum = Checksum.PartialCalculate(ref Unsafe.As<TcpV4PseudoHeader, byte>(ref pseudo), Unsafe.SizeOf<TcpV4PseudoHeader>());
-            _sendSequenceNumber = GetRandomSequenceStart();
         }
 
         public void ProcessPacket(TcpHeaderWithOptions header, ReadOnlySpan<byte> data)
@@ -46,6 +45,7 @@ namespace Magma.Transport.Tcp
             switch (_state)
             {
                 case TcpConnectionState.Listen:
+                    _sendSequenceNumber = GetRandomSequenceStart();
                     _localPort = header.Header.DestinationPort;
                     _remotePort = header.Header.SourcePort;
                     _receiveSequenceNumber = header.Header.SequenceNumber;
