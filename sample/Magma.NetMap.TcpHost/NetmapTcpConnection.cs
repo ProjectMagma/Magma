@@ -18,9 +18,9 @@ namespace Magma.NetMap.TcpHost
     {
         private TcpReceiver _tcpReceiver;
         private TransportConnection _connection;
-        
+
         public NetMapTcpConnection(Ethernet ethernetHeader, IPv4 ipHeader, TcpReceiver tcpReceiver)
-            :base(ethernetHeader, ipHeader)
+            : base(ethernetHeader, ipHeader)
         {
             _tcpReceiver = tcpReceiver;
             _connection = new TransportConnection();
@@ -29,6 +29,7 @@ namespace Magma.NetMap.TcpHost
         public TransportConnection Connection => _connection;
 
         protected override uint GetRandomSequenceStart() => _tcpReceiver.RandomSeqeunceNumber();
+        protected override uint GetTimestamp() => (uint)DateTime.UtcNow.TimeOfDay.TotalMilliseconds;
 
         protected override void WriteMemory(Memory<byte> memory)
         {
