@@ -14,13 +14,12 @@ namespace Magma.Internet.Ip.Facts
 {
     public class TcpFacts
     {
-        private static readonly ushort _sourcePort = 57598;
-        private static readonly ushort _destPort = 6667;
-        private static readonly byte[] _tcpSynPacketWithOptions = "e0 fe 1a 0b 7b 2b 85 36 00 00 00 00 80 02 fa f0 1b 94 00 00 02 04 05 b4 01 03 03 08 01 01 04 02".HexToByteArray();
-                                                                //"D8-BF-1A-0B-33-5A-4C-7B-00-00-00-00-80-02-FA-F0-E6-11-00-00-02-04-05-B4-01-03-03-08-01-01-04-02"
-        //Wireshark says the checksum is wrong on this and should be 0x520c so either will do me
+        private static readonly ushort _sourcePort = 49859;
+        private static readonly ushort _destPort = 80;
+        private static readonly byte[] _tcpSynPacketWithOptions = "c2 c3 00 50 d5 e2 df b4 00 00 00 00 a0 02 20 00 c4 47 00 00 02 04 05 b4 01 03 03 02 04 02 08 0a 00 04 aa 62 00 00 00 00".HexToByteArray();
+                                                                //"D0-33-1B-58-D6-D8-5B-6F-00-00-00-00-80-02-FA-F0-3A-DE-00-00-02-04-05-B4-01-03-03-08-01-01-04-02"
         private static readonly byte[] _tcpSynPacket = _tcpSynPacketWithOptions.AsSpan().Slice(0, 20).ToArray();
-        private static readonly uint _synSequenceNumber = 2066449718;
+        private static readonly uint _synSequenceNumber = 3588415412;
         private static readonly V4Address _sourceAddress = new V4Address(172, 18, 225, 161);
         private static readonly V4Address _destAddress = new V4Address(172, 18, 225, 166);
 
@@ -41,10 +40,10 @@ namespace Magma.Internet.Ip.Facts
             Assert.False(tcpHeader.RST);
             Assert.False(tcpHeader.PSH);
             Assert.False(tcpHeader.URG);
-            Assert.Equal(64240, tcpHeader.WindowSize);
+            Assert.Equal(8192, tcpHeader.WindowSize);
             Assert.Equal(_synSequenceNumber, tcpHeader.SequenceNumber);
             Assert.Equal(0u, tcpHeader.AcknowledgmentNumber);
-            Assert.Equal(8, tcpHeader.DataOffset);
+            Assert.Equal(10, tcpHeader.DataOffset);
         }
 
         [Fact]
@@ -53,7 +52,7 @@ namespace Magma.Internet.Ip.Facts
             var span = _tcpSynPacketWithOptions.AsSpan();
 
             Assert.True(Tcp.TryConsume(span, out var tcp, out var options, out var data));
-            Assert.Equal(12, options.Length);
+            Assert.Equal(20, options.Length);
             Assert.Equal(0, data.Length);
         }
 
@@ -65,13 +64,13 @@ namespace Magma.Internet.Ip.Facts
             Assert.True(TcpHeaderWithOptions.TryConsume(span, out var header, out var data));
             Assert.True(header.SackPermitted);
             Assert.Equal(1460, header.MaximumSegmentSize);
-            Assert.Equal(8, header.WindowScale);
+            Assert.Equal(2, header.WindowScale);
         }
 
         [Fact]
         public void CanWriteTcpSyn()
         {
-            var span = Enumerable.Repeat<byte>(0xFF, 32).ToArray().AsSpan();
+            var span = Enumerable.Repeat<byte>(0xFF, 10 * 4).ToArray().AsSpan();
             _tcpSynPacketWithOptions.AsSpan().Slice(20).CopyTo(span.Slice(20));
             ref var tcpHeader = ref Unsafe.As<byte, Tcp>(ref MemoryMarshal.GetReference(span));
             tcpHeader.AcknowledgmentNumber = 0;
@@ -90,8 +89,8 @@ namespace Magma.Internet.Ip.Facts
             tcpHeader.RST = false;
             tcpHeader.SYN = true;
             tcpHeader.FIN = false;
-            tcpHeader.DataOffset = 8;
-            tcpHeader.WindowSize = 64240;
+            tcpHeader.DataOffset = 10;
+            tcpHeader.WindowSize = 8192;
 
             var pseudoHeader = new TcpV4PseudoHeader()
             {
@@ -99,10 +98,21 @@ namespace Magma.Internet.Ip.Facts
                 Source = _sourceAddress,
                 ProtocolNumber = ProtocolNumber.Tcp,
                 Reserved = 0,
-                Size = 32,
+                Size = (ushort)span.Length,
             };
-            var temp = Checksum.PartialCalculate(ref Unsafe.As<TcpV4PseudoHeader, byte>(ref pseudoHeader), Unsafe.SizeOf<TcpV4PseudoHeader>());
-            tcpHeader.Checksum = Checksum.Calculate(ref MemoryMarshal.GetReference(span), 32, temp);
+
+            var checksumSpan = (new byte[span.Length + Unsafe.SizeOf<TcpV4PseudoHeader>()]).AsSpan();
+            span.CopyTo(checksumSpan.Slice(Unsafe.SizeOf<TcpV4PseudoHeader>()));
+            ref var pseudo = ref Unsafe.As<byte, TcpV4PseudoHeader>(ref MemoryMarshal.GetReference(checksumSpan));
+            pseudo.Destination = _destAddress;
+            pseudo.ProtocolNumber = ProtocolNumber.Tcp;
+            pseudo.Reserved = 0;
+            pseudo.Size = (ushort)span.Length;
+            pseudo.Source = _sourceAddress;
+
+            tcpHeader.Checksum = Checksum.Calculate(ref MemoryMarshal.GetReference(checksumSpan), checksumSpan.Length);
+            //var temp = Checksum.PartialCalculate(ref Unsafe.As<TcpV4PseudoHeader, byte>(ref pseudoHeader), Unsafe.SizeOf<TcpV4PseudoHeader>());
+            //tcpHeader.Checksum = Checksum.Calculate(ref MemoryMarshal.GetReference(span), 32, temp);
 
             for (var i = 0; i < _tcpSynPacket.Length;i++)
             {

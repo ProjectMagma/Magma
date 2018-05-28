@@ -10,8 +10,8 @@ namespace Magma.Transport.Tcp.Header
     [StructLayout(LayoutKind.Sequential, Pack =1)]
     public struct TcpV4PseudoHeader
     {
-        public V4Address Destination;
         public V4Address Source;
+        public V4Address Destination;
         public byte Reserved;
         public ProtocolNumber ProtocolNumber;
         private ushort _size;
