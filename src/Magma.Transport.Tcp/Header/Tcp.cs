@@ -3,6 +3,7 @@ using System;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Magma.Transport.Tcp.Header;
 
 namespace Magma.Network.Header
 {
@@ -260,6 +261,15 @@ namespace Magma.Network.Header
         // Options: (Variable 0–320 bits, divisible by 32)
         // Padding: The TCP header padding is used to ensure that the TCP header ends, and data begins, on a 32 bit boundary.
         //          The padding is composed of zeros.
+
+        // Calculates the checksum in the Tcp Header. The pseudo header (minus the size) is always the same for the connection
+        // So we only need to calculate for the size + Tcp Header and all data
+        public void SetChecksum(ReadOnlySpan<byte> input, ulong pseudoHeaderSum)
+        { 
+            var size = (ushort)System.Net.IPAddress.HostToNetworkOrder((short)input.Length);
+            pseudoHeaderSum = Network.Checksum.PartialCalculate(ref Unsafe.As<ushort, byte>(ref size), sizeof(ushort), pseudoHeaderSum);
+            Checksum = Network.Checksum.Calculate(ref MemoryMarshal.GetReference(input), input.Length, pseudoHeaderSum);
+        }
 
         public static bool TryConsume(ReadOnlySpan<byte> input, out Tcp tcp, out ReadOnlySpan<byte> options, out ReadOnlySpan<byte> data)
         {

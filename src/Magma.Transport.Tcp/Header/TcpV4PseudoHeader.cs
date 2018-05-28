@@ -14,8 +14,5 @@ namespace Magma.Transport.Tcp.Header
         public V4Address Destination;
         public byte Reserved;
         public ProtocolNumber ProtocolNumber;
-        private ushort _size;
-
-        public ushort Size { get => (ushort)System.Net.IPAddress.NetworkToHostOrder((short)_size); set => _size = (ushort)System.Net.IPAddress.HostToNetworkOrder((short)value); }
     }
 }

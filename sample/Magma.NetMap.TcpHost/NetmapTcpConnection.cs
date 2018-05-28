@@ -28,6 +28,7 @@ namespace Magma.NetMap.TcpHost
         private MacAddress _localMac;
         private byte _windowScale;
         private ushort _windowSize;
+        private ulong _pseudoPartialSum;
 
         public NetMapTcpConnection(Ethernet ethHeader, IPv4 ipHeader,TcpReceiver tcpReceiver)
         {
@@ -37,6 +38,9 @@ namespace Magma.NetMap.TcpHost
             _localMac = ethHeader.Destination;
             _tcpReceiver = tcpReceiver;
             _connection = new TransportConnection();
+
+            var pseudo = new TcpV4PseudoHeader() { Destination = _remoteAddress, Source = _localAddress, ProtocolNumber = Internet.Ip.ProtocolNumber.Tcp, Reserved = 0 };
+            _pseudoPartialSum = Checksum.PartialCalculate(ref Unsafe.As<TcpV4PseudoHeader, byte>(ref pseudo), Unsafe.SizeOf<TcpV4PseudoHeader>());
         }
 
         public TransportConnection Connection => _connection;
@@ -55,17 +59,16 @@ namespace Magma.NetMap.TcpHost
                     _windowSize = header.Header.WindowSize;
                     Tcp tcpHeader = default;
                     
-                    if(!WriteEthernetPacket(0, ref tcpHeader, out var dataSpan, out var memory, out var tcpLength))
+                    if(!WriteEthernetPacket(0, ref tcpHeader, out var dataSpan, out var memory, out var tcpSpan))
                     {
                         throw new NotImplementedException("Need to handle this we don't have anyway to ack cause we have back pressure");
                     }
                     tcpHeader.AcknowledgmentNumber = ++_receiveSequenceNumber;
                     tcpHeader.SequenceNumber = _sendSequenceNumber ++;
                     tcpHeader.SYN = true;
-                    tcpHeader.Checksum = Checksum.Calculate(ref Unsafe.As<Tcp, byte>(ref tcpHeader), tcpLength);
+                    tcpHeader.SetChecksum(tcpSpan, _pseudoPartialSum);
                     _tcpReceiver.Transmitter.SendBuffer(memory);
                     _tcpReceiver.Transmitter.ForceFlush();
-
                     _state = TcpConnectionState.Syn_Rcvd;
                     break;
                 case TcpConnectionState.Syn_Rcvd:
@@ -73,6 +76,10 @@ namespace Magma.NetMap.TcpHost
                     {
                         Console.WriteLine("Another Syn made");
                         return;
+                    }
+                    else
+                    {
+                        Console.WriteLine("NOT ANOTHER SYN HOOOORAH");
                     }
                     Console.WriteLine($"Got a syn received with sequence number {header.Header.SequenceNumber} is it correct? {header.Header.SequenceNumber == _receiveSequenceNumber}");
                     Console.WriteLine($"Also the ack was {header.Header.AcknowledgmentNumber} is it correct? {header.Header.AcknowledgmentNumber == _sendSequenceNumber}");
@@ -84,13 +91,13 @@ namespace Magma.NetMap.TcpHost
             }
         }
 
-        private bool WriteEthernetPacket(int dataSize, ref Tcp tcpHeader, out Span<byte> dataSpan, out Memory<byte> memory, out int tcpLength)
+        private bool WriteEthernetPacket(int dataSize, ref Tcp tcpHeader, out Span<byte> dataSpan, out Memory<byte> memory, out Span<byte> tcpSpan)
         {
             if(!_tcpReceiver.Transmitter.TryGetNextBuffer(out memory))
             {
                 dataSpan = default;
                 tcpHeader = default;
-                tcpLength = default;
+                tcpSpan = default;
                 return false;
             }
 
@@ -129,7 +136,7 @@ namespace Magma.NetMap.TcpHost
             tcpHeader.WindowSize = _windowSize;
             memory = memory.Slice(0, totalSize);
             dataSpan = span.Slice(Unsafe.SizeOf<Ethernet>() + Unsafe.SizeOf<IPv4>() + Unsafe.SizeOf<Tcp>());
-            tcpLength = ipHeader.DataLength;
+            tcpSpan = span.Slice(Unsafe.SizeOf<Ethernet>() + Unsafe.SizeOf<IPv4>());
             return true;
 
         }
