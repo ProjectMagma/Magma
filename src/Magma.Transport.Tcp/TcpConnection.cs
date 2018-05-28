@@ -133,5 +133,6 @@ namespace Magma.Transport.Tcp
         protected abstract void WriteMemory(Memory<byte> memory);
         protected abstract bool TryGetMemory(out Memory<byte> memory);
         protected abstract uint GetRandomSequenceStart();
+        protected abstract uint GetTimestamp();
     }
 }
