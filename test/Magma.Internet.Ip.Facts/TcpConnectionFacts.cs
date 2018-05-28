@@ -52,6 +52,10 @@ namespace Magma.Internet.Ip.Facts
 
             protected override void WriteMemory(Memory<byte> memory)
             {
+                for(var i = 0; i < memory.Length;i++)
+                {
+                    Assert.Equal(s_synAckPacket[i], memory.Span[i]);
+                }
             }
         }
     }

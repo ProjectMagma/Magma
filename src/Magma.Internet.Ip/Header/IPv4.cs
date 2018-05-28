@@ -219,7 +219,7 @@ namespace Magma.Network.Header
             header.DestinationAddress = destination;
             header.SourceAddress = source;
             header.Protocol = protocol;
-            header.TimeToLive = 128;
+            header.TimeToLive = 45;
             header.FlagsAndFragmentOffset = 0;
             header.DontFragment = true;
             header.DataLength = dataSize;

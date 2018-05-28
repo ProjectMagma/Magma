@@ -18,6 +18,7 @@ namespace Magma.Transport.Tcp.Header
         public bool SackPermitted => _sackPermitted;
         public ushort MaximumSegmentSize => _maximumSegmentSize;
         public byte WindowScale => _windowScale;
+        public uint TimeStamp => _timeStamp;
 
         public static bool TryConsume(ReadOnlySpan<byte> input, out TcpHeaderWithOptions headerWithOps, out ReadOnlySpan<byte> data)
         {
@@ -66,5 +67,7 @@ namespace Magma.Transport.Tcp.Header
 
             return true;
         }
+
+        public static int SizeOfSynAckHeader = Unsafe.SizeOf<Network.Header.Tcp>() + Unsafe.SizeOf<TcpOptionMaxSegmentSize>() + Unsafe.SizeOf<TcpOptionTimestamp>() + Unsafe.SizeOf<TcpOptionWindowScale>();
     }
 }
