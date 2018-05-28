@@ -17,7 +17,7 @@ namespace Magma.Internet.Ip.Facts
         private static readonly ushort _sourcePort = 49859;
         private static readonly ushort _destPort = 80;
         private static readonly byte[] _tcpSynPacketWithOptions = "c2 c3 00 50 d5 e2 df b4 00 00 00 00 a0 02 20 00 c4 47 00 00 02 04 05 b4 01 03 03 02 04 02 08 0a 00 04 aa 62 00 00 00 00".HexToByteArray();
-                                                                //"C2-C3-00-50-D5-E2-DF-B4-00-00-00-00-A0-02-20-00-E9-85-00-00-02-04-05-B4-01-03-03-02-04-02-08-0A-00-04-AA-62-00-00-00-00"
+                                                                //"C2-C3-00-50-D5-E2-DF-B4-00-00-00-00-A0-02-20-00-C4-47-00-00-02-04-05-B4-01-03-03-02-04-02-08-0A-00-04-AA-62-00-00-00-00"
         private static readonly byte[] _tcpSynPacket = _tcpSynPacketWithOptions.AsSpan().Slice(0, 20).ToArray();
         private static readonly uint _synSequenceNumber = 3588415412;
         private static readonly V4Address _sourceAddress = new V4Address(192, 168, 1, 104);
@@ -119,7 +119,7 @@ namespace Magma.Internet.Ip.Facts
                 Assert.Equal(_tcpSynPacket[i], span[i]);
             }
 
-            Assert.Equal(_tcpSynPacket, span.ToArray());
+            Assert.Equal(_tcpSynPacket, span.Slice(0,20).ToArray());
         }
     }
 }
