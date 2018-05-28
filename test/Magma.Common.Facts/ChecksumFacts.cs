@@ -51,11 +51,11 @@ namespace Magma.Common.Facts
             var changedData = new Span<byte>(&icmpIn, Unsafe.SizeOf<IcmpV4>());
             changedData.CopyTo(input);
 
-            input = input.Slice(0, 6);
+            var input1 = input.Slice(0, 6);
             var input2 = input.Slice(6);
 
-            var temp = Checksum.PartialCalculate(ref MemoryMarshal.GetReference(input), input.Length);
-            var newChecksum = Checksum.Calculate(ref MemoryMarshal.GetReference(input2), input2.Length, temp);
+            var partial = Checksum.PartialCalculate(ref MemoryMarshal.GetReference(input), input1.Length);
+            var newChecksum = Checksum.Calculate(ref MemoryMarshal.GetReference(input2), input2.Length, partial);
 
             Assert.Equal(checksum, newChecksum);
         }
