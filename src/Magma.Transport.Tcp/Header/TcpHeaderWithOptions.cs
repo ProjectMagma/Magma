@@ -71,7 +71,7 @@ namespace Magma.Transport.Tcp.Header
             }
             catch
             {
-                Console.WriteLine($"Failed to parse options data was {BitConverter.ToString(input.ToArray())}");
+                //Console.WriteLine($"Failed to parse options data was {BitConverter.ToString(input.ToArray())}");
             }
             return true;
         }
