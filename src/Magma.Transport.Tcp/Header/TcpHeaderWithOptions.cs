@@ -61,7 +61,9 @@ namespace Magma.Transport.Tcp.Header
                         exit = true;
                         break;
                     default:
-                        throw new NotImplementedException($"Unknown option kind {optionKind}");
+                        Console.WriteLine($"Unknown option kind {optionKind}");
+                        options = options.Slice(options[1]);
+                        break;
                 }
             }
 
