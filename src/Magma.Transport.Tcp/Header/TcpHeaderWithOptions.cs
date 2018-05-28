@@ -12,6 +12,8 @@ namespace Magma.Transport.Tcp.Header
         private byte _windowScale;
         private ushort _maximumSegmentSize;
         private bool _sackPermitted;
+        private uint _timeStamp;
+        private uint _timeStampEchoReply;
 
         public bool SackPermitted => _sackPermitted;
         public ushort MaximumSegmentSize => _maximumSegmentSize;
@@ -50,7 +52,9 @@ namespace Magma.Transport.Tcp.Header
                         options = options.Slice(2);
                         break;
                     case TcpOptionKind.Timestamps:
-                        options = options.Slice(options[1]);
+                        headerWithOps._timeStamp = System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(options.Slice(2));
+                        headerWithOps._timeStampEchoReply = System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(options.Slice(6));
+                        options = options.Slice(10);
                         break;
                     case TcpOptionKind.EndOfOptions:
                         exit = true;

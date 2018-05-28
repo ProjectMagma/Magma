@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Magma.NetMap.TcpHost
+namespace Magma.Transport.Tcp
 {
     public enum TcpConnectionState
     {
