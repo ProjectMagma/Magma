@@ -20,8 +20,8 @@ namespace Magma.Internet.Ip.Facts
                                                                 //"C2-C3-00-50-D5-E2-DF-B4-00-00-00-00-A0-02-20-00-E9-85-00-00-02-04-05-B4-01-03-03-02-04-02-08-0A-00-04-AA-62-00-00-00-00"
         private static readonly byte[] _tcpSynPacket = _tcpSynPacketWithOptions.AsSpan().Slice(0, 20).ToArray();
         private static readonly uint _synSequenceNumber = 3588415412;
-        private static readonly V4Address _sourceAddress = new V4Address(172, 18, 225, 161);
-        private static readonly V4Address _destAddress = new V4Address(172, 18, 225, 166);
+        private static readonly V4Address _sourceAddress = new V4Address(192, 168, 1, 104);
+        private static readonly V4Address _destAddress = new V4Address(216,18,166,136);
 
         [Fact]
         public void CanReadTcpSyn()
