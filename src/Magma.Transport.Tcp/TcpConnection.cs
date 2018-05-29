@@ -157,11 +157,11 @@ namespace Magma.Transport.Tcp
             tcpHeader.URG = false;
             tcpHeader.UrgentPointer = 0;
             tcpHeader.WindowSize = 50;
-            ref var optionPoint = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Network.Header.Tcp>());
+            //ref var optionPoint = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Network.Header.Tcp>());
                         
-            var timestamps = new TcpOptionTimestamp(GetTimestamp(), _echoTimestamp);
-            Unsafe.WriteUnaligned(ref optionPoint, timestamps);
-            optionPoint = ref Unsafe.Add(ref optionPoint, Unsafe.SizeOf<TcpOptionTimestamp>());
+            //var timestamps = new TcpOptionTimestamp(GetTimestamp(), _echoTimestamp);
+            //Unsafe.WriteUnaligned(ref optionPoint, timestamps);
+            //optionPoint = ref Unsafe.Add(ref optionPoint, Unsafe.SizeOf<TcpOptionTimestamp>());
 
             tcpHeader.SetChecksum(span.Slice(span.Length - TcpHeaderWithOptions.SizeOfStandardHeader), _pseudoPartialSum);
 
@@ -215,11 +215,11 @@ namespace Magma.Transport.Tcp
             tcpHeader.URG = false;
             tcpHeader.UrgentPointer = 0;
             tcpHeader.WindowSize = 50;
-            ref var optionPoint = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Network.Header.Tcp>());
+            //ref var optionPoint = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Network.Header.Tcp>());
 
-            var timestamps = new TcpOptionTimestamp(GetTimestamp(), _echoTimestamp);
-            Unsafe.WriteUnaligned(ref optionPoint, timestamps);
-            optionPoint = ref Unsafe.Add(ref optionPoint, Unsafe.SizeOf<TcpOptionTimestamp>());
+            //var timestamps = new TcpOptionTimestamp(GetTimestamp(), _echoTimestamp);
+            //Unsafe.WriteUnaligned(ref optionPoint, timestamps);
+            //optionPoint = ref Unsafe.Add(ref optionPoint, Unsafe.SizeOf<TcpOptionTimestamp>());
 
             data.CopyTo(span.Slice(span.Length - data.Length));
 
