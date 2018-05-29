@@ -47,7 +47,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Magma.Performance", "benchm
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Magma.NetMap.TcpHost", "sample\Magma.NetMap.TcpHost\Magma.NetMap.TcpHost.csproj", "{358CD7A8-E78B-4DCD-8640-EA62442755D7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Magma.Internet.Ip.Facts", "test\Magma.Internet.Ip.Facts\Magma.Internet.Ip.Facts.csproj", "{47D45F49-E8E0-4267-9FDA-8635DA6F5348}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Magma.Internet.Ip.Facts", "test\Magma.Internet.Ip.Facts\Magma.Internet.Ip.Facts.csproj", "{47D45F49-E8E0-4267-9FDA-8635DA6F5348}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Magma.PCap", "src\Magma.PCap\Magma.PCap.csproj", "{F91B0866-9DF5-488D-AD3E-1E471509C60F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -119,6 +121,10 @@ Global
 		{47D45F49-E8E0-4267-9FDA-8635DA6F5348}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{47D45F49-E8E0-4267-9FDA-8635DA6F5348}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{47D45F49-E8E0-4267-9FDA-8635DA6F5348}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F91B0866-9DF5-488D-AD3E-1E471509C60F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F91B0866-9DF5-488D-AD3E-1E471509C60F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F91B0866-9DF5-488D-AD3E-1E471509C60F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F91B0866-9DF5-488D-AD3E-1E471509C60F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -140,6 +146,7 @@ Global
 		{C2C87D71-4BB3-4DD1-BE4D-35DEBF927290} = {0581267E-B53B-4BBE-BB90-80C3CA0C4ACD}
 		{358CD7A8-E78B-4DCD-8640-EA62442755D7} = {23E375E0-8A4A-4D6A-8C96-9F2046CE9EB0}
 		{47D45F49-E8E0-4267-9FDA-8635DA6F5348} = {B1BA53C8-CCCF-46D5-BA9F-6031811F2E19}
+		{F91B0866-9DF5-488D-AD3E-1E471509C60F} = {34A1DC50-486C-4BB9-9929-1805CA0B0DD0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {99D656D2-FC86-462A-BB4C-610D644ADC62}

@@ -22,9 +22,11 @@ namespace Magma.NetMap.TcpHost
         private ushort _port;
         private Dictionary<(V4Address address, ushort port), NetMapTcpConnection> _connections = new Dictionary<(V4Address address, ushort port), NetMapTcpConnection>();
         private Random _randomSequenceNumber = new Random();
+        private PCap.PCapFileWriter _pcap;
 
-        public TcpReceiver(IPEndPoint ipEndPoint, NetMapTransmitRing transmitRing, IConnectionDispatcher connectionDispatcher)
+        public TcpReceiver(IPEndPoint ipEndPoint, NetMapTransmitRing transmitRing, IConnectionDispatcher connectionDispatcher, PCap.PCapFileWriter writer)
         {
+            _pcap = writer;
             _ipEndPoint = ipEndPoint;
             _transmitRing = transmitRing;
             _connectionDispatcher = connectionDispatcher;
@@ -41,6 +43,7 @@ namespace Magma.NetMap.TcpHost
         public T TryConsume<T>(T input) where T : IMemoryOwner<byte>
         {
             var span = input.Memory.Span;
+            _pcap.WritePacket(span);
 
             if (!Ethernet.TryConsume(span, out var etherHeader, out var data)) return input;
 
@@ -67,7 +70,7 @@ namespace Magma.NetMap.TcpHost
                 }
 
                 // So looks like we need to create a connection then
-                connection = new NetMapTcpConnection(etherHeader, ipHeader, tcp.Header, this);
+                connection = new NetMapTcpConnection(etherHeader, ipHeader, tcp.Header, this, _pcap);
                 _connections[(ipHeader.SourceAddress, tcp.Header.SourcePort)] = connection;
                 _connectionDispatcher.OnConnection(connection);
             }

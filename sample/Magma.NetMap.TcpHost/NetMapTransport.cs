@@ -14,9 +14,11 @@ namespace Magma.NetMap.TcpHost
         private string _interfaceName;
         private IConnectionDispatcher _connectionDispatcher;
         private List<TcpReceiver> _receivers = new List<TcpReceiver>();
+        private PCap.PCapFileWriter _pcapWriter;
 
         public NetMapTransport(IPEndPoint ipEndpoint, string interfaceName, IConnectionDispatcher dispatcher)
         {
+            _pcapWriter = new PCap.PCapFileWriter("networkdata.pcap");
             _endpoint = ipEndpoint ?? throw new ArgumentNullException(nameof(ipEndpoint));
             _interfaceName = interfaceName ?? throw new ArgumentNullException(nameof(interfaceName));
             _connectionDispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
@@ -31,7 +33,7 @@ namespace Magma.NetMap.TcpHost
 
         private TcpReceiver CreateReceiver(NetMapTransmitRing transmitRing)
         {
-            var receiver = new TcpReceiver(_endpoint, transmitRing, _connectionDispatcher);
+            var receiver = new TcpReceiver(_endpoint, transmitRing, _connectionDispatcher, _pcapWriter);
             _receivers.Add(receiver);
             return receiver;
         }
