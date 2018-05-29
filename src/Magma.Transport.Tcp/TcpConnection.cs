@@ -128,7 +128,7 @@ namespace Magma.Transport.Tcp
             if (!TryGetMemory(out var memory)) throw new InvalidOperationException("Back pressure, something to do here");
             var totalSize = Unsafe.SizeOf<Ethernet>() + Unsafe.SizeOf<IPv4>() + TcpHeaderWithOptions.SizeOfStandardHeader;
             memory = memory.Slice(0, totalSize);
-            var span = memory.Span;
+            var span = memory.Span.Slice(0, totalSize);
             ref var pointer = ref MemoryMarshal.GetReference(span);
 
             Unsafe.WriteUnaligned(ref pointer, _outboundEthernetHeader);
@@ -152,7 +152,7 @@ namespace Magma.Transport.Tcp
             tcpHeader.NS = false;
             tcpHeader.PSH = false;
             tcpHeader.RST = false;
-            tcpHeader.SYN = true;
+            tcpHeader.SYN = false;
             tcpHeader.URG = false;
             tcpHeader.UrgentPointer = 0;
             tcpHeader.WindowSize = 5792;
