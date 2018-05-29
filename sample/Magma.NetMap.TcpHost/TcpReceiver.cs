@@ -43,7 +43,7 @@ namespace Magma.NetMap.TcpHost
         public T TryConsume<T>(T input) where T : IMemoryOwner<byte>
         {
             var span = input.Memory.Span;
-            _pcap.WritePacket(span);
+            
 
             if (!Ethernet.TryConsume(span, out var etherHeader, out var data)) return input;
 
@@ -53,10 +53,12 @@ namespace Magma.NetMap.TcpHost
             if (ipHeader.Protocol != Internet.Ip.ProtocolNumber.Tcp
                 || (!_isAny && ipHeader.DestinationAddress != _address)
                 || !ipHeader.IsChecksumValid()) return input;
-
+            
             // So we have TCP lets parse out the header
             if (!TcpHeaderWithOptions.TryConsume(data, out var tcp, out data)
                 || tcp.Header.DestinationPort != _port) return input;
+
+            _pcap.WritePacket(span);
 
             // okay we now have some data we care about all the rest has been ditched to the host rings
             if (!_connections.TryGetValue((ipHeader.SourceAddress, tcp.Header.SourcePort), out var connection))
