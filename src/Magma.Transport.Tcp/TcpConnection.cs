@@ -115,6 +115,7 @@ namespace Magma.Transport.Tcp
                     {
                         _flushTask = task.AsTask();
                     }
+                    WriteAckPacket();
                     Console.WriteLine("Posted data to connection");
                     break;
                 default:
