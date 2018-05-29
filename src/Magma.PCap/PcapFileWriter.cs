@@ -38,6 +38,7 @@ namespace Magma.PCap
             {
                 _fileStream.Write(headerSpan);
                 _fileStream.Write(packet);
+                _fileStream.Flush();
             }
         }
     }
