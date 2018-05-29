@@ -187,7 +187,7 @@ namespace Magma.Transport.Tcp
             if (!TryGetMemory(out var memory)) throw new InvalidOperationException("Back pressure, something to do here");
             var totalSize = Unsafe.SizeOf<Ethernet>() + Unsafe.SizeOf<IPv4>() + TcpHeaderWithOptions.SizeOfStandardHeader + data.Length;
             memory = memory.Slice(0, totalSize);
-            var span = memory.Span.Slice(0, totalSize);
+            var span = memory.Span;
             ref var pointer = ref MemoryMarshal.GetReference(span);
 
             Unsafe.WriteUnaligned(ref pointer, _outboundEthernetHeader);
@@ -214,7 +214,7 @@ namespace Magma.Transport.Tcp
             tcpHeader.SYN = false;
             tcpHeader.URG = false;
             tcpHeader.UrgentPointer = 0;
-            tcpHeader.WindowSize = 5792/4;
+            tcpHeader.WindowSize = 50;
             ref var optionPoint = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Network.Header.Tcp>());
 
             var timestamps = new TcpOptionTimestamp(GetTimestamp(), _echoTimestamp);
@@ -223,7 +223,7 @@ namespace Magma.Transport.Tcp
 
             data.CopyTo(span.Slice(span.Length - data.Length));
 
-            tcpHeader.SetChecksum(span.Slice(span.Length - TcpHeaderWithOptions.SizeOfStandardHeader - data.Length), _pseudoPartialSum);
+            tcpHeader.SetChecksum(span.Slice(span.Length - (TcpHeaderWithOptions.SizeOfStandardHeader + data.Length)), _pseudoPartialSum);
             unchecked { _sendSequenceNumber += (uint)data.Length; }
 
             WriteMemory(memory);
