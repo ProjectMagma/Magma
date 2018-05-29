@@ -94,18 +94,7 @@ namespace Magma.Transport.Tcp
                     throw new NotImplementedException($"Unknown tcp state?? {_state}");
             }
         }
-
-        private async Task DummyClient()
-        {
-            while (true)
-            {
-                var result = await _connection.Application.Input.ReadAsync();
-                Console.WriteLine("Got actual useful data and it is ---------------------------------");
-                Console.WriteLine(Encoding.UTF8.GetString(result.Buffer.First.ToArray()));
-                _connection.Application.Input.AdvanceTo(result.Buffer.End);
-            }
-        }
-
+        
         private void WriteAckPacket()
         {
             if (!TryGetMemory(out var memory)) throw new InvalidOperationException("Back pressure, something to do here");
