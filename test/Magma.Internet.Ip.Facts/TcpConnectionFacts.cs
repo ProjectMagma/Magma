@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 using Magma.Network.Header;
@@ -36,7 +37,7 @@ namespace Magma.Internet.Ip.Facts
         private class TestTcpConnection : TcpConnection
         {
             public TestTcpConnection(Ethernet etherHeader, IPv4 ipHeader)
-                : base(etherHeader, ipHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, System.IO.Pipelines.PipeScheduler.ThreadPool)
+                : base(etherHeader, ipHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, System.IO.Pipelines.PipeScheduler.ThreadPool, MemoryPool<byte>.Shared)
             {
             }
 

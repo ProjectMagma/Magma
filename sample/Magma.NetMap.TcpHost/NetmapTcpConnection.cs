@@ -1,29 +1,19 @@
 using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using Magma.Link;
-using Magma.Network;
+using System.Buffers;
 using Magma.Network.Header;
 using Magma.Transport.Tcp;
-using Magma.Transport.Tcp.Header;
-using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
-using static Magma.Network.IPAddress;
 
 namespace Magma.NetMap.TcpHost
 {
     public class NetMapTcpConnection : TcpConnection
     {
         private TcpReceiver _tcpReceiver;
-       
 
         public NetMapTcpConnection(Ethernet ethernetHeader, IPv4 ipHeader, TcpReceiver tcpReceiver)
-            : base(ethernetHeader, ipHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, System.IO.Pipelines.PipeScheduler.ThreadPool)
+            : base(ethernetHeader, ipHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, System.IO.Pipelines.PipeScheduler.ThreadPool, MemoryPool<byte>.Shared)
         {
             _tcpReceiver = tcpReceiver;
-            
+
         }
 
         protected override uint GetRandomSequenceStart() => _tcpReceiver.RandomSeqeunceNumber();

@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
@@ -31,7 +32,7 @@ namespace Magma.Transport.Tcp
         private uint _echoTimestamp;
         private Task _flushTask = Task.CompletedTask;
 
-        public TcpConnection(Ethernet ethHeader, IPv4 ipHeader, PipeScheduler readScheduler, PipeScheduler writeScheduler)
+        public TcpConnection(Ethernet ethHeader, IPv4 ipHeader, PipeScheduler readScheduler, PipeScheduler writeScheduler, MemoryPool<byte> memoryPool)
         {
             _remoteAddress = ipHeader.SourceAddress;
             _localAddress = ipHeader.DestinationAddress;
@@ -44,10 +45,12 @@ namespace Magma.Transport.Tcp
 
             OutputReaderScheduler = readScheduler;
             InputWriterScheduler = writeScheduler;
+            MemoryPool = memoryPool;
         }
 
         public override PipeScheduler OutputReaderScheduler { get; }
         public override PipeScheduler InputWriterScheduler { get; }
+        public override MemoryPool<byte> MemoryPool { get; }
 
         public void ProcessPacket(TcpHeaderWithOptions header, ReadOnlySpan<byte> data)
         {
