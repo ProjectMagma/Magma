@@ -34,7 +34,7 @@ namespace Magma.Transport.Tcp
         private Task _flushTask = Task.CompletedTask;
         private CancellationTokenSource _closedToken = new CancellationTokenSource();
 
-        public TcpConnection(Ethernet ethHeader, IPv4 ipHeader, PipeScheduler readScheduler, PipeScheduler writeScheduler, MemoryPool<byte> memoryPool)
+        public TcpConnection(Ethernet ethHeader, IPv4 ipHeader, Network.Header.Tcp tcpHeader, PipeScheduler readScheduler, PipeScheduler writeScheduler, MemoryPool<byte> memoryPool)
         {
             _remoteAddress = ipHeader.SourceAddress;
             _localAddress = ipHeader.DestinationAddress;
@@ -44,6 +44,8 @@ namespace Magma.Transport.Tcp
 
             LocalAddress = new System.Net.IPAddress(_localAddress.Address);
             RemoteAddress = new System.Net.IPAddress(_remoteAddress.Address);
+            RemotePort = tcpHeader.SourcePort;
+            LocalPort = tcpHeader.DestinationPort;
 
             OutputReaderScheduler = readScheduler;
             InputWriterScheduler = writeScheduler;

@@ -9,11 +9,10 @@ namespace Magma.NetMap.TcpHost
     {
         private TcpReceiver _tcpReceiver;
 
-        public NetMapTcpConnection(Ethernet ethernetHeader, IPv4 ipHeader, TcpReceiver tcpReceiver)
-            : base(ethernetHeader, ipHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, System.IO.Pipelines.PipeScheduler.ThreadPool, MemoryPool<byte>.Shared)
+        public NetMapTcpConnection(Ethernet ethernetHeader, IPv4 ipHeader, Tcp tcpHeader, TcpReceiver tcpReceiver)
+            : base(ethernetHeader, ipHeader,tcpHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, System.IO.Pipelines.PipeScheduler.ThreadPool, MemoryPool<byte>.Shared)
         {
             _tcpReceiver = tcpReceiver;
-
         }
 
         protected override uint GetRandomSequenceStart() => _tcpReceiver.RandomSeqeunceNumber();
