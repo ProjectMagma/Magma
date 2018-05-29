@@ -55,7 +55,8 @@ namespace Magma.Transport.Tcp
         public override PipeScheduler OutputReaderScheduler { get; }
         public override PipeScheduler InputWriterScheduler { get; }
         public override MemoryPool<byte> MemoryPool { get; }
-
+        public override long TotalBytesWritten => 0;
+        
         public void ProcessPacket(TcpHeaderWithOptions header, ReadOnlySpan<byte> data)
         {
             // If there is backpressure just drop the packet

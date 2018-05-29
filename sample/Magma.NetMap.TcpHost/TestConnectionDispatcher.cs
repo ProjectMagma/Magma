@@ -17,10 +17,10 @@ namespace Magma.NetMap.TcpHost
         {
             while (true)
             {
-                var result = await connection.Application.Input.ReadAsync();
+                var result = await connection.Output.ReadAsync();
                 Console.WriteLine("Got actual useful data and it is ---------------------------------");
                 Console.WriteLine(Encoding.UTF8.GetString(result.Buffer.First.ToArray()));
-                connection.Application.Input.AdvanceTo(result.Buffer.End);
+                connection.Output.AdvanceTo(result.Buffer.End);
 
             }
             //Need to read until we find a End of request and then write back the correct response
