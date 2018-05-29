@@ -13,7 +13,7 @@ using static Magma.Network.IPAddress;
 
 namespace Magma.Transport.Tcp
 {
-    public abstract class TcpConnection
+    public abstract class TcpConnection : TransportConnection
     {
         private TcpConnectionState _state = TcpConnectionState.Listen;
         private uint _receiveSequenceNumber;
@@ -28,8 +28,7 @@ namespace Magma.Transport.Tcp
         private ushort _windowSize;
         private ulong _pseudoPartialSum;
         private uint _echoTimestamp;
-        private TransportConnection _connection;
-
+        
         public TcpConnection(Ethernet ethHeader, IPv4 ipHeader)
         {
             _remoteAddress = ipHeader.SourceAddress;
@@ -37,11 +36,8 @@ namespace Magma.Transport.Tcp
             _outboundEthernetHeader = new Ethernet() { Destination = ethHeader.Source, Ethertype = EtherType.IPv4, Source = ethHeader.Destination };
             var pseudo = new TcpV4PseudoHeader() { Destination = _remoteAddress, Source = _localAddress, ProtocolNumber = Internet.Ip.ProtocolNumber.Tcp, Reserved = 0 };
             _pseudoPartialSum = Checksum.PartialCalculate(ref Unsafe.As<TcpV4PseudoHeader, byte>(ref pseudo), Unsafe.SizeOf<TcpV4PseudoHeader>());
-            _connection = new TransportConnection();
         }
-
-        public TransportConnection Connection => _connection;
-
+        
         public void ProcessPacket(TcpHeaderWithOptions header, ReadOnlySpan<byte> data)
         {
             _echoTimestamp = header.TimeStamp;
@@ -84,10 +80,10 @@ namespace Magma.Transport.Tcp
                         Console.WriteLine($"Expected seq {_receiveSequenceNumber} got {header.Header.SequenceNumber}");
                     }
                     unchecked { _receiveSequenceNumber += (uint)data.Length; }
-                    var output = _connection.Input.GetSpan(data.Length);
+                    var output = Input.GetSpan(data.Length);
                     data.CopyTo(output);
                     // need to do something with the task and make sure we don't overlap the writes
-                    _connection.Input.FlushAsync();
+                    Input.FlushAsync();
                     Console.WriteLine("Posted data to connection");
                     break;
                 default:

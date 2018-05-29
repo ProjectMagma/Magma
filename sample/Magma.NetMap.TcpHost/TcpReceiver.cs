@@ -69,7 +69,7 @@ namespace Magma.NetMap.TcpHost
                 // So looks like we need to create a connection then
                 connection = new NetMapTcpConnection(etherHeader, ipHeader, this);
                 _connections[(ipHeader.SourceAddress, tcp.Header.SourcePort)] = connection;
-                _connectionDispatcher.OnConnection(connection.Connection);
+                _connectionDispatcher.OnConnection(connection);
             }
 
             connection.ProcessPacket(tcp, data);
