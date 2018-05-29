@@ -29,7 +29,7 @@ namespace Magma.Transport.Tcp
         private ushort _windowSize;
         private ulong _pseudoPartialSum;
         private uint _echoTimestamp;
-        private Task _flushTask;
+        private Task _flushTask = Task.CompletedTask;
 
         public TcpConnection(Ethernet ethHeader, IPv4 ipHeader, PipeScheduler readScheduler, PipeScheduler writeScheduler)
         {
@@ -52,7 +52,7 @@ namespace Magma.Transport.Tcp
         public void ProcessPacket(TcpHeaderWithOptions header, ReadOnlySpan<byte> data)
         {
             // If there is backpressure just drop the packet
-            if (_flushTask?.IsCompleted != true) return;
+            if (!_flushTask.IsCompleted) return;
 
             _echoTimestamp = header.TimeStamp;
             switch (_state)
