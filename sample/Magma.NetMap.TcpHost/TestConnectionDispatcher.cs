@@ -15,14 +15,14 @@ namespace Magma.NetMap.TcpHost
 
         private async Task ReadAndRespond(TransportConnection connection)
         {
-            while (true)
-            {
-                var result = await connection.Output.ReadAsync();
-                Console.WriteLine("Got actual useful data and it is ---------------------------------");
-                Console.WriteLine(Encoding.UTF8.GetString(result.Buffer.First.ToArray()));
-                connection.Output.AdvanceTo(result.Buffer.End);
+            //while (true)
+            //{
+            //    var result = await connection.Output.ReadAsync();
+            //    Console.WriteLine("Got actual useful data and it is ---------------------------------");
+            //    Console.WriteLine(Encoding.UTF8.GetString(result.Buffer.First.ToArray()));
+            //    connection.Output.AdvanceTo(result.Buffer.End);
 
-            }
+            //}
             //Need to read until we find a End of request and then write back the correct response
         }
     }
