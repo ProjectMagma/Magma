@@ -47,9 +47,9 @@ namespace Magma.Transport.Tcp
             RemotePort = tcpHeader.SourcePort;
             LocalPort = tcpHeader.DestinationPort;
 
-            OutputReaderScheduler = readScheduler;
-            InputWriterScheduler = writeScheduler;
-            MemoryPool = memoryPool;
+            OutputReaderScheduler = readScheduler ?? throw new ArgumentNullException(nameof(readScheduler));
+            InputWriterScheduler = writeScheduler ?? throw new ArgumentNullException(nameof(writeScheduler));
+            MemoryPool = memoryPool ?? throw new ArgumentNullException(nameof(memoryPool));
 
             ConnectionClosed = _closedToken.Token;
         }
