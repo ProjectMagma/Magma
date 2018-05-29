@@ -173,10 +173,10 @@ namespace Magma.Transport.Tcp
             var content = "<html><body><h1>Hello from Magma</h1></body></html>";
 
             var fullResponse = "HTTP/1.1 200 OK\r\n" +
-            "Date: Tue, 29 Mar 2010 23:19:53 GMT\r\n" +
+            "Date: Tue, 29 Mar 2018 23:19:53 GMT\r\n" +
             "Server: Magma\r\n" +
             "Content-Length: " + content.Length + "\r\n" +
-            "Content-Type: text/html\r\n" + "\r\n" + content;
+            "Content-Type: text/plain\r\n" + "\r\n" + content;
 
             var bytes = Encoding.UTF8.GetBytes(fullResponse);
             WriteDataPacket(bytes);
