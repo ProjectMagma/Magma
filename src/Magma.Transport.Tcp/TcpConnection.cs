@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -28,22 +29,37 @@ namespace Magma.Transport.Tcp
         private ushort _windowSize;
         private ulong _pseudoPartialSum;
         private uint _echoTimestamp;
-        
-        public TcpConnection(Ethernet ethHeader, IPv4 ipHeader)
+        private Task _flushTask;
+
+        public TcpConnection(Ethernet ethHeader, IPv4 ipHeader, PipeScheduler readScheduler, PipeScheduler writeScheduler)
         {
             _remoteAddress = ipHeader.SourceAddress;
             _localAddress = ipHeader.DestinationAddress;
             _outboundEthernetHeader = new Ethernet() { Destination = ethHeader.Source, Ethertype = EtherType.IPv4, Source = ethHeader.Destination };
             var pseudo = new TcpV4PseudoHeader() { Destination = _remoteAddress, Source = _localAddress, ProtocolNumber = Internet.Ip.ProtocolNumber.Tcp, Reserved = 0 };
             _pseudoPartialSum = Checksum.PartialCalculate(ref Unsafe.As<TcpV4PseudoHeader, byte>(ref pseudo), Unsafe.SizeOf<TcpV4PseudoHeader>());
+
+            LocalAddress = new System.Net.IPAddress(_localAddress.Address);
+            RemoteAddress = new System.Net.IPAddress(_remoteAddress.Address);
+
+            OutputReaderScheduler = readScheduler;
+            InputWriterScheduler = writeScheduler;
         }
-        
+
+        public override PipeScheduler OutputReaderScheduler { get; }
+        public override PipeScheduler InputWriterScheduler { get; }
+
         public void ProcessPacket(TcpHeaderWithOptions header, ReadOnlySpan<byte> data)
         {
+            // If there is backpressure just drop the packet
+            if (_flushTask?.IsCompleted != true) return;
+
             _echoTimestamp = header.TimeStamp;
             switch (_state)
             {
                 case TcpConnectionState.Listen:
+                    LocalPort = header.Header.DestinationPort;
+                    RemotePort = header.Header.SourcePort;
                     _sendSequenceNumber = GetRandomSequenceStart();
                     _localPort = header.Header.DestinationPort;
                     _remotePort = header.Header.SourcePort;
@@ -83,7 +99,11 @@ namespace Magma.Transport.Tcp
                     var output = Input.GetSpan(data.Length);
                     data.CopyTo(output);
                     // need to do something with the task and make sure we don't overlap the writes
-                    Input.FlushAsync();
+                    var task = Input.FlushAsync();
+                    if (!task.IsCompleted)
+                    {
+                        _flushTask = task.AsTask();
+                    }
                     Console.WriteLine("Posted data to connection");
                     break;
                 default:

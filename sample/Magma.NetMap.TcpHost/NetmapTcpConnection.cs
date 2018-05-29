@@ -20,7 +20,7 @@ namespace Magma.NetMap.TcpHost
        
 
         public NetMapTcpConnection(Ethernet ethernetHeader, IPv4 ipHeader, TcpReceiver tcpReceiver)
-            : base(ethernetHeader, ipHeader)
+            : base(ethernetHeader, ipHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, System.IO.Pipelines.PipeScheduler.ThreadPool)
         {
             _tcpReceiver = tcpReceiver;
             

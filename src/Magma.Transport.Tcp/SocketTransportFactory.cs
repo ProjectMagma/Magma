@@ -51,7 +51,8 @@ namespace Magma.Transport.Tcp
                 throw new ArgumentNullException(nameof(dispatcher));
             }
 
-            return new SocketTransport(endPointInformation, dispatcher, _appLifetime, _options.IOQueueCount, _trace, _options.MemoryPoolFactory());
+            throw new NotImplementedException();
+            //return new SocketTransport(endPointInformation, dispatcher, _appLifetime, _options.IOQueueCount, _trace, _options.MemoryPoolFactory());
         }
     }
 }
