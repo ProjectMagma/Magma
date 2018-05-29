@@ -156,7 +156,7 @@ namespace Magma.Transport.Tcp
             tcpHeader.SYN = false;
             tcpHeader.URG = false;
             tcpHeader.UrgentPointer = 0;
-            tcpHeader.WindowSize = 5792;
+            tcpHeader.WindowSize = 50;
             ref var optionPoint = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Network.Header.Tcp>());
                         
             var timestamps = new TcpOptionTimestamp(GetTimestamp(), _echoTimestamp);
