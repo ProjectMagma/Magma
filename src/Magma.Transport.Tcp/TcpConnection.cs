@@ -103,8 +103,9 @@ namespace Magma.Transport.Tcp
                         Console.WriteLine($"Expected seq {_receiveSequenceNumber} got {header.Header.SequenceNumber}");
                     }
                     unchecked { _receiveSequenceNumber += (uint)data.Length; }
-                    var output = Input.GetSpan(data.Length);
-                    data.CopyTo(output);
+                    var output = Input.GetMemory(data.Length);
+                    data.CopyTo(output.Span);
+                    Input.Advance(data.Length);
                     // need to do something with the task and make sure we don't overlap the writes
                     var task = Input.FlushAsync();
                     if (!task.IsCompleted)
