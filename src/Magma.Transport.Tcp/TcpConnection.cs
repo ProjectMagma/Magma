@@ -5,6 +5,7 @@ using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Magma.Link;
 using Magma.Network;
@@ -31,6 +32,7 @@ namespace Magma.Transport.Tcp
         private ulong _pseudoPartialSum;
         private uint _echoTimestamp;
         private Task _flushTask = Task.CompletedTask;
+        private CancellationTokenSource _closedToken = new CancellationTokenSource();
 
         public TcpConnection(Ethernet ethHeader, IPv4 ipHeader, PipeScheduler readScheduler, PipeScheduler writeScheduler, MemoryPool<byte> memoryPool)
         {
@@ -46,6 +48,8 @@ namespace Magma.Transport.Tcp
             OutputReaderScheduler = readScheduler;
             InputWriterScheduler = writeScheduler;
             MemoryPool = memoryPool;
+
+            ConnectionClosed = _closedToken.Token;
         }
 
         public override PipeScheduler OutputReaderScheduler { get; }
