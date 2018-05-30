@@ -7,12 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions" Version="2.1.0-rc1-final" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.0-rc1" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Magma.Common\Magma.Common.csproj" />
     <ProjectReference Include="..\Magma.Link\Magma.Link.csproj" />
     <ProjectReference Include="..\Magma.Network.Abstractions\Magma.Network.Abstractions.csproj" />
+    <ProjectReference Include="..\Magma.PCap\Magma.PCap.csproj" />
+    <ProjectReference Include="..\Magma.Transport.Tcp\Magma.Transport.Tcp.csproj" />
   </ItemGroup>
 
 </Project>

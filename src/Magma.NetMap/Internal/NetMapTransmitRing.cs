@@ -4,9 +4,9 @@ using System.Threading;
 using Magma.NetMap.Interop;
 using static Magma.NetMap.Interop.Netmap;
 
-namespace Magma.NetMap
+namespace Magma.NetMap.Internal
 {
-    public sealed class NetMapTransmitRing : NetMapRing
+    internal sealed class NetMapTransmitRing : NetMapRing
     {
         private const int SPINCOUNT = 100;
         private const int MAXLOOPTRY = 2;

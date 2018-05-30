@@ -58,6 +58,7 @@ namespace Magma.Transport.Tcp
         public override PipeScheduler InputWriterScheduler { get; }
         public override MemoryPool<byte> MemoryPool { get; }
         public override long TotalBytesWritten => 0;
+        public bool PendingAck { get; set; }
         
         public void ProcessPacket(TcpHeaderWithOptions header, ReadOnlySpan<byte> data)
         {
@@ -115,7 +116,7 @@ namespace Magma.Transport.Tcp
                     {
                         _flushTask = task.AsTask();
                     }
-                    WriteAckPacket();
+                    PendingAck = true;
                     Console.WriteLine("Posted data to connection");
                     WriteDataPacket();
                     break;
@@ -166,6 +167,7 @@ namespace Magma.Transport.Tcp
             tcpHeader.SetChecksum(span.Slice(span.Length - TcpHeaderWithOptions.SizeOfStandardHeader), _pseudoPartialSum);
 
             WriteMemory(memory);
+            PendingAck = false;
         }
 
         private void WriteDataPacket()
@@ -227,6 +229,7 @@ namespace Magma.Transport.Tcp
             unchecked { _sendSequenceNumber += (uint)data.Length; }
 
             WriteMemory(memory);
+            PendingAck = false;
         }
 
         private void WriteSyncAckPacket()
@@ -279,56 +282,7 @@ namespace Magma.Transport.Tcp
 
             WriteMemory(memory);
         }
-
-        //private bool WriteEthernetPacket(int dataSize, ref Network.Header.Tcp tcpHeader, out Span<byte> dataSpan, out Memory<byte> memory, out Span<byte> tcpSpan)
-        //{
-        //    if (!TryGetMemory(out memory))
-        //    {
-        //        dataSpan = default;
-        //        tcpHeader = default;
-        //        tcpSpan = default;
-        //        return false;
-        //    }
-
-        //    // We have the memory calculate the total size we need
-        //    var totalSize = dataSize + Unsafe.SizeOf<Ethernet>() + Unsafe.SizeOf<IPv4>() + Unsafe.SizeOf<Network.Header.Tcp>();
-        //    var span = memory.Span.Slice(0, totalSize);
-        //    ref var pointer = ref MemoryMarshal.GetReference(span);
-
-        //    ref var ethHeader = ref Unsafe.As<byte, Ethernet>(ref pointer);
-        //    ethHeader.Destination = _remoteMac;
-        //    ethHeader.Ethertype = EtherType.IPv4;
-        //    ethHeader.Source = _localMac;
-        //    pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Ethernet>());
-
-        //    ref var ipHeader = ref Unsafe.As<byte, IPv4>(ref pointer);
-        //    IPv4.InitHeader(ref ipHeader, _localAddress, _remoteAddress, (ushort)(Unsafe.SizeOf<Network.Header.Tcp>() + dataSize), Internet.Ip.ProtocolNumber.Tcp, 41503);
-        //    pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<IPv4>());
-
-        //    // IP V4 done time to do the TCP packet;
-
-        //    tcpHeader = ref Unsafe.As<byte, Network.Header.Tcp>(ref pointer);
-        //    tcpHeader.DestinationPort = _remotePort;
-        //    tcpHeader.SourcePort = _localPort;
-        //    tcpHeader.ACK = true;
-        //    tcpHeader.Checksum = 0;
-        //    tcpHeader.CWR = false;
-        //    tcpHeader.DataOffset = 5;
-        //    tcpHeader.ECE = false;
-        //    tcpHeader.FIN = false;
-        //    tcpHeader.NS = false;
-        //    tcpHeader.PSH = true;
-        //    tcpHeader.RST = false;
-        //    tcpHeader.SYN = false;
-        //    tcpHeader.URG = false;
-        //    tcpHeader.UrgentPointer = 0;
-        //    tcpHeader.WindowSize = _windowSize;
-        //    memory = memory.Slice(0, totalSize);
-        //    dataSpan = span.Slice(Unsafe.SizeOf<Ethernet>() + Unsafe.SizeOf<IPv4>() + Unsafe.SizeOf<Network.Header.Tcp>());
-        //    tcpSpan = span.Slice(Unsafe.SizeOf<Ethernet>() + Unsafe.SizeOf<IPv4>());
-        //    return true;
-        //}
-
+                
         protected abstract void WriteMemory(Memory<byte> memory);
         protected abstract bool TryGetMemory(out Memory<byte> memory);
         protected abstract uint GetRandomSequenceStart();

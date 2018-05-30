@@ -1,19 +1,21 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
+using System.Text;
 using Magma.Network.Header;
 using Magma.Transport.Tcp;
 
-namespace Magma.NetMap.TcpHost
+namespace Magma.NetMap
 {
-    public class NetMapTcpConnection : TcpConnection
+    internal class NetMapTcpConnection : TcpConnection
     {
-        private TcpReceiver _tcpReceiver;
+        private NetMapTransportReceiver _tcpReceiver;
         private PCap.PCapFileWriter _writer;
-        public NetMapTcpConnection(Ethernet ethernetHeader, IPv4 ipHeader, Tcp tcpHeader, TcpReceiver tcpReceiver, PCap.PCapFileWriter writer)
-            : base(ethernetHeader, ipHeader,tcpHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, System.IO.Pipelines.PipeScheduler.ThreadPool, MemoryPool<byte>.Shared)
+
+        public NetMapTcpConnection(Ethernet ethernetHeader, IPv4 ipHeader, Tcp tcpHeader, NetMapTransportReceiver tcpReceiver, PCap.PCapFileWriter writer)
+            : base(ethernetHeader, ipHeader, tcpHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, System.IO.Pipelines.PipeScheduler.ThreadPool, MemoryPool<byte>.Shared)
         {
             _tcpReceiver = tcpReceiver;
-            _writer = writer;
         }
 
         protected override uint GetRandomSequenceStart() => _tcpReceiver.RandomSeqeunceNumber();
