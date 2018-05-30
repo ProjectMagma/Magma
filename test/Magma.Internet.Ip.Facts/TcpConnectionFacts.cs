@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 using Magma.Network.Header;
@@ -28,15 +29,15 @@ namespace Magma.Internet.Ip.Facts
             Assert.True(IPv4.TryConsume(data, out var ipHeader, out data, true));
             Assert.True(TcpHeaderWithOptions.TryConsume(data, out var tcpHeader, out data));
 
-            var connection = new TestTcpConnection(etherHeader, ipHeader);
+            var connection = new TestTcpConnection(etherHeader, ipHeader, tcpHeader.Header);
             connection.ProcessPacket(tcpHeader, data);
         }
 
 
         private class TestTcpConnection : TcpConnection
         {
-            public TestTcpConnection(Ethernet etherHeader, IPv4 ipHeader)
-                :base(etherHeader, ipHeader)
+            public TestTcpConnection(Ethernet etherHeader, IPv4 ipHeader, Tcp tcpHeader)
+                : base(etherHeader, ipHeader, tcpHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, System.IO.Pipelines.PipeScheduler.ThreadPool, MemoryPool<byte>.Shared)
             {
             }
 

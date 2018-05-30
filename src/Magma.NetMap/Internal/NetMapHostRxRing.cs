@@ -8,9 +8,9 @@ using Magma.NetMap.Interop;
 using Magma.Network.Header;
 using static Magma.NetMap.Interop.Libc;
 
-namespace Magma.NetMap
+namespace Magma.NetMap.Internal
 {
-    public sealed class NetMapHostRxRing:NetMapRing
+    internal sealed class NetMapHostRxRing:NetMapRing
     {
         private readonly Thread _worker;
         private readonly NetMapTransmitRing _transmitRing;

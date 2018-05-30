@@ -3,9 +3,9 @@ using System.Threading;
 using Magma.NetMap.Interop;
 using Magma.Network.Abstractions;
 
-namespace Magma.NetMap
+namespace Magma.NetMap.Internal
 {
-    public sealed class NetMapReceiveRing<TPacketReceiver> : NetMapRing
+    internal sealed class NetMapReceiveRing<TPacketReceiver> : NetMapRing
         where TPacketReceiver : IPacketReceiver
     {
         private readonly Thread _worker;

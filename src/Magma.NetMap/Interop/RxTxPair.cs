@@ -8,7 +8,7 @@ namespace Magma.NetMap.Interop
     public class RxTxPair
     {
         private FileDescriptor _rxFileDescriptor;
-        //private FileDescriptor _txFileDescriptor;
+        private FileDescriptor _txFileDescriptor;
         private readonly int _ringId;
         private readonly bool _isHostStack;
 
@@ -19,8 +19,8 @@ namespace Magma.NetMap.Interop
             var flags = isHostStack ? NetMapRequestFlags.NR_REG_SW : NetMapRequestFlags.NR_REG_ONE_NIC;
             ringId = isHostStack ? 0 : ringId;
             
-            _rxFileDescriptor = OpenNetMap(interfaceName, ringId, flags, out var request);
-            //_txFileDescriptor = OpenNetMap(interfaceName, ringId, flags | NetMapRequestFlags.NR_TX_RINGS_ONLY, out request);
+            _rxFileDescriptor = OpenNetMap(interfaceName, ringId, flags | NetMapRequestFlags.NR_RX_RINGS_ONLY, out var request);
+            _txFileDescriptor = OpenNetMap(interfaceName, ringId, flags | NetMapRequestFlags.NR_TX_RINGS_ONLY, out request);
         }
 
         public unsafe void WaitForWork()
@@ -30,11 +30,10 @@ namespace Magma.NetMap.Interop
                 Events = PollEvents.POLLIN,
                 Fd = _rxFileDescriptor,
             };
-            var result = Poll(ref pfd, 1, 1000);
+            var result = Poll(ref pfd, 1, 50);
             if (result < 0) ExceptionHelper.ThrowInvalidOperation("Error on poll");
-
         }
 
-        public unsafe void ForceFlush() => IOCtl(_rxFileDescriptor, IOControlCommand.NIOCTXSYNC, IntPtr.Zero);
+        public unsafe void ForceFlush() => IOCtl(_txFileDescriptor, IOControlCommand.NIOCTXSYNC, IntPtr.Zero);
     }
 }

@@ -1,7 +1,7 @@
 using System;
 using System.Buffers;
 
-namespace Magma.NetMap
+namespace Magma.NetMap.Internal
 {
     internal struct NetMapMemoryWrapper : IMemoryOwner<byte>
     {

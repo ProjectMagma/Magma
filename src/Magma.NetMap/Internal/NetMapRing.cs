@@ -4,9 +4,9 @@ using System.Threading;
 using Magma.NetMap.Interop;
 using static Magma.NetMap.Interop.Netmap;
 
-namespace Magma.NetMap
+namespace Magma.NetMap.Internal
 {
-    public unsafe abstract class NetMapRing
+    internal unsafe abstract class NetMapRing
     {
         protected readonly byte* _memoryRegion;
         protected readonly long _queueOffset;

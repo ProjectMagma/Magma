@@ -1,8 +1,12 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Magma.Link;
 using Magma.Network;
 using Magma.Network.Header;
@@ -12,10 +16,11 @@ using static Magma.Network.IPAddress;
 
 namespace Magma.Transport.Tcp
 {
-    public abstract class TcpConnection
+    public abstract class TcpConnection : TransportConnection
     {
         private TcpConnectionState _state = TcpConnectionState.Listen;
         private uint _receiveSequenceNumber;
+        private uint _sendAckSequenceNumber;
         private uint _sendSequenceNumber;
         private ushort _remotePort;
         private ushort _localPort;
@@ -26,26 +31,46 @@ namespace Magma.Transport.Tcp
         private ushort _windowSize;
         private ulong _pseudoPartialSum;
         private uint _echoTimestamp;
-        private TransportConnection _connection;
+        private Task _flushTask = Task.CompletedTask;
+        private CancellationTokenSource _closedToken = new CancellationTokenSource();
 
-        public TcpConnection(Ethernet ethHeader, IPv4 ipHeader)
+        public TcpConnection(Ethernet ethHeader, IPv4 ipHeader, Network.Header.Tcp tcpHeader, PipeScheduler readScheduler, PipeScheduler writeScheduler, MemoryPool<byte> memoryPool)
         {
             _remoteAddress = ipHeader.SourceAddress;
             _localAddress = ipHeader.DestinationAddress;
             _outboundEthernetHeader = new Ethernet() { Destination = ethHeader.Source, Ethertype = EtherType.IPv4, Source = ethHeader.Destination };
             var pseudo = new TcpV4PseudoHeader() { Destination = _remoteAddress, Source = _localAddress, ProtocolNumber = Internet.Ip.ProtocolNumber.Tcp, Reserved = 0 };
             _pseudoPartialSum = Checksum.PartialCalculate(ref Unsafe.As<TcpV4PseudoHeader, byte>(ref pseudo), Unsafe.SizeOf<TcpV4PseudoHeader>());
-            _connection = new TransportConnection();
+
+            LocalAddress = new System.Net.IPAddress(_localAddress.Address);
+            RemoteAddress = new System.Net.IPAddress(_remoteAddress.Address);
+            RemotePort = tcpHeader.SourcePort;
+            LocalPort = tcpHeader.DestinationPort;
+
+            OutputReaderScheduler = readScheduler ?? throw new ArgumentNullException(nameof(readScheduler));
+            InputWriterScheduler = writeScheduler ?? throw new ArgumentNullException(nameof(writeScheduler));
+            MemoryPool = memoryPool ?? throw new ArgumentNullException(nameof(memoryPool));
+
+            ConnectionClosed = _closedToken.Token;
         }
 
-        public TransportConnection Connection => _connection;
-
+        public override PipeScheduler OutputReaderScheduler { get; }
+        public override PipeScheduler InputWriterScheduler { get; }
+        public override MemoryPool<byte> MemoryPool { get; }
+        public override long TotalBytesWritten => 0;
+        public bool PendingAck { get; set; }
+        
         public void ProcessPacket(TcpHeaderWithOptions header, ReadOnlySpan<byte> data)
         {
+            // If there is backpressure just drop the packet
+            if (!_flushTask.IsCompleted) return;
+
             _echoTimestamp = header.TimeStamp;
             switch (_state)
             {
                 case TcpConnectionState.Listen:
+                    LocalPort = header.Header.DestinationPort;
+                    RemotePort = header.Header.SourcePort;
                     _sendSequenceNumber = GetRandomSequenceStart();
                     _localPort = header.Header.DestinationPort;
                     _remotePort = header.Header.SourcePort;
@@ -71,12 +96,140 @@ namespace Magma.Transport.Tcp
                 case TcpConnectionState.Established:
                     if(header.Header.FIN) { throw new NotImplementedException("Got a fin don't know what to do, dying"); }
                     if(header.Header.RST) { throw new NotImplementedException("Got an rst don't know what to do dying"); }
-                    Console.WriteLine("Got actual useful data and it is ---------------------------------");
-                    Console.WriteLine(Encoding.UTF8.GetString(data.ToArray()));
+
+                    // First lets update our acked squence number;
+                    _sendAckSequenceNumber = header.Header.AcknowledgmentNumber;
+
+                    if(_receiveSequenceNumber != header.Header.SequenceNumber)
+                    {
+                        // We are just going to drop this and wait for a resend
+                        Console.WriteLine("Dropped packet due to wrong sequence");
+                        Console.WriteLine($"Expected seq {_receiveSequenceNumber} got {header.Header.SequenceNumber}");
+                    }
+                    unchecked { _receiveSequenceNumber += (uint)data.Length; }
+                    var output = Input.GetMemory(data.Length);
+                    data.CopyTo(output.Span);
+                    Input.Advance(data.Length);
+                    // need to do something with the task and make sure we don't overlap the writes
+                    var task = Input.FlushAsync();
+                    if (!task.IsCompleted)
+                    {
+                        _flushTask = task.AsTask();
+                    }
+                    PendingAck = true;
+                    Console.WriteLine("Posted data to connection");
+                    WriteDataPacket();
                     break;
                 default:
                     throw new NotImplementedException($"Unknown tcp state?? {_state}");
             }
+        }
+        
+        private void WriteAckPacket()
+        {
+            if (!TryGetMemory(out var memory)) throw new InvalidOperationException("Back pressure, something to do here");
+            var totalSize = Unsafe.SizeOf<Ethernet>() + Unsafe.SizeOf<IPv4>() + TcpHeaderWithOptions.SizeOfStandardHeader;
+            memory = memory.Slice(0, totalSize);
+            var span = memory.Span.Slice(0, totalSize);
+            ref var pointer = ref MemoryMarshal.GetReference(span);
+
+            Unsafe.WriteUnaligned(ref pointer, _outboundEthernetHeader);
+            pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Ethernet>());
+
+            ref var ipHeader = ref Unsafe.As<byte, IPv4>(ref pointer);
+            IPv4.InitHeader(ref ipHeader, _localAddress, _remoteAddress, (ushort)TcpHeaderWithOptions.SizeOfStandardHeader, Internet.Ip.ProtocolNumber.Tcp, 0);
+            pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<IPv4>());
+
+            ref var tcpHeader = ref Unsafe.As<byte, Network.Header.Tcp>(ref pointer);
+            tcpHeader.DestinationPort = _remotePort;
+            tcpHeader.SourcePort = _localPort;
+            tcpHeader.AcknowledgmentNumber = _receiveSequenceNumber;
+            tcpHeader.SequenceNumber = _sendSequenceNumber;
+            tcpHeader.ACK = true;
+            tcpHeader.Checksum = 0;
+            tcpHeader.CWR = false;
+            tcpHeader.DataOffset = (byte)(TcpHeaderWithOptions.SizeOfStandardHeader / 4);
+            tcpHeader.ECE = false;
+            tcpHeader.FIN = false;
+            tcpHeader.NS = false;
+            tcpHeader.PSH = false;
+            tcpHeader.RST = false;
+            tcpHeader.SYN = false;
+            tcpHeader.URG = false;
+            tcpHeader.UrgentPointer = 0;
+            tcpHeader.WindowSize = 50;
+            //ref var optionPoint = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Network.Header.Tcp>());
+                        
+            //var timestamps = new TcpOptionTimestamp(GetTimestamp(), _echoTimestamp);
+            //Unsafe.WriteUnaligned(ref optionPoint, timestamps);
+            //optionPoint = ref Unsafe.Add(ref optionPoint, Unsafe.SizeOf<TcpOptionTimestamp>());
+
+            tcpHeader.SetChecksum(span.Slice(span.Length - TcpHeaderWithOptions.SizeOfStandardHeader), _pseudoPartialSum);
+
+            WriteMemory(memory);
+            PendingAck = false;
+        }
+
+        private void WriteDataPacket()
+        {
+            var content = "<html><body><h1>Hello from Magma</h1></body></html>";
+
+            var fullResponse = "HTTP/1.1 200 OK\r\n" +
+            "Date: Tue, 29 Mar 2018 23:19:53 GMT\r\n" +
+            "Server: Magma\r\n" +
+            "Content-Length: " + content.Length + "\r\n" +
+            "Content-Type: text/plain\r\n" + "\r\n" + content;
+
+            var bytes = Encoding.UTF8.GetBytes(fullResponse);
+            WriteDataPacket(bytes);
+        }
+
+        private void WriteDataPacket(Span<byte> data)
+        {
+            if (!TryGetMemory(out var memory)) throw new InvalidOperationException("Back pressure, something to do here");
+            var totalSize = Unsafe.SizeOf<Ethernet>() + Unsafe.SizeOf<IPv4>() + TcpHeaderWithOptions.SizeOfStandardHeader + data.Length;
+            memory = memory.Slice(0, totalSize);
+            var span = memory.Span;
+            ref var pointer = ref MemoryMarshal.GetReference(span);
+
+            Unsafe.WriteUnaligned(ref pointer, _outboundEthernetHeader);
+            pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Ethernet>());
+
+            ref var ipHeader = ref Unsafe.As<byte, IPv4>(ref pointer);
+            IPv4.InitHeader(ref ipHeader, _localAddress, _remoteAddress, (ushort)(TcpHeaderWithOptions.SizeOfStandardHeader + data.Length), Internet.Ip.ProtocolNumber.Tcp, 0);
+            pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<IPv4>());
+
+            ref var tcpHeader = ref Unsafe.As<byte, Network.Header.Tcp>(ref pointer);
+            tcpHeader.DestinationPort = _remotePort;
+            tcpHeader.SourcePort = _localPort;
+            tcpHeader.AcknowledgmentNumber = _receiveSequenceNumber;
+            tcpHeader.SequenceNumber = _sendSequenceNumber;
+            tcpHeader.ACK = true;
+            tcpHeader.Checksum = 0;
+            tcpHeader.CWR = false;
+            tcpHeader.DataOffset = (byte)(TcpHeaderWithOptions.SizeOfStandardHeader / 4);
+            tcpHeader.ECE = false;
+            tcpHeader.FIN = false;
+            tcpHeader.NS = false;
+            tcpHeader.PSH = true;
+            tcpHeader.RST = false;
+            tcpHeader.SYN = false;
+            tcpHeader.URG = false;
+            tcpHeader.UrgentPointer = 0;
+            tcpHeader.WindowSize = 50;
+            //ref var optionPoint = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Network.Header.Tcp>());
+
+            //var timestamps = new TcpOptionTimestamp(GetTimestamp(), _echoTimestamp);
+            //Unsafe.WriteUnaligned(ref optionPoint, timestamps);
+            //optionPoint = ref Unsafe.Add(ref optionPoint, Unsafe.SizeOf<TcpOptionTimestamp>());
+
+            data.CopyTo(span.Slice(span.Length - data.Length));
+
+            tcpHeader.SetChecksum(span.Slice(span.Length - (TcpHeaderWithOptions.SizeOfStandardHeader + data.Length)), _pseudoPartialSum);
+            unchecked { _sendSequenceNumber += (uint)data.Length; }
+
+            WriteMemory(memory);
+            PendingAck = false;
         }
 
         private void WriteSyncAckPacket()
@@ -129,56 +282,7 @@ namespace Magma.Transport.Tcp
 
             WriteMemory(memory);
         }
-
-        //private bool WriteEthernetPacket(int dataSize, ref Network.Header.Tcp tcpHeader, out Span<byte> dataSpan, out Memory<byte> memory, out Span<byte> tcpSpan)
-        //{
-        //    if (!TryGetMemory(out memory))
-        //    {
-        //        dataSpan = default;
-        //        tcpHeader = default;
-        //        tcpSpan = default;
-        //        return false;
-        //    }
-
-        //    // We have the memory calculate the total size we need
-        //    var totalSize = dataSize + Unsafe.SizeOf<Ethernet>() + Unsafe.SizeOf<IPv4>() + Unsafe.SizeOf<Network.Header.Tcp>();
-        //    var span = memory.Span.Slice(0, totalSize);
-        //    ref var pointer = ref MemoryMarshal.GetReference(span);
-
-        //    ref var ethHeader = ref Unsafe.As<byte, Ethernet>(ref pointer);
-        //    ethHeader.Destination = _remoteMac;
-        //    ethHeader.Ethertype = EtherType.IPv4;
-        //    ethHeader.Source = _localMac;
-        //    pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Ethernet>());
-
-        //    ref var ipHeader = ref Unsafe.As<byte, IPv4>(ref pointer);
-        //    IPv4.InitHeader(ref ipHeader, _localAddress, _remoteAddress, (ushort)(Unsafe.SizeOf<Network.Header.Tcp>() + dataSize), Internet.Ip.ProtocolNumber.Tcp, 41503);
-        //    pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<IPv4>());
-
-        //    // IP V4 done time to do the TCP packet;
-
-        //    tcpHeader = ref Unsafe.As<byte, Network.Header.Tcp>(ref pointer);
-        //    tcpHeader.DestinationPort = _remotePort;
-        //    tcpHeader.SourcePort = _localPort;
-        //    tcpHeader.ACK = true;
-        //    tcpHeader.Checksum = 0;
-        //    tcpHeader.CWR = false;
-        //    tcpHeader.DataOffset = 5;
-        //    tcpHeader.ECE = false;
-        //    tcpHeader.FIN = false;
-        //    tcpHeader.NS = false;
-        //    tcpHeader.PSH = true;
-        //    tcpHeader.RST = false;
-        //    tcpHeader.SYN = false;
-        //    tcpHeader.URG = false;
-        //    tcpHeader.UrgentPointer = 0;
-        //    tcpHeader.WindowSize = _windowSize;
-        //    memory = memory.Slice(0, totalSize);
-        //    dataSpan = span.Slice(Unsafe.SizeOf<Ethernet>() + Unsafe.SizeOf<IPv4>() + Unsafe.SizeOf<Network.Header.Tcp>());
-        //    tcpSpan = span.Slice(Unsafe.SizeOf<Ethernet>() + Unsafe.SizeOf<IPv4>());
-        //    return true;
-        //}
-
+                
         protected abstract void WriteMemory(Memory<byte> memory);
         protected abstract bool TryGetMemory(out Memory<byte> memory);
         protected abstract uint GetRandomSequenceStart();

@@ -8,9 +8,9 @@ using Magma.Network.Abstractions;
 using static Magma.NetMap.Interop.Libc;
 using static Magma.NetMap.Interop.Netmap;
 
-namespace Magma.NetMap
+namespace Magma.NetMap.Internal
 {
-    public class NetMapPort<TPacketReceiver>
+    internal class NetMapPort<TPacketReceiver>
         where TPacketReceiver : IPacketReceiver
     {
         private NetMapReceiveRing<TPacketReceiver>[] _receiveRings;

@@ -1,29 +1,21 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
-using Magma.Link;
-using Magma.Network;
 using Magma.Network.Header;
 using Magma.Transport.Tcp;
-using Magma.Transport.Tcp.Header;
-using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
-using static Magma.Network.IPAddress;
 
-namespace Magma.NetMap.TcpHost
+namespace Magma.NetMap
 {
-    public class NetMapTcpConnection : TcpConnection
+    internal class NetMapTcpConnection : TcpConnection
     {
-        private TcpReceiver _tcpReceiver;
-       
+        private NetMapTransportReceiver _tcpReceiver;
+        private PCap.PCapFileWriter _writer;
 
-        public NetMapTcpConnection(Ethernet ethernetHeader, IPv4 ipHeader, TcpReceiver tcpReceiver)
-            : base(ethernetHeader, ipHeader)
+        public NetMapTcpConnection(Ethernet ethernetHeader, IPv4 ipHeader, Tcp tcpHeader, NetMapTransportReceiver tcpReceiver, PCap.PCapFileWriter writer)
+            : base(ethernetHeader, ipHeader, tcpHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, System.IO.Pipelines.PipeScheduler.ThreadPool, MemoryPool<byte>.Shared)
         {
             _tcpReceiver = tcpReceiver;
-            
         }
 
         protected override uint GetRandomSequenceStart() => _tcpReceiver.RandomSeqeunceNumber();
@@ -31,6 +23,7 @@ namespace Magma.NetMap.TcpHost
 
         protected override void WriteMemory(Memory<byte> memory)
         {
+            _writer.WritePacket(memory.Span);
             _tcpReceiver.Transmitter.SendBuffer(memory);
             _tcpReceiver.Transmitter.ForceFlush();
         }

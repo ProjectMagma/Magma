@@ -77,5 +77,6 @@ namespace Magma.Transport.Tcp.Header
         }
 
         public static int SizeOfSynAckHeader = Unsafe.SizeOf<Network.Header.Tcp>() + Unsafe.SizeOf<TcpOptionMaxSegmentSize>() + Unsafe.SizeOf<TcpOptionTimestamp>() + Unsafe.SizeOf<TcpOptionWindowScale>();
+        public static int SizeOfStandardHeader = Unsafe.SizeOf<Network.Header.Tcp>();
     }
 }

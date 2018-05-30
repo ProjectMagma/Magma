@@ -2,16 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Magma.NetMap
+namespace Magma.NetMap.Internal
 {
     internal class NetMapBufferPool
     {
         private readonly NetMapOwnedMemory[] _memoryPool;
 
-        public unsafe NetMapBufferPool(ushort bufferLength, IntPtr bufferStart, uint numberOfBuffers)
+        public NetMapBufferPool(ushort bufferLength, IntPtr bufferStart, uint numberOfBuffers)
         {
             _memoryPool = new NetMapOwnedMemory[numberOfBuffers];
-            var ptr = (byte*)bufferStart.ToPointer();
             for(var i = 0; i < numberOfBuffers;i++)
             {
                 _memoryPool[i] = new NetMapOwnedMemory(IntPtr.Add(bufferStart, i * bufferLength), bufferLength, (uint)i);
