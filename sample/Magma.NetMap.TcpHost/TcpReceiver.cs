@@ -78,7 +78,8 @@ namespace Magma.NetMap.TcpHost
             }
 
             connection.ProcessPacket(tcp, data);
-            return input;
+            input.Dispose();
+            return default;
         }
     }
 }
