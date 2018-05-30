@@ -27,15 +27,26 @@ namespace Magma.Transport.Tcp
         private V4Address _remoteAddress;
         private V4Address _localAddress;
         private Ethernet _outboundEthernetHeader;
+        private Network.Header.Tcp _partialTcpHeader;
+        private IPv4 _partialIPHeader;
         private byte _windowScale;
         private ushort _windowSize;
         private ulong _pseudoPartialSum;
         private uint _echoTimestamp;
         private Task _flushTask = Task.CompletedTask;
+        private IConnectionDispatcher _connectionDispatcher;
         private CancellationTokenSource _closedToken = new CancellationTokenSource();
+        private long _totalBytesWritten;
 
-        public TcpConnection(Ethernet ethHeader, IPv4 ipHeader, Network.Header.Tcp tcpHeader, PipeScheduler readScheduler, PipeScheduler writeScheduler, MemoryPool<byte> memoryPool)
+        public TcpConnection(Ethernet ethHeader, 
+            IPv4 ipHeader, 
+            Network.Header.Tcp tcpHeader, 
+            PipeScheduler readScheduler, 
+            PipeScheduler writeScheduler, 
+            MemoryPool<byte> memoryPool, 
+            IConnectionDispatcher connectionDispatcher)
         {
+            _connectionDispatcher = connectionDispatcher;
             _remoteAddress = ipHeader.SourceAddress;
             _localAddress = ipHeader.DestinationAddress;
             _outboundEthernetHeader = new Ethernet() { Destination = ethHeader.Source, Ethertype = EtherType.IPv4, Source = ethHeader.Destination };
@@ -57,7 +68,7 @@ namespace Magma.Transport.Tcp
         public override PipeScheduler OutputReaderScheduler { get; }
         public override PipeScheduler InputWriterScheduler { get; }
         public override MemoryPool<byte> MemoryPool { get; }
-        public override long TotalBytesWritten => 0;
+        public override long TotalBytesWritten => _totalBytesWritten;
         public bool PendingAck { get; set; }
         
         public void ProcessPacket(TcpHeaderWithOptions header, ReadOnlySpan<byte> data)
@@ -69,13 +80,10 @@ namespace Magma.Transport.Tcp
             switch (_state)
             {
                 case TcpConnectionState.Listen:
-                    LocalPort = header.Header.DestinationPort;
-                    RemotePort = header.Header.SourcePort;
                     _sendSequenceNumber = GetRandomSequenceStart();
-                    _localPort = header.Header.DestinationPort;
-                    _remotePort = header.Header.SourcePort;
                     _receiveSequenceNumber = header.Header.SequenceNumber;
                     // We know we checked for syn in the upper layer so we can ignore that for now
+                    _partialTcpHeader = Network.Header.Tcp.Create(_localPort, _remotePort);
                     WriteSyncAckPacket();
                     _state = TcpConnectionState.Syn_Rcvd;
                     break;
@@ -85,12 +93,7 @@ namespace Magma.Transport.Tcp
                         Console.WriteLine("Another Syn made");
                         return;
                     }
-                    else
-                    {
-                        Console.WriteLine("Moving into Established!!!");
-                    }
-                    Console.WriteLine($"Got a syn received with sequence number {header.Header.SequenceNumber} is it correct? {header.Header.SequenceNumber == _receiveSequenceNumber}");
-                    Console.WriteLine($"Also the ack was {header.Header.AcknowledgmentNumber} is it correct? {header.Header.AcknowledgmentNumber == _sendSequenceNumber}");
+                    _connectionDispatcher.OnConnection(this);
                     _state = TcpConnectionState.Established;
                     break;
                 case TcpConnectionState.Established:
@@ -117,6 +120,7 @@ namespace Magma.Transport.Tcp
                         _flushTask = task.AsTask();
                     }
                     PendingAck = true;
+                    _totalBytesWritten += data.Length;
                     Console.WriteLine("Posted data to connection");
                     WriteDataPacket();
                     break;
@@ -149,31 +153,13 @@ namespace Magma.Transport.Tcp
             IPv4.InitHeader(ref ipHeader, _localAddress, _remoteAddress, (ushort)TcpHeaderWithOptions.SizeOfStandardHeader, Internet.Ip.ProtocolNumber.Tcp, 0);
             pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<IPv4>());
 
-            ref var tcpHeader = ref Unsafe.As<byte, Network.Header.Tcp>(ref pointer);
-            tcpHeader.DestinationPort = _remotePort;
-            tcpHeader.SourcePort = _localPort;
-            tcpHeader.AcknowledgmentNumber = _receiveSequenceNumber;
-            tcpHeader.SequenceNumber = _sendSequenceNumber;
-            tcpHeader.ACK = true;
-            tcpHeader.Checksum = 0;
-            tcpHeader.CWR = false;
-            tcpHeader.DataOffset = (byte)(TcpHeaderWithOptions.SizeOfStandardHeader / 4);
-            tcpHeader.ECE = false;
-            tcpHeader.FIN = false;
-            tcpHeader.NS = false;
-            tcpHeader.PSH = false;
-            tcpHeader.RST = false;
-            tcpHeader.SYN = false;
-            tcpHeader.URG = false;
-            tcpHeader.UrgentPointer = 0;
-            tcpHeader.WindowSize = 50;
-            //ref var optionPoint = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Network.Header.Tcp>());
-                        
-            //var timestamps = new TcpOptionTimestamp(GetTimestamp(), _echoTimestamp);
-            //Unsafe.WriteUnaligned(ref optionPoint, timestamps);
-            //optionPoint = ref Unsafe.Add(ref optionPoint, Unsafe.SizeOf<TcpOptionTimestamp>());
-
-            tcpHeader.SetChecksum(span.Slice(span.Length - TcpHeaderWithOptions.SizeOfStandardHeader), _pseudoPartialSum);
+            ref var header = ref _partialTcpHeader;
+            header.AcknowledgmentNumber = _receiveSequenceNumber;
+            header.SequenceNumber = _sendSequenceNumber;
+            header.WindowSize = 50;
+            Unsafe.WriteUnaligned(ref pointer, header);
+            header = ref Unsafe.As<byte, Network.Header.Tcp>(ref pointer);
+            header.SetChecksum(span.Slice(span.Length - TcpHeaderWithOptions.SizeOfStandardHeader), _pseudoPartialSum);
 
             WriteMemory(memory);
             PendingAck = false;
@@ -226,11 +212,6 @@ namespace Magma.Transport.Tcp
             tcpHeader.URG = false;
             tcpHeader.UrgentPointer = 0;
             tcpHeader.WindowSize = 50;
-            //ref var optionPoint = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Network.Header.Tcp>());
-
-            //var timestamps = new TcpOptionTimestamp(GetTimestamp(), _echoTimestamp);
-            //Unsafe.WriteUnaligned(ref optionPoint, timestamps);
-            //optionPoint = ref Unsafe.Add(ref optionPoint, Unsafe.SizeOf<TcpOptionTimestamp>());
 
             data.CopyTo(span.Slice(span.Length - data.Length));
 

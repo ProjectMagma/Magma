@@ -262,6 +262,26 @@ namespace Magma.Network.Header
         // Padding: The TCP header padding is used to ensure that the TCP header ends, and data begins, on a 32 bit boundary.
         //          The padding is composed of zeros.
 
+        public static Tcp Create(ushort sourcePort, ushort destPort)
+        {
+            var tcp = new Tcp()
+            {
+                DestinationPort = destPort,
+                SourcePort = sourcePort,
+                ACK = true,
+                CWR = false,
+                DataOffset = (byte)(TcpHeaderWithOptions.SizeOfStandardHeader / 4),
+                ECE = false,
+                FIN = false,
+                NS = false,
+                PSH = false,
+                RST = false,
+                SYN = false,
+                URG = false,
+            };
+            return tcp;
+        }
+
         // Calculates the checksum in the Tcp Header. The pseudo header (minus the size) is always the same for the connection
         // So we only need to calculate for the size + Tcp Header and all data
         public void SetChecksum(ReadOnlySpan<byte> input, ulong pseudoHeaderSum)

@@ -23,12 +23,10 @@ namespace Magma.NetMap
         private ushort _port;
         private Dictionary<(V4Address address, ushort port), NetMapTcpConnection> _connections = new Dictionary<(V4Address address, ushort port), NetMapTcpConnection>();
         private Random _randomSequenceNumber = new Random();
-        private PCap.PCapFileWriter _pcap;
         private NetMapTcpConnection _lastConnectionSentTo;
 
-        public NetMapTransportReceiver(IPEndPoint ipEndPoint, NetMapTransmitRing transmitRing, IConnectionDispatcher connectionDispatcher, PCap.PCapFileWriter writer)
+        public NetMapTransportReceiver(IPEndPoint ipEndPoint, NetMapTransmitRing transmitRing, IConnectionDispatcher connectionDispatcher)
         {
-            _pcap = writer;
             _ipEndPoint = ipEndPoint;
             _transmitRing = transmitRing;
             _connectionDispatcher = connectionDispatcher;
@@ -61,8 +59,6 @@ namespace Magma.NetMap
                 if (!TcpHeaderWithOptions.TryConsume(data, out var tcp, out data)
                     || tcp.Header.DestinationPort != _port) return input;
 
-                _pcap.WritePacket(span);
-
                 // okay we now have some data we care about all the rest has been ditched to the host rings
                 if (!_connections.TryGetValue((ipHeader.SourceAddress, tcp.Header.SourcePort), out var connection))
                 {
@@ -76,9 +72,8 @@ namespace Magma.NetMap
                     }
 
                     // So looks like we need to create a connection then
-                    connection = new NetMapTcpConnection(etherHeader, ipHeader, tcp.Header, this, _pcap);
+                    connection = new NetMapTcpConnection(etherHeader, ipHeader, tcp.Header, this, _connectionDispatcher);
                     _connections[(ipHeader.SourceAddress, tcp.Header.SourcePort)] = connection;
-                    _connectionDispatcher.OnConnection(connection);
                 }
                 else if(connection != _lastConnectionSentTo)
                 {
