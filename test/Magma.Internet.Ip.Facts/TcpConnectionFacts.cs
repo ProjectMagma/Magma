@@ -5,6 +5,7 @@ using System.Text;
 using Magma.Network.Header;
 using Magma.Transport.Tcp;
 using Magma.Transport.Tcp.Header;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 using Xunit;
 
 namespace Magma.Internet.Ip.Facts
@@ -29,15 +30,15 @@ namespace Magma.Internet.Ip.Facts
             Assert.True(IPv4.TryConsume(data, out var ipHeader, out data, true));
             Assert.True(TcpHeaderWithOptions.TryConsume(data, out var tcpHeader, out data));
 
-            var connection = new TestTcpConnection(etherHeader, ipHeader, tcpHeader.Header);
+            var connection = new TestTcpConnection(etherHeader, ipHeader, tcpHeader.Header, null);
             connection.ProcessPacket(tcpHeader, data);
         }
 
 
         private class TestTcpConnection : TcpConnection
         {
-            public TestTcpConnection(Ethernet etherHeader, IPv4 ipHeader, Tcp tcpHeader)
-                : base(etherHeader, ipHeader, tcpHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, System.IO.Pipelines.PipeScheduler.ThreadPool, MemoryPool<byte>.Shared)
+            public TestTcpConnection(Ethernet etherHeader, IPv4 ipHeader, Tcp tcpHeader, IConnectionDispatcher connectionDisptacher)
+                : base(etherHeader, ipHeader, tcpHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, System.IO.Pipelines.PipeScheduler.ThreadPool, MemoryPool<byte>.Shared, connectionDisptacher)
             {
             }
 

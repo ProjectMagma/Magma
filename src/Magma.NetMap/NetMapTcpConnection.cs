@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using Magma.Network.Header;
 using Magma.Transport.Tcp;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 
 namespace Magma.NetMap
 {
@@ -12,8 +13,10 @@ namespace Magma.NetMap
         private NetMapTransportReceiver _tcpReceiver;
         private PCap.PCapFileWriter _writer;
 
-        public NetMapTcpConnection(Ethernet ethernetHeader, IPv4 ipHeader, Tcp tcpHeader, NetMapTransportReceiver tcpReceiver, PCap.PCapFileWriter writer)
-            : base(ethernetHeader, ipHeader, tcpHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, System.IO.Pipelines.PipeScheduler.ThreadPool, MemoryPool<byte>.Shared)
+        public NetMapTcpConnection(Ethernet ethernetHeader, IPv4 ipHeader, Tcp tcpHeader,
+            NetMapTransportReceiver tcpReceiver, IConnectionDispatcher connectionDispatcher)
+            : base(ethernetHeader, ipHeader, tcpHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, 
+                  System.IO.Pipelines.PipeScheduler.ThreadPool, MemoryPool<byte>.Shared, connectionDispatcher)
         {
             _tcpReceiver = tcpReceiver;
         }
