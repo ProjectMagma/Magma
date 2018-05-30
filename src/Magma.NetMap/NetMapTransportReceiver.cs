@@ -24,6 +24,7 @@ namespace Magma.NetMap
         private Dictionary<(V4Address address, ushort port), NetMapTcpConnection> _connections = new Dictionary<(V4Address address, ushort port), NetMapTcpConnection>();
         private Random _randomSequenceNumber = new Random();
         private PCap.PCapFileWriter _pcap;
+        private NetMapTcpConnection _lastConnectionSentTo;
 
         public NetMapTransportReceiver(IPEndPoint ipEndPoint, NetMapTransmitRing transmitRing, IConnectionDispatcher connectionDispatcher, PCap.PCapFileWriter writer)
         {
@@ -38,6 +39,8 @@ namespace Magma.NetMap
         }
 
         public NetMapTransmitRing Transmitter => _transmitRing;
+
+        public void FlushPendingAcks() => _lastConnectionSentTo.SendAckIfRequired();
 
         public uint RandomSeqeunceNumber() => (uint)_randomSequenceNumber.Next();
 
@@ -63,6 +66,7 @@ namespace Magma.NetMap
                 // okay we now have some data we care about all the rest has been ditched to the host rings
                 if (!_connections.TryGetValue((ipHeader.SourceAddress, tcp.Header.SourcePort), out var connection))
                 {
+                    _lastConnectionSentTo?.SendAckIfRequired();
                     // We need to create a connection because we don't know this one but only if the packet is a syn
                     // otherwise this is garbage and we should just swallow it
                     if (!tcp.Header.SYN)
@@ -76,8 +80,13 @@ namespace Magma.NetMap
                     _connections[(ipHeader.SourceAddress, tcp.Header.SourcePort)] = connection;
                     _connectionDispatcher.OnConnection(connection);
                 }
+                else if(connection != _lastConnectionSentTo)
+                {
+                    _lastConnectionSentTo.SendAckIfRequired();
+                }
 
                 connection.ProcessPacket(tcp, data);
+                _lastConnectionSentTo = connection;
                 return default;
             }
             finally

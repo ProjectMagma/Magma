@@ -124,7 +124,16 @@ namespace Magma.Transport.Tcp
                     throw new NotImplementedException($"Unknown tcp state?? {_state}");
             }
         }
-        
+
+        public void SendAckIfRequired()
+        {
+            if(PendingAck)
+            {
+                PendingAck = false;
+                WriteAckPacket();
+            }
+        }
+
         private void WriteAckPacket()
         {
             if (!TryGetMemory(out var memory)) throw new InvalidOperationException("Back pressure, something to do here");
