@@ -15,6 +15,11 @@ namespace Magma.Network
                 _packetReceiver = PacketReceiver.CreateDefault()
             };
 
+        public void FlushPendingAcks()
+        {
+            throw new NotImplementedException();
+        }
+
         public T TryConsume<T>(T input) where T : IMemoryOwner<byte> => _packetReceiver.TryConsume(input);
     }
 
@@ -89,6 +94,11 @@ namespace Magma.Network
         private static bool TryConsumeArp(in Ethernet ethernetFrame, ReadOnlySpan<byte> input)
         {
             return false;
+        }
+
+        public void FlushPendingAcks()
+        {
+            throw new NotImplementedException();
         }
     }
 }

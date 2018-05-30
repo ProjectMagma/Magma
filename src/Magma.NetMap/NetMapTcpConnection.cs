@@ -29,5 +29,7 @@ namespace Magma.NetMap
         }
 
         protected override bool TryGetMemory(out Memory<byte> memory) => _tcpReceiver.Transmitter.TryGetNextBuffer(out memory);
+
+        
     }
 }

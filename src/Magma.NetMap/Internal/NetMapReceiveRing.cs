@@ -44,6 +44,7 @@ namespace Magma.NetMap.Internal
                         MoveHeadForward(slot.buf_idx);
                     }
                 }
+                _receiver.FlushPendingAcks();
                 _rxTxPair.WaitForWork();
             }
         }
