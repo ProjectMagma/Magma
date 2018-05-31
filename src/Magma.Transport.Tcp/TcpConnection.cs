@@ -22,8 +22,6 @@ namespace Magma.Transport.Tcp
         private uint _receiveSequenceNumber;
         private uint _sendAckSequenceNumber;
         private uint _sendSequenceNumber;
-        private ushort _remotePort;
-        private ushort _localPort;
         private V4Address _remoteAddress;
         private V4Address _localAddress;
         private Ethernet _outboundEthernetHeader;
@@ -85,7 +83,7 @@ namespace Magma.Transport.Tcp
                     _sendSequenceNumber = GetRandomSequenceStart();
                     _receiveSequenceNumber = header.Header.SequenceNumber;
                     // We know we checked for syn in the upper layer so we can ignore that for now
-                    _partialTcpHeader = Network.Header.Tcp.Create(_localPort, _remotePort);
+                    _partialTcpHeader = Network.Header.Tcp.Create((ushort)LocalPort, (ushort)RemotePort);
                     WriteSyncAckPacket();
                     _state = TcpConnectionState.Syn_Rcvd;
                     break;
@@ -204,8 +202,8 @@ namespace Magma.Transport.Tcp
             pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<IPv4>());
 
             ref var tcpHeader = ref Unsafe.As<byte, Network.Header.Tcp>(ref pointer);
-            tcpHeader.DestinationPort = _remotePort;
-            tcpHeader.SourcePort = _localPort;
+            tcpHeader.DestinationPort = (ushort)RemotePort;
+            tcpHeader.SourcePort = (ushort)LocalPort;
             tcpHeader.AcknowledgmentNumber = _receiveSequenceNumber;
             tcpHeader.SequenceNumber = _sendSequenceNumber;
             tcpHeader.Checksum = 0;
@@ -239,8 +237,8 @@ namespace Magma.Transport.Tcp
             pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<IPv4>());
 
             ref var tcpHeader = ref Unsafe.As<byte, Network.Header.Tcp>(ref pointer);
-            tcpHeader.DestinationPort = _remotePort;
-            tcpHeader.SourcePort = _localPort;
+            tcpHeader.DestinationPort = (ushort)RemotePort;
+            tcpHeader.SourcePort = (ushort)LocalPort;
             tcpHeader.AcknowledgmentNumber = _receiveSequenceNumber;
             tcpHeader.SequenceNumber = _sendSequenceNumber;
             tcpHeader.Checksum = 0;
@@ -274,8 +272,8 @@ namespace Magma.Transport.Tcp
             pointer = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<IPv4>());
 
             ref var tcpHeader = ref Unsafe.As<byte, Network.Header.Tcp>(ref pointer);
-            tcpHeader.DestinationPort = _remotePort;
-            tcpHeader.SourcePort = _localPort;
+            tcpHeader.DestinationPort = (ushort)RemotePort;
+            tcpHeader.SourcePort = (ushort)LocalPort;
             tcpHeader.AcknowledgmentNumber = ++_receiveSequenceNumber;
             tcpHeader.SequenceNumber = _sendSequenceNumber++;
             tcpHeader.Checksum = 0;
