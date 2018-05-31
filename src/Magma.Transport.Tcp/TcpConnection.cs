@@ -98,8 +98,16 @@ namespace Magma.Transport.Tcp
                     _state = TcpConnectionState.Established;
                     break;
                 case TcpConnectionState.Established:
-                    if(header.Header.FIN) { throw new NotImplementedException("Got a fin don't know what to do, dying"); }
-                    if(header.Header.RST) { throw new NotImplementedException("Got an rst don't know what to do dying"); }
+                    if(header.Header.FIN)
+                    {
+                        Console.WriteLine("Got fin should shut down!");
+                        return;
+                    }
+                    if(header.Header.RST)
+                    {
+                        Console.WriteLine("Got RST Should shut down!");
+                        return;
+                    }
 
                     // First lets update our acked squence number;
                     _sendAckSequenceNumber = header.Header.AcknowledgmentNumber;
