@@ -20,12 +20,14 @@ namespace Magma.NetMap
             _endpoint = ipEndpoint ?? throw new ArgumentNullException(nameof(ipEndpoint));
             _interfaceName = interfaceName ?? throw new ArgumentNullException(nameof(interfaceName));
             _connectionDispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+            Console.WriteLine($"Transport started with ip endpoint {ipEndpoint} on interface name {interfaceName}");
         }
 
         public Task BindAsync()
         {
             _port = new NetMapPort<NetMapTransportReceiver>(_interfaceName, CreateReceiver);
             _port.Open();
+            Console.WriteLine($"Bind completed and netmap port open");
             return Task.CompletedTask;
         }
 
