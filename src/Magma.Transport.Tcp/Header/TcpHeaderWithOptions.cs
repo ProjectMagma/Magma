@@ -63,7 +63,8 @@ namespace Magma.Transport.Tcp.Header
                             exit = true;
                             break;
                         default:
-                            Console.WriteLine($"Unknown option kind {optionKind}");
+                            exit = true;
+                            //Console.WriteLine($"Unknown option kind {optionKind}");
                             options = options.Slice(options[1]);
                             break;
                     }
