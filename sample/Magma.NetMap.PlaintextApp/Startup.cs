@@ -33,7 +33,7 @@ namespace PlaintextApp
             var host = new WebHostBuilder()
                 .UseKestrel(options =>
                 {
-                    options.Listen(IPAddress.Loopback, 5001);
+                    options.Listen(IPAddress.Parse("172.18.225.166"), 5001);
                 })
 
                 .UseNetMap(ops => ops.InterfaceName = "eth0") // ----^ should use this?
