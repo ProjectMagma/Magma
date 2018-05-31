@@ -115,8 +115,7 @@ namespace Magma.Transport.Tcp
                     if(_receiveSequenceNumber != header.Header.SequenceNumber)
                     {
                         // We are just going to drop this and wait for a resend
-                        Console.WriteLine("Dropped packet due to wrong sequence");
-                        Console.WriteLine($"Expected seq {_receiveSequenceNumber} got {header.Header.SequenceNumber}");
+                        return;
                     }
                     unchecked { _receiveSequenceNumber += (uint)data.Length; }
                     var output = Input.GetMemory(data.Length);
