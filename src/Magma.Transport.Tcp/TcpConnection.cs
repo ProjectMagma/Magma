@@ -155,6 +155,7 @@ namespace Magma.Transport.Tcp
                         WriteDataPacket(currentSlice);
                     }
                 }
+                Output.AdvanceTo(buffer.End);
             }
         }
 
