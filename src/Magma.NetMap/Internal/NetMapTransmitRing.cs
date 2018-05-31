@@ -15,7 +15,7 @@ namespace Magma.NetMap.Internal
         private Thread _flushThread;
 
         internal unsafe NetMapTransmitRing(RxTxPair rxTxPair, byte* memoryRegion, long queueOffset)
-            : base(rxTxPair, memoryRegion, queueOffset) => _flushThread = new Thread(FlushLoop) { IsBackground = true };
+            : base(rxTxPair, memoryRegion, queueOffset) => _flushThread = new Thread(FlushLoop) ;
 
         public override void Start() => _flushThread.Start();
 

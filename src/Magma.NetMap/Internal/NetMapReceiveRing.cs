@@ -18,7 +18,7 @@ namespace Magma.NetMap.Internal
         {
             _hostTxRing = hostTxRing;
             _receiver = receiver;
-            _worker = new Thread(new ThreadStart(ThreadLoop)) { IsBackground = true };
+            _worker = new Thread(new ThreadStart(ThreadLoop));
         }
 
         public override void Start() => _worker.Start();
