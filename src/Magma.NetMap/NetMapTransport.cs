@@ -35,6 +35,7 @@ namespace Magma.NetMap
         {
             var receiver = new NetMapTransportReceiver(_endpoint, transmitRing, _connectionDispatcher);
             _receivers.Add(receiver);
+            Console.WriteLine("Creating receiver");
             return receiver;
         }
 

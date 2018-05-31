@@ -44,6 +44,7 @@ namespace Magma.NetMap
 
         public T TryConsume<T>(T input) where T : IMemoryOwner<byte>
         {
+            Console.WriteLine("Packet received");
             try
             {
                 var span = input.Memory.Span;
@@ -82,6 +83,11 @@ namespace Magma.NetMap
 
                 connection.ProcessPacket(tcp, data);
                 _lastConnectionSentTo = connection;
+                return default;
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Error processing packet!!! thread will die exception was {ex}");
                 return default;
             }
             finally
