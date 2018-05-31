@@ -26,9 +26,9 @@ namespace Magma.Transport.Tcp
         private V4Address _localAddress;
         private Ethernet _outboundEthernetHeader;
         private Network.Header.Tcp _partialTcpHeader;
-        private IPv4 _partialIPHeader;
-        private byte _windowScale;
-        private ushort _windowSize;
+        //private IPv4 _partialIPHeader;
+        //private byte _windowScale;
+        //private ushort _windowSize;
         private ulong _pseudoPartialSum;
         private uint _echoTimestamp;
         private Task _flushTask = Task.CompletedTask;
