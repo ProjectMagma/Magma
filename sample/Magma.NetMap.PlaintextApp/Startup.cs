@@ -36,7 +36,7 @@ namespace PlaintextApp
                     options.Listen(IPAddress.Loopback, 5001);
                 })
 
-                .UseNetMap() // ----^ should use this?
+                .UseNetMap(ops => ops.InterfaceName = "eth0") // ----^ should use this?
 
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseStartup<Startup>()
