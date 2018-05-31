@@ -199,17 +199,9 @@ namespace Magma.Transport.Tcp
             tcpHeader.SourcePort = _localPort;
             tcpHeader.AcknowledgmentNumber = _receiveSequenceNumber;
             tcpHeader.SequenceNumber = _sendSequenceNumber;
-            tcpHeader.ACK = true;
             tcpHeader.Checksum = 0;
-            tcpHeader.CWR = false;
             tcpHeader.DataOffset = (byte)(TcpHeaderWithOptions.SizeOfStandardHeader / 4);
-            tcpHeader.ECE = false;
-            tcpHeader.FIN = false;
-            tcpHeader.NS = false;
-            tcpHeader.PSH = true;
-            tcpHeader.RST = false;
-            tcpHeader.SYN = false;
-            tcpHeader.URG = false;
+            tcpHeader.Flags = TcpFlags.ACK | TcpFlags.PSH;
             tcpHeader.UrgentPointer = 0;
             tcpHeader.WindowSize = 50;
 
@@ -242,17 +234,9 @@ namespace Magma.Transport.Tcp
             tcpHeader.SourcePort = _localPort;
             tcpHeader.AcknowledgmentNumber = ++_receiveSequenceNumber;
             tcpHeader.SequenceNumber = _sendSequenceNumber++;
-            tcpHeader.ACK = true;
             tcpHeader.Checksum = 0;
-            tcpHeader.CWR = false;
             tcpHeader.DataOffset = (byte)(TcpHeaderWithOptions.SizeOfSynAckHeader / 4);
-            tcpHeader.ECE = false;
-            tcpHeader.FIN = false;
-            tcpHeader.NS = false;
-            tcpHeader.PSH = false;
-            tcpHeader.RST = false;
-            tcpHeader.SYN = true;
-            tcpHeader.URG = false;
+            tcpHeader.Flags = TcpFlags.ACK | TcpFlags.SYN;
             tcpHeader.UrgentPointer = 0;
             tcpHeader.WindowSize = 5792;
             ref var optionPoint = ref Unsafe.Add(ref pointer, Unsafe.SizeOf<Network.Header.Tcp>());
