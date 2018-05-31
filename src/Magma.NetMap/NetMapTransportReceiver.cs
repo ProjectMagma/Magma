@@ -44,7 +44,6 @@ namespace Magma.NetMap
 
         public T TryConsume<T>(T input) where T : IMemoryOwner<byte>
         {
-            Console.WriteLine("Packet received");
             try
             {
                 var span = input.Memory.Span;
