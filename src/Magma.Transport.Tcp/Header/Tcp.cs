@@ -62,6 +62,23 @@ namespace Magma.Network.Header
         /// </summary>
         public byte Reserved => (byte)((_dataOffsetAndReservedAndFlags0 & 0xf) >> 1);
 
+        public TcpFlags Flags
+        {
+            get => (TcpFlags)(((_dataOffsetAndReservedAndFlags0 & 0b1) << 8) | _flags1);
+            set
+            {
+                _flags1 = (byte)value;
+                if (((int)value >> 8) > 0)
+                {
+                    _dataOffsetAndReservedAndFlags0 |= 0b0000_0001;
+                }
+                else
+                {
+                    _dataOffsetAndReservedAndFlags0 &= 0b1111_1110;
+                }
+            }
+        }
+
         /// <summary>
         /// ECN-nonce - concealment protection(experimental: see RFC 3540)
         /// </summary>
