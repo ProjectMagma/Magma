@@ -38,7 +38,7 @@ namespace Magma.NetMap
 
         public NetMapTransmitRing Transmitter => _transmitRing;
 
-        public void FlushPendingAcks() => _lastConnectionSentTo.SendAckIfRequired();
+        public void FlushPendingAcks() => _lastConnectionSentTo?.SendAckIfRequired();
 
         public uint RandomSeqeunceNumber() => (uint)_randomSequenceNumber.Next();
 
