@@ -33,10 +33,10 @@ namespace PlaintextApp
             var host = new WebHostBuilder()
                 .UseKestrel(options =>
                 {
-                    options.Listen(IPAddress.Loopback, 5001);
+                    options.Listen(IPAddress.Any, 5001);
                 })
 
-                .UseNetMap() // ----^ should use this?
+                .UseNetMap(ops => ops.InterfaceName = "eth0")
 
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseStartup<Startup>()

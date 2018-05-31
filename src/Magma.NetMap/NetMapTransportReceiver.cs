@@ -38,7 +38,7 @@ namespace Magma.NetMap
 
         public NetMapTransmitRing Transmitter => _transmitRing;
 
-        public void FlushPendingAcks() => _lastConnectionSentTo.SendAckIfRequired();
+        public void FlushPendingAcks() => _lastConnectionSentTo?.SendAckIfRequired();
 
         public uint RandomSeqeunceNumber() => (uint)_randomSequenceNumber.Next();
 
@@ -58,35 +58,41 @@ namespace Magma.NetMap
                 // So we have TCP lets parse out the header
                 if (!TcpHeaderWithOptions.TryConsume(data, out var tcp, out data)
                     || tcp.Header.DestinationPort != _port) return input;
-
-                // okay we now have some data we care about all the rest has been ditched to the host rings
-                if (!_connections.TryGetValue((ipHeader.SourceAddress, tcp.Header.SourcePort), out var connection))
+                try
                 {
-                    _lastConnectionSentTo?.SendAckIfRequired();
-                    // We need to create a connection because we don't know this one but only if the packet is a syn
-                    // otherwise this is garbage and we should just swallow it
-                    if (!tcp.Header.SYN)
+                    // okay we now have some data we care about all the rest has been ditched to the host rings
+                    if (!_connections.TryGetValue((ipHeader.SourceAddress, tcp.Header.SourcePort), out var connection))
                     {
-                        input.Dispose();
-                        return default;
+                        _lastConnectionSentTo?.SendAckIfRequired();
+                        // We need to create a connection because we don't know this one but only if the packet is a syn
+                        // otherwise this is garbage and we should just swallow it
+                        if (!tcp.Header.SYN)
+                        {
+                            return default;
+                        }
+
+                        // So looks like we need to create a connection then
+                        connection = new NetMapTcpConnection(etherHeader, ipHeader, tcp.Header, this, _connectionDispatcher);
+                        _connections[(ipHeader.SourceAddress, tcp.Header.SourcePort)] = connection;
+                    }
+                    else if (connection != _lastConnectionSentTo)
+                    {
+                        _lastConnectionSentTo.SendAckIfRequired();
                     }
 
-                    // So looks like we need to create a connection then
-                    connection = new NetMapTcpConnection(etherHeader, ipHeader, tcp.Header, this, _connectionDispatcher);
-                    _connections[(ipHeader.SourceAddress, tcp.Header.SourcePort)] = connection;
+                    connection.ProcessPacket(tcp, data);
+                    _lastConnectionSentTo = connection;
+                    return default;
                 }
-                else if(connection != _lastConnectionSentTo)
+                finally
                 {
-                    _lastConnectionSentTo.SendAckIfRequired();
+                    input.Dispose();
                 }
-
-                connection.ProcessPacket(tcp, data);
-                _lastConnectionSentTo = connection;
-                return default;
             }
-            finally
+            catch(Exception ex)
             {
-                input.Dispose();
+                Console.WriteLine($"Error processing packet!!! thread will die exception was {ex}");
+                return input;
             }
         }
     }

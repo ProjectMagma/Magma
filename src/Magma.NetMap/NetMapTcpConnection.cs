@@ -11,8 +11,7 @@ namespace Magma.NetMap
     internal class NetMapTcpConnection : TcpConnection
     {
         private NetMapTransportReceiver _tcpReceiver;
-        private PCap.PCapFileWriter _writer;
-
+        
         public NetMapTcpConnection(Ethernet ethernetHeader, IPv4 ipHeader, Tcp tcpHeader,
             NetMapTransportReceiver tcpReceiver, IConnectionDispatcher connectionDispatcher)
             : base(ethernetHeader, ipHeader, tcpHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, 
@@ -26,13 +25,10 @@ namespace Magma.NetMap
 
         protected override void WriteMemory(Memory<byte> memory)
         {
-            _writer.WritePacket(memory.Span);
             _tcpReceiver.Transmitter.SendBuffer(memory);
             _tcpReceiver.Transmitter.ForceFlush();
         }
 
         protected override bool TryGetMemory(out Memory<byte> memory) => _tcpReceiver.Transmitter.TryGetNextBuffer(out memory);
-
-        
     }
 }
