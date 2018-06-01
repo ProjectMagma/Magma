@@ -90,7 +90,7 @@ namespace Magma.Transport.Tcp
                 case TcpConnectionState.Syn_Rcvd:
                     if (header.Header.SYN)
                     {
-                        Console.WriteLine("Another Syn made");
+                        //Console.WriteLine("Another Syn made");
                         return;
                     }
                     _connectionDispatcher.OnConnection(this);
@@ -100,12 +100,13 @@ namespace Magma.Transport.Tcp
                 case TcpConnectionState.Established:
                     if(header.Header.FIN)
                     {
-                        Console.WriteLine("Got fin should shut down!");
+                        _receiveSequenceNumber++;
+                        _state = TcpConnectionState.Fin_Wait_1;
                         return;
                     }
                     if(header.Header.RST)
                     {
-                        Console.WriteLine("Got RST Should shut down!");
+                        //Console.WriteLine("Got RST Should shut down!");
                         return;
                     }
 
@@ -129,6 +130,9 @@ namespace Magma.Transport.Tcp
                     }
                     PendingAck = true;
                     _totalBytesWritten += data.Length;
+                    break;
+                case TcpConnectionState.Fin_Wait_1:
+                case TcpConnectionState.Fin_Wait_2:
                     break;
                 default:
                     throw new NotImplementedException($"Unknown tcp state?? {_state}");
@@ -155,6 +159,7 @@ namespace Magma.Transport.Tcp
                     }
                 }
                 Output.AdvanceTo(buffer.End);
+                Flush();
             }
         }
 
@@ -191,6 +196,7 @@ namespace Magma.Transport.Tcp
             header.SetChecksum(span.Slice(span.Length - TcpHeaderWithOptions.SizeOfStandardHeader), _pseudoPartialSum);
 
             WriteMemory(memory);
+            Flush();
             PendingAck = false;
         }
 
@@ -305,11 +311,13 @@ namespace Magma.Transport.Tcp
             tcpHeader.SetChecksum(span.Slice(span.Length - TcpHeaderWithOptions.SizeOfSynAckHeader), _pseudoPartialSum);
 
             WriteMemory(memory);
+            Flush();
         }
                 
         protected abstract void WriteMemory(Memory<byte> memory);
         protected abstract bool TryGetMemory(out Memory<byte> memory);
         protected abstract uint GetRandomSequenceStart();
         protected abstract uint GetTimestamp();
+        protected abstract void Flush();
     }
 }
