@@ -11,11 +11,11 @@ namespace Magma.NetMap.Internal
         private const int SPINCOUNT = 100;
         private const int MAXLOOPTRY = 2;
         private ManualResetEventSlim _sendEvent = new ManualResetEventSlim(true);
-        private readonly object _sendBufferLock = new object();
+        private SpinLock _lock = new SpinLock();
         private Thread _flushThread;
 
         internal unsafe NetMapTransmitRing(RxTxPair rxTxPair, byte* memoryRegion, long queueOffset)
-            : base(rxTxPair, memoryRegion, queueOffset) => _flushThread = new Thread(FlushLoop) ;
+            : base(rxTxPair, memoryRegion, queueOffset) => _flushThread = new Thread(FlushLoop);
 
         public override void Start() => _flushThread.Start();
 
@@ -62,8 +62,10 @@ namespace Magma.NetMap.Internal
             if (start != 0) ExceptionHelper.ThrowInvalidOperation("Invalid start for buffer");
             if (manager.RingId != this) ExceptionHelper.ThrowInvalidOperation($"Invalid ring id, expected {_ringId} actual {manager.RingId}");
 
-            lock (_sendBufferLock)
+            var lockTaken = false;
+            try
             {
+                _lock.Enter(ref lockTaken);
                 ref var ring = ref RingInfo;
                 var newHead = RingNext(ring.Head);
                 ref var slot = ref GetSlot(ring.Head);
@@ -75,6 +77,10 @@ namespace Magma.NetMap.Internal
                 slot.len = (ushort)buffer.Length;
                 ring.Head = newHead;
             }
+            finally
+            {
+                if (lockTaken) _lock.Exit(true);
+            }
         }
 
         internal bool TrySendWithSwap(ref NetmapSlot sourceSlot)
@@ -82,8 +88,11 @@ namespace Magma.NetMap.Internal
             ref var ring = ref RingInfo;
             for (var loop = 0; loop < MAXLOOPTRY; loop++)
             {
-                lock (_sendBufferLock)
+                var lockTaken = false;
+                try
+
                 {
+                    _lock.Enter(ref lockTaken);
                     var slotIndex = GetCursor();
                     if (slotIndex == -1)
                     {
@@ -100,6 +109,10 @@ namespace Magma.NetMap.Internal
                     sourceSlot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
                     ring.Head = RingNext(slotIndex);
                     return true;
+                }
+                finally
+                {
+                    if (lockTaken) _lock.Exit(true);
                 }
             }
             return false;
