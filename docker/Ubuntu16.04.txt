@@ -13,12 +13,11 @@ sudo lsmod | grep net
 # Without this it won't do passthrough from host correctly
 ethtool -K eth0 tx off rx off gso off tso off gro off lro off
 
-# Will kill the eth0 network
-sudo ./build-apps/pkt-gen/pkt-gen -i eth0 -f tx -l 60
+# Test below, will kill the eth0 network
+# sudo ./build-apps/pkt-gen/pkt-gen -i eth0 -f tx -l 60
 
 #To make modprobe perm
-sudo vim /etc/modules
+sudo echo "netmap" >> /etc/modules
 
-#add a line with "netmap" in this file
-
-#to make ethtool perm add it to the /etc/rc.local file (you need to sudo to edit this file)
+#to make ethtool perm 
+sudo echo "ethtool -K eth0 tx off rx off gso off tso off gro off lro off" >>  /etc/rc.local
