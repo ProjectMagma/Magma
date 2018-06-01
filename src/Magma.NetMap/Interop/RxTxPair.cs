@@ -5,7 +5,7 @@ using static Magma.NetMap.Interop.Netmap;
 
 namespace Magma.NetMap.Interop
 {
-    public class RxTxPair
+    internal class RxTxPair:IDisposable
     {
         private FileDescriptor _rxFileDescriptor;
         private FileDescriptor _txFileDescriptor;
@@ -35,5 +35,19 @@ namespace Magma.NetMap.Interop
         }
 
         public unsafe void ForceFlush() => IOCtl(_txFileDescriptor, IOControlCommand.NIOCTXSYNC, IntPtr.Zero);
+
+        public void Dispose()
+        {
+            if(_rxFileDescriptor.IsValid)
+            {
+                Close(_rxFileDescriptor);
+                _rxFileDescriptor = new FileDescriptor();
+            }
+            if(_txFileDescriptor.IsValid)
+            {
+                Close(_txFileDescriptor);
+                _txFileDescriptor = new FileDescriptor();
+            }
+        }
     }
 }

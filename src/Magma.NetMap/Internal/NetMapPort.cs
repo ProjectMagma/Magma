@@ -10,12 +10,13 @@ using static Magma.NetMap.Interop.Netmap;
 
 namespace Magma.NetMap.Internal
 {
-    internal class NetMapPort<TPacketReceiver>
+    internal class NetMapPort<TPacketReceiver> : IDisposable
         where TPacketReceiver : IPacketReceiver
     {
         private NetMapReceiveRing<TPacketReceiver>[] _receiveRings;
         private NetMapTransmitRing[] _transmitRings;
         private List<NetMapRing> _allRings = new List<NetMapRing>();
+        private RxTxPair[] _rxTxPairs;
         private NetMapHostRxRing _hostRxRing;
         private NetMapTransmitRing _hostTxRing;
         private readonly string _interfaceName;
@@ -38,14 +39,14 @@ namespace Magma.NetMap.Internal
         public unsafe void Open()
         {
             _fileDescriptor = OpenNetMap(_interfaceName, 0, NetMapRequestFlags.NR_REG_NIC_SW, out _request);
-                        
+
             MapMemory();
             SetupRings();
 
             var maxBufferId = _allRings.Select(r => r.GetMaxBufferId()).Max();
             var buffersStart = _allRings[0].BufferStart;
             var pool = new NetMapBufferPool((ushort)_allRings[0].BufferSize, buffersStart, maxBufferId + 1);
-            foreach(var ring in _allRings)
+            foreach (var ring in _allRings)
             {
                 ring.BufferPool = pool;
                 ring.Start();
@@ -56,19 +57,19 @@ namespace Magma.NetMap.Internal
         {
             var txOffsets = new long[_netmapInterface.NumberOfTXRings];
             var rxOffsets = new long[_netmapInterface.NumberOfRXRings];
-            var rxTxPairs = new RxTxPair[txOffsets.Length];
+            _rxTxPairs = new RxTxPair[txOffsets.Length + 1];
             var span = new Span<long>(IntPtr.Add(NetMapInterfaceAddress, Unsafe.SizeOf<NetMapInterface>()).ToPointer(), _netmapInterface.NumberOfRXRings + _netmapInterface.NumberOfTXRings + 2);
             for (var i = 0; i < txOffsets.Length; i++)
             {
                 txOffsets[i] = span[0];
                 span = span.Slice(1);
-                rxTxPairs[i] = new RxTxPair(_interfaceName, i, false);
+                _rxTxPairs[i] = new RxTxPair(_interfaceName, i, false);
             }
-            var rxTxPairHost = new RxTxPair(_interfaceName, txOffsets.Length, true);
+            _rxTxPairs[txOffsets.Length] = new RxTxPair(_interfaceName, txOffsets.Length, true);
 
             var txHost = span[0];
             span = span.Slice(1);
-            
+
             for (var i = 0; i < rxOffsets.Length; i++)
             {
                 rxOffsets[i] = span[0];
@@ -76,18 +77,18 @@ namespace Magma.NetMap.Internal
             }
             var rxHost = span[0];
 
-            _hostTxRing = new NetMapTransmitRing(rxTxPairHost, (byte*)_mappedRegion.ToPointer(), txHost);
+            _hostTxRing = new NetMapTransmitRing(_rxTxPairs[_rxTxPairs.Length - 1], (byte*)_mappedRegion.ToPointer(), txHost);
             _allRings.Add(_hostTxRing);
             _transmitRings = new NetMapTransmitRing[txOffsets.Length];
             _receiveRings = new NetMapReceiveRing<TPacketReceiver>[rxOffsets.Length];
             for (var i = 0; i < txOffsets.Length; i++)
             {
-                _transmitRings[i] = new NetMapTransmitRing(rxTxPairs[i], (byte*)_mappedRegion.ToPointer(), txOffsets[i]);
+                _transmitRings[i] = new NetMapTransmitRing(_rxTxPairs[i], (byte*)_mappedRegion.ToPointer(), txOffsets[i]);
                 _allRings.Add(_transmitRings[i]);
-                _receiveRings[i] = new NetMapReceiveRing<TPacketReceiver>(rxTxPairs[i], (byte*)_mappedRegion.ToPointer(), rxOffsets[i], _createReceiver(_transmitRings[i]), _hostTxRing);
+                _receiveRings[i] = new NetMapReceiveRing<TPacketReceiver>(_rxTxPairs[i], (byte*)_mappedRegion.ToPointer(), rxOffsets[i], _createReceiver(_transmitRings[i]), _hostTxRing);
                 _allRings.Add(_receiveRings[i]);
             }
-            _hostRxRing = new NetMapHostRxRing(rxTxPairHost, (byte*)_mappedRegion.ToPointer(), rxHost, _transmitRings[0]);
+            _hostRxRing = new NetMapHostRxRing(_rxTxPairs[_rxTxPairs.Length - 1], (byte*)_mappedRegion.ToPointer(), rxHost, _transmitRings[0]);
             _allRings.Add(_hostRxRing);
         }
 
@@ -101,7 +102,7 @@ namespace Magma.NetMap.Internal
             _mappedRegion = mapResult;
             _netmapInterface = Unsafe.Read<NetMapInterface>(NetMapInterfaceAddress.ToPointer());
         }
-        
+
         public void PrintPortInfo()
         {
             Console.WriteLine($"memsize = {_request.nr_memsize}");
@@ -114,5 +115,27 @@ namespace Magma.NetMap.Internal
             Console.WriteLine($"Interface Nic TX Queues {_netmapInterface.NumberOfTXRings}");
             Console.WriteLine($"Interface Start of extra buffers {_netmapInterface.ni_bufs_head}");
         }
+
+        protected void Dispose(bool isDisposing)
+        {
+            foreach(var pair in _rxTxPairs)
+            {
+                pair.Dispose();
+            }
+            if (_mappedRegion != IntPtr.Zero)
+            {
+                MUnmap(_mappedRegion, _request.nr_memsize);
+                _mappedRegion = IntPtr.Zero;
+            }
+            if(_fileDescriptor.IsValid)
+            {
+                Close(_fileDescriptor);
+                _fileDescriptor = new FileDescriptor();
+            }
+        }
+
+        public void Dispose() => Dispose(true);
+
+        ~NetMapPort() => Dispose(false);
     }
 }
