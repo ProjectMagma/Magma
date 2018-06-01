@@ -59,7 +59,7 @@ namespace Magma.NetMap.Internal
             var rxOffsets = new long[_netmapInterface.NumberOfRXRings];
             _rxTxPairs = new RxTxPair[txOffsets.Length + 1];
             var span = new Span<long>(IntPtr.Add(NetMapInterfaceAddress, Unsafe.SizeOf<NetMapInterface>()).ToPointer(), _netmapInterface.NumberOfRXRings + _netmapInterface.NumberOfTXRings + 2);
-            for (var i = 0; i < txOffsets.Length - 1; i++)
+            for (var i = 0; i < txOffsets.Length; i++)
             {
                 txOffsets[i] = span[0];
                 span = span.Slice(1);
