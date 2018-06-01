@@ -11,7 +11,7 @@ namespace Magma.NetMap.Internal
         private const int SPINCOUNT = 100;
         private const int MAXLOOPTRY = 2;
         private ManualResetEventSlim _sendEvent = new ManualResetEventSlim(true);
-        private SpinLock _lock = new SpinLock();
+        private SpinLock _lock = new SpinLock(enableThreadOwnerTracking: false);
         private Thread _flushThread;
 
         internal unsafe NetMapTransmitRing(RxTxPair rxTxPair, byte* memoryRegion, long queueOffset)
