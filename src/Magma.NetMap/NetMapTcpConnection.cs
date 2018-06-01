@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 
 namespace Magma.NetMap
 {
-    internal class NetMapTcpConnection : TcpConnection
+    internal sealed class NetMapTcpConnection : TcpConnection
     {
         private NetMapTransportReceiver _tcpReceiver;
         
@@ -26,6 +26,10 @@ namespace Magma.NetMap
         protected override void WriteMemory(Memory<byte> memory)
         {
             _tcpReceiver.Transmitter.SendBuffer(memory);
+        }
+
+        protected override void Flush()
+        {
             _tcpReceiver.Transmitter.ForceFlush();
         }
 

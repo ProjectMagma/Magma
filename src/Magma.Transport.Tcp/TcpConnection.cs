@@ -159,6 +159,7 @@ namespace Magma.Transport.Tcp
                     }
                 }
                 Output.AdvanceTo(buffer.End);
+                Flush();
             }
         }
 
@@ -195,6 +196,7 @@ namespace Magma.Transport.Tcp
             header.SetChecksum(span.Slice(span.Length - TcpHeaderWithOptions.SizeOfStandardHeader), _pseudoPartialSum);
 
             WriteMemory(memory);
+            Flush();
             PendingAck = false;
         }
 
@@ -309,11 +311,13 @@ namespace Magma.Transport.Tcp
             tcpHeader.SetChecksum(span.Slice(span.Length - TcpHeaderWithOptions.SizeOfSynAckHeader), _pseudoPartialSum);
 
             WriteMemory(memory);
+            Flush();
         }
                 
         protected abstract void WriteMemory(Memory<byte> memory);
         protected abstract bool TryGetMemory(out Memory<byte> memory);
         protected abstract uint GetRandomSequenceStart();
         protected abstract uint GetTimestamp();
+        protected abstract void Flush();
     }
 }

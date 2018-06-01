@@ -42,6 +42,11 @@ namespace Magma.Internet.Ip.Facts
             {
             }
 
+            protected override void Flush()
+            {
+                throw new NotImplementedException();
+            }
+
             protected override uint GetRandomSequenceStart() => 697411256;
 
             protected override uint GetTimestamp() => 1315092752;
