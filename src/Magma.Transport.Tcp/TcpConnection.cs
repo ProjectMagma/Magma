@@ -100,7 +100,8 @@ namespace Magma.Transport.Tcp
                 case TcpConnectionState.Established:
                     if(header.Header.FIN)
                     {
-                        Console.WriteLine("Got fin should shut down!");
+                        _receiveSequenceNumber++;
+                        _state = TcpConnectionState.Fin_Wait_1;
                         return;
                     }
                     if(header.Header.RST)
