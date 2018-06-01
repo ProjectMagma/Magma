@@ -73,7 +73,7 @@ namespace Magma.Transport.Tcp
         public void ProcessPacket(TcpHeaderWithOptions header, ReadOnlySpan<byte> data)
         {
             // If there is backpressure just drop the packet
-            if (!_flushTask.IsCompleted) _flushTask.Wait();
+            if (!_flushTask.IsCompleted) return;
 
             _echoTimestamp = header.TimeStamp;
             switch (_state)
