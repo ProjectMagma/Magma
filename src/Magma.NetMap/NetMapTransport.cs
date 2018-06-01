@@ -39,14 +39,8 @@ namespace Magma.NetMap
             return receiver;
         }
 
-        public Task StopAsync()
-        {
-            throw new NotImplementedException();
-        }
+        public Task StopAsync() => Task.CompletedTask;
 
-        public Task UnbindAsync()
-        {
-            throw new NotImplementedException();
-        }
+        public Task UnbindAsync() => Task.CompletedTask;
     }
 }
