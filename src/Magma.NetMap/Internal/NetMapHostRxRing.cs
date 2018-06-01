@@ -37,7 +37,11 @@ namespace Magma.NetMap.Internal
                     //Console.WriteLine("Received data on host ring");
                     var i = ring.Cursor;
                     ring.Cursor = RingNext(i);
-                    _transmitRing.TrySendWithSwap(ref GetSlot(i));
+                    _transmitRing.TryGetNextBuffer(out var memory);
+                    var slot = GetSlot(i);
+                    var buffer = GetBuffer(slot.buf_idx);
+                    buffer.CopyTo(memory.Span);
+                    _transmitRing.SendBuffer(memory.Slice(0, slot.len));
                     ring.Head = RingNext(ring.Head);
                     sentData = true;
                 }

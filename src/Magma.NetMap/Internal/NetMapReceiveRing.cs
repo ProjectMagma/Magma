@@ -39,8 +39,9 @@ namespace Magma.NetMap.Internal
                     ring.Cursor = RingNext(i);
                     if (!_receiver.TryConsume(new NetMapMemoryWrapper(buffer)).IsEmpty)
                     {
-                        _hostTxRing.TrySendWithSwap(ref slot);
-                        _hostTxRing.ForceFlush();
+                        _hostTxRing.TryGetNextBuffer(out var copyBuffer);
+                        buffer.GetSpan().CopyTo(copyBuffer.Span);
+                        _hostTxRing.SendBuffer(copyBuffer.Slice(0, slot.len));
                         MoveHeadForward(slot.buf_idx);
                     }
                 }

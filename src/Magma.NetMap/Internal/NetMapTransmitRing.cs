@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Magma.NetMap.Interop;
@@ -10,10 +11,10 @@ namespace Magma.NetMap.Internal
     {
         private const int SPINCOUNT = 100;
         private const int MAXLOOPTRY = 2;
-        private ManualResetEventSlim _sendEvent = new ManualResetEventSlim(true);
         private SpinLock _lock = new SpinLock(enableThreadOwnerTracking: false);
         private Thread _flushThread;
-
+        private ConcurrentQueue<(NetMapOwnedMemory manager, ushort length)> _buffersToSend = new ConcurrentQueue<(NetMapOwnedMemory, ushort)>();
+        private ManualResetEventSlim _manualResetEvent = new ManualResetEventSlim(false);
         internal unsafe NetMapTransmitRing(RxTxPair rxTxPair, byte* memoryRegion, long queueOffset)
             : base(rxTxPair, memoryRegion, queueOffset) => _flushThread = new Thread(FlushLoop);
 
@@ -25,32 +26,42 @@ namespace Magma.NetMap.Internal
         {
             while (true)
             {
-                _sendEvent.Wait();
-                _sendEvent.Reset();
-                _rxTxPair.ForceFlush();
+                _manualResetEvent.Wait();
+                _manualResetEvent.Reset();
+                var dataSent = false;
+                while (_buffersToSend.TryDequeue(out var sendBuffer))
+                {
+                    ref var ring = ref RingInfo;
+                    var newHead = RingNext(ring.Head);
+                    ref var slot = ref GetSlot(ring.Head);
+                    if (slot.buf_idx != sendBuffer.manager.BufferIndex)
+                    {
+                        slot.buf_idx = sendBuffer.manager.BufferIndex;
+                        slot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
+                    }
+                    slot.len = sendBuffer.length;
+                    ring.Head = newHead;
+                    dataSent = true;
+                }
+                if (dataSent) _rxTxPair.ForceFlush();
             }
         }
 
         public bool TryGetNextBuffer(out Memory<byte> buffer)
         {
             ref var ring = ref RingInfo;
-            for (var loop = 0; loop < MAXLOOPTRY; loop++)
+            var slotIndex = GetCursor();
+            if (slotIndex == -1)
             {
-                var slotIndex = GetCursor();
-                if (slotIndex == -1)
-                {
-                    ForceFlush();   // Thread.SpinWait(SPINCOUNT);
-                    continue;
-                }
-                var slot = GetSlot(slotIndex);
-                var manager = _bufferPool.GetBuffer(slot.buf_idx);
-                manager.RingId = this;
-                manager.Length = (ushort)_bufferSize;
-                buffer = manager.Memory;
-                return true;
+                buffer = default;
+                return false;
             }
-            buffer = default;
-            return false;
+            var slot = GetSlot(slotIndex);
+            var manager = _bufferPool.GetBuffer(slot.buf_idx);
+            manager.RingId = this;
+            manager.Length = (ushort)_bufferSize;
+            buffer = manager.Memory;
+            return true;
         }
 
         public void SendBuffer(ReadOnlyMemory<byte> buffer)
@@ -61,64 +72,46 @@ namespace Magma.NetMap.Internal
             }
             if (start != 0) ExceptionHelper.ThrowInvalidOperation("Invalid start for buffer");
             if (manager.RingId != this) ExceptionHelper.ThrowInvalidOperation($"Invalid ring id, expected {_ringId} actual {manager.RingId}");
-
-            var lockTaken = false;
-            try
-            {
-                _lock.Enter(ref lockTaken);
-                ref var ring = ref RingInfo;
-                var newHead = RingNext(ring.Head);
-                ref var slot = ref GetSlot(ring.Head);
-                if (slot.buf_idx != manager.BufferIndex)
-                {
-                    slot.buf_idx = manager.BufferIndex;
-                    slot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
-                }
-                slot.len = (ushort)buffer.Length;
-                ring.Head = newHead;
-            }
-            finally
-            {
-                if (lockTaken) _lock.Exit(true);
-            }
+            _buffersToSend.Enqueue((manager, (ushort)length));
+            _manualResetEvent.Set();
         }
 
-        internal bool TrySendWithSwap(ref NetmapSlot sourceSlot)
-        {
-            ref var ring = ref RingInfo;
-            for (var loop = 0; loop < MAXLOOPTRY; loop++)
-            {
-                var lockTaken = false;
-                try
+        //internal bool TrySendWithSwap(ref NetmapSlot sourceSlot)
+        //{
+        //    ref var ring = ref RingInfo;
+        //    for (var loop = 0; loop < MAXLOOPTRY; loop++)
+        //    {
+        //        var lockTaken = false;
+        //        try
 
-                {
-                    _lock.Enter(ref lockTaken);
-                    var slotIndex = GetCursor();
-                    if (slotIndex == -1)
-                    {
-                        Thread.SpinWait(SPINCOUNT);
-                        continue;
-                    }
-                    ref var slot = ref GetSlot(slotIndex);
-                    var buffIndex = slot.buf_idx;
-                    slot.buf_idx = sourceSlot.buf_idx;
-                    slot.len = sourceSlot.len;
-                    slot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
+        //        {
+        //            _lock.Enter(ref lockTaken);
+        //            var slotIndex = GetCursor();
+        //            if (slotIndex == -1)
+        //            {
+        //                Thread.SpinWait(SPINCOUNT);
+        //                continue;
+        //            }
+        //            ref var slot = ref GetSlot(slotIndex);
+        //            var buffIndex = slot.buf_idx;
+        //            slot.buf_idx = sourceSlot.buf_idx;
+        //            slot.len = sourceSlot.len;
+        //            slot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
 
-                    sourceSlot.buf_idx = buffIndex;
-                    sourceSlot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
-                    ring.Head = RingNext(slotIndex);
-                    return true;
-                }
-                finally
-                {
-                    if (lockTaken) _lock.Exit(true);
-                }
-            }
-            return false;
-        }
+        //            sourceSlot.buf_idx = buffIndex;
+        //            sourceSlot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
+        //            ring.Head = RingNext(slotIndex);
+        //            return true;
+        //        }
+        //        finally
+        //        {
+        //            if (lockTaken) _lock.Exit(true);
+        //        }
+        //    }
+        //    return false;
+        //}
 
-        public void ForceFlush() => _sendEvent.Set();
+        public void ForceFlush() { }
 
         internal override void Return(int buffer_index) => throw new NotImplementedException();
     }
