@@ -39,7 +39,12 @@ namespace Magma.NetMap
             return receiver;
         }
 
-        public Task StopAsync() => Task.CompletedTask;
+        public Task StopAsync()
+        {
+            _port.Dispose();
+            _port = null;
+            return Task.CompletedTask;
+        }
 
         public Task UnbindAsync() => Task.CompletedTask;
     }
