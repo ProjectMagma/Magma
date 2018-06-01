@@ -14,8 +14,8 @@ namespace Magma.NetMap
         
         public NetMapTcpConnection(Ethernet ethernetHeader, IPv4 ipHeader, Tcp tcpHeader,
             NetMapTransportReceiver tcpReceiver, IConnectionDispatcher connectionDispatcher)
-            : base(ethernetHeader, ipHeader, tcpHeader, System.IO.Pipelines.PipeScheduler.Inline, 
-                  System.IO.Pipelines.PipeScheduler.Inline, MemoryPool<byte>.Shared, connectionDispatcher)
+            : base(ethernetHeader, ipHeader, tcpHeader, System.IO.Pipelines.PipeScheduler.ThreadPool, 
+                  System.IO.Pipelines.PipeScheduler.ThreadPool, MemoryPool<byte>.Shared, connectionDispatcher)
         {
             _tcpReceiver = tcpReceiver;
         }
