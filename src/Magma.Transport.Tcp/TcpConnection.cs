@@ -69,6 +69,7 @@ namespace Magma.Transport.Tcp
         public override MemoryPool<byte> MemoryPool { get; }
         public override long TotalBytesWritten => _totalBytesWritten;
         public bool PendingAck { get; set; }
+        public bool PendingFlush { get; set; }
         
         public void ProcessPacket(TcpHeaderWithOptions header, ReadOnlySpan<byte> data)
         {
@@ -122,11 +123,7 @@ namespace Magma.Transport.Tcp
                     data.CopyTo(output.Span);
                     Input.Advance(data.Length);
                     // need to do something with the task and make sure we don't overlap the writes
-                    var task = Input.FlushAsync();
-                    if (!task.IsCompleted)
-                    {
-                        _flushTask = task.AsTask();
-                    }
+                    PendingFlush = true;
                     PendingAck = true;
                     _totalBytesWritten += data.Length;
                     break;
@@ -164,6 +161,14 @@ namespace Magma.Transport.Tcp
             {
                 PendingAck = false;
                 WriteAckPacket();
+            }
+            if(PendingFlush)
+            {
+                var task = Input.FlushAsync();
+                if (!task.IsCompleted)
+                {
+                    _flushTask = task.AsTask();
+                }
             }
         }
 
