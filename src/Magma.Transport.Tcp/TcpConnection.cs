@@ -131,6 +131,8 @@ namespace Magma.Transport.Tcp
                     PendingAck = true;
                     _totalBytesWritten += data.Length;
                     break;
+                case TcpConnectionState.Fin_Wait_1:
+                    break;
                 default:
                     throw new NotImplementedException($"Unknown tcp state?? {_state}");
             }
