@@ -90,7 +90,7 @@ namespace Magma.Transport.Tcp
                 case TcpConnectionState.Syn_Rcvd:
                     if (header.Header.SYN)
                     {
-                        Console.WriteLine("Another Syn made");
+                        //Console.WriteLine("Another Syn made");
                         return;
                     }
                     _connectionDispatcher.OnConnection(this);
@@ -106,7 +106,7 @@ namespace Magma.Transport.Tcp
                     }
                     if(header.Header.RST)
                     {
-                        Console.WriteLine("Got RST Should shut down!");
+                        //Console.WriteLine("Got RST Should shut down!");
                         return;
                     }
 
