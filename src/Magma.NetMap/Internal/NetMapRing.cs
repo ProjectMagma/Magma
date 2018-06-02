@@ -11,7 +11,7 @@ namespace Magma.NetMap.Internal
         protected readonly byte* _memoryRegion;
         protected readonly long _queueOffset;
         protected readonly int _bufferSize;
-
+        
         protected readonly int _numberOfSlots;
         protected readonly int _ringId;
         private readonly NetmapSlot* _rxRing;
@@ -37,7 +37,7 @@ namespace Magma.NetMap.Internal
         internal unsafe ref NetmapRing RingInfo => ref Unsafe.AsRef<NetmapRing>((_memoryRegion + _queueOffset));
 
         internal Span<byte> GetBuffer(uint bufferIndex) => GetBuffer(bufferIndex, (ushort)_bufferSize);
-        internal ref NetmapSlot GetSlot(int index) => ref _rxRing[index];
+        internal ref NetmapSlot GetSlot(int index) => ref _rxRing[index]; 
         internal unsafe IntPtr BufferStart => (IntPtr)_bufferStart;
 
         internal int BufferSize => _bufferSize;
@@ -58,19 +58,22 @@ namespace Magma.NetMap.Internal
         internal int GetCursor()
         {
             ref var ring = ref RingInfo;
-            var cursor = ring.Cursor;
-            if (RingSpace(cursor) > 0)
+            while (true)
             {
-                var newIndex = RingNext(cursor);
-                if (Interlocked.CompareExchange(ref ring.Cursor, newIndex, cursor) == cursor)
+                var cursor = ring.Cursor;
+                if (RingSpace(cursor) > 0)
                 {
-                    return cursor;
+                    var newIndex = RingNext(cursor);
+                    if (Interlocked.CompareExchange(ref ring.Cursor, newIndex, cursor) == cursor)
+                    {
+                        return cursor;
+                    }
                 }
-            }
-            else
-            {
-                //No space so we will spin or backpressure
-                return -1;
+                else
+                {
+                    //No space so we will spin or backpressure
+                    return -1;
+                }
             }
         }
 
