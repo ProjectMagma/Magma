@@ -83,40 +83,40 @@ namespace Magma.NetMap.Internal
             }
         }
 
-        internal bool TrySendWithSwap(ref NetmapSlot sourceSlot)
-        {
-            ref var ring = ref RingInfo;
-            for (var loop = 0; loop < MAXLOOPTRY; loop++)
-            {
-                var lockTaken = false;
-                try
+        //internal bool TrySendWithSwap(ref NetmapSlot sourceSlot)
+        //{
+        //    ref var ring = ref RingInfo;
+        //    for (var loop = 0; loop < MAXLOOPTRY; loop++)
+        //    {
+        //        var lockTaken = false;
+        //        try
 
-                {
-                    _lock.Enter(ref lockTaken);
-                    var slotIndex = GetCursor();
-                    if (slotIndex == -1)
-                    {
-                        Thread.SpinWait(SPINCOUNT);
-                        continue;
-                    }
-                    ref var slot = ref GetSlot(slotIndex);
-                    var buffIndex = slot.buf_idx;
-                    slot.buf_idx = sourceSlot.buf_idx;
-                    slot.len = sourceSlot.len;
-                    slot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
+        //        {
+        //            _lock.Enter(ref lockTaken);
+        //            var slotIndex = GetCursor();
+        //            if (slotIndex == -1)
+        //            {
+        //                Thread.SpinWait(SPINCOUNT);
+        //                continue;
+        //            }
+        //            ref var slot = ref GetSlot(slotIndex);
+        //            var buffIndex = slot.buf_idx;
+        //            slot.buf_idx = sourceSlot.buf_idx;
+        //            slot.len = sourceSlot.len;
+        //            slot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
 
-                    sourceSlot.buf_idx = buffIndex;
-                    sourceSlot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
-                    ring.Head = RingNext(slotIndex);
-                    return true;
-                }
-                finally
-                {
-                    if (lockTaken) _lock.Exit(true);
-                }
-            }
-            return false;
-        }
+        //            sourceSlot.buf_idx = buffIndex;
+        //            sourceSlot.flags |= NetmapSlotFlags.NS_BUF_CHANGED;
+        //            ring.Head = RingNext(slotIndex);
+        //            return true;
+        //        }
+        //        finally
+        //        {
+        //            if (lockTaken) _lock.Exit(true);
+        //        }
+        //    }
+        //    return false;
+        //}
 
         public void ForceFlush() => _sendEvent.Set();
 
