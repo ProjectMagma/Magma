@@ -52,7 +52,7 @@ namespace Magma.NetMap.Internal
         internal bool IsRingEmpty()
         {
             ref var ring = ref RingInfo;
-            return (ring.Cursor == ring.Tail);
+            return (Volatile.Read(ref ring.Cursor) == Volatile.Read(ref ring.Tail));
         }
 
         internal int GetCursor()

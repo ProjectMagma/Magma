@@ -45,6 +45,10 @@ namespace Magma.NetMap.Internal
                     }
                 }
                 _receiver.FlushPendingAcks();
+                //Add a little spin to check
+                Thread.SpinWait(100);
+                if (!IsRingEmpty()) continue;
+
                 _rxTxPair.WaitForWork();
             }
         }

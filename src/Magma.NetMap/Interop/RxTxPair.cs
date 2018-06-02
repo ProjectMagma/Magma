@@ -23,7 +23,7 @@ namespace Magma.NetMap.Interop
             _txFileDescriptor = OpenNetMap(interfaceName, ringId, flags | NetMapRequestFlags.NR_TX_RINGS_ONLY, out request);
         }
 
-        public unsafe void WaitForWork()
+        public void WaitForWork()
         {
             var pfd = new PollFileDescriptor()
             {
