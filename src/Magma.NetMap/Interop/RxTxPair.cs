@@ -19,18 +19,18 @@ namespace Magma.NetMap.Interop
             var flags = isHostStack ? NetMapRequestFlags.NR_REG_SW : NetMapRequestFlags.NR_REG_ONE_NIC;
             ringId = isHostStack ? 0 : ringId;
             
-            _rxFileDescriptor = OpenNetMap(interfaceName, ringId, flags | NetMapRequestFlags.NR_RX_RINGS_ONLY, out var request);
+            _rxFileDescriptor = OpenNetMap(interfaceName, ringId, flags | NetMapRequestFlags.NR_RX_RINGS_ONLY | NetMapRequestFlags.NR_NO_TX_POLL, out var request);
             _txFileDescriptor = OpenNetMap(interfaceName, ringId, flags | NetMapRequestFlags.NR_TX_RINGS_ONLY, out request);
         }
 
-        public unsafe void WaitForWork()
+        public void WaitForWork()
         {
             var pfd = new PollFileDescriptor()
             {
                 Events = PollEvents.POLLIN,
                 Fd = _rxFileDescriptor,
             };
-            var result = Poll(ref pfd, 1, 50);
+            var result = Poll(ref pfd, 1, -1);
             if (result < 0) ExceptionHelper.ThrowInvalidOperation("Error on poll");
         }
 
