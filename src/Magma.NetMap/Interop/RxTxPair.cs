@@ -30,7 +30,7 @@ namespace Magma.NetMap.Interop
                 Events = PollEvents.POLLIN,
                 Fd = _rxFileDescriptor,
             };
-            var result = Poll(ref pfd, 1, 50);
+            var result = Poll(ref pfd, 1, -1);
             if (result < 0) ExceptionHelper.ThrowInvalidOperation("Error on poll");
         }
 
