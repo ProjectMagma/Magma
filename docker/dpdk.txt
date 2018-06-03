@@ -1,0 +1,8 @@
+sudo apt-get update
+sudo apt-get install libnuma-dev
+sudo apt-get install git build-essential linux-headers-`uname -r`
+
+git clone http://dpdk.org/git/dpdk
+cd dpdk
+make config T=x86_64-native-linuxapp-gcc
+make
