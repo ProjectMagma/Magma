@@ -28,11 +28,6 @@ namespace Magma.NetMap
             _tcpReceiver.Transmitter.SendBuffer(memory);
         }
 
-        protected override void Flush()
-        {
-            _tcpReceiver.Transmitter.ForceFlush();
-        }
-
         protected override bool TryGetMemory(out Memory<byte> memory) => _tcpReceiver.Transmitter.TryGetNextBuffer(out memory);
     }
 }
