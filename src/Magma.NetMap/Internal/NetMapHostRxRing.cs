@@ -31,7 +31,6 @@ namespace Magma.NetMap.Internal
             ref var ring = ref RingInfo;
             while (true)
             {
-                var sentData = false;
                 while (!IsRingEmpty())
                 {
                     //Console.WriteLine("Received data on host ring");
@@ -45,9 +44,7 @@ namespace Magma.NetMap.Internal
                         _transmitRing.SendBuffer(copyBuffer.Slice(0, slot.len));
                     }
                     ring.Head = RingNext(ring.Head);
-                    sentData = true;
                 }
-                if(sentData) _transmitRing.ForceFlush();
                 _rxTxPair.WaitForWork();
             }
         }

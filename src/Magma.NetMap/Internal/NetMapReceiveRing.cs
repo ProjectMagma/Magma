@@ -44,7 +44,6 @@ namespace Magma.NetMap.Internal
                             buffer.Memory.CopyTo(copyMemory);
                             _hostTxRing.SendBuffer(copyMemory.Slice(0, slot.len));
                         }
-                        _hostTxRing.ForceFlush();
                         MoveHeadForward(slot.buf_idx);
                     }
                 }
