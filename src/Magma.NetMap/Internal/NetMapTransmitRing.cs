@@ -7,7 +7,7 @@ using static Magma.NetMap.Interop.Netmap;
 
 namespace Magma.NetMap.Internal
 {
-    internal sealed class NetMapTransmitRing : NetMapAbstractRing
+    internal sealed class NetMapTransmitRing : INetMapRing
     {
         private const int SPINCOUNT = 100;
         private const int MAXLOOPTRY = 2;
@@ -15,15 +15,22 @@ namespace Magma.NetMap.Internal
         private Queue<(NetMapOwnedMemory ownedMemory, ushort length)> _sendQueue = new Queue<(NetMapOwnedMemory ownedMemory, ushort length)>(1024);
         private SpinLock _lock = new SpinLock(enableThreadOwnerTracking: false);
         private Thread _flushThread;
+        private NetMapRing _netMapRing;
+        private NetMapBufferPool _bufferPool;
 
-        internal unsafe NetMapTransmitRing(RxTxPair rxTxPair, byte* memoryRegion, long queueOffset)
-            : base(rxTxPair, memoryRegion, queueOffset) => _flushThread = new Thread(FlushLoop);
+        internal unsafe NetMapTransmitRing(string interfaceName, bool isHostStack, byte* memoryRegion, long queueOffset)
+        {
+            _netMapRing = new NetMapRing(interfaceName, isHostStack, isTxRing: true, memoryRegion, queueOffset);
+            _flushThread = new Thread(FlushLoop);
+        }
 
-        public override void Start() => _flushThread.Start();
+        public void Start() => _flushThread.Start();
+        public NetMapBufferPool BufferPool { set => _bufferPool = value; }
+        public NetMapRing NetMapRing => _netMapRing;
 
         private void FlushLoop()
         {
-            ref var ring = ref RingInfo;
+            ref var ring = ref _netMapRing.RingInfo;
             while (true)
             {
                 var dataWritten = false;
@@ -33,8 +40,8 @@ namespace Magma.NetMap.Internal
                     _lock.Enter(ref hasLock);
                     while (_sendQueue.TryDequeue(out var queuedItem))
                     {
-                        var newHead = RingNext(ring.Head);
-                        ref var slot = ref GetSlot(ring.Head);
+                        var newHead = _netMapRing.RingNext(ring.Head);
+                        ref var slot = ref _netMapRing.GetSlot(ring.Head);
                         if (slot.buf_idx != queuedItem.ownedMemory.BufferIndex)
                         {
                             slot.buf_idx = queuedItem.ownedMemory.BufferIndex;
@@ -49,7 +56,7 @@ namespace Magma.NetMap.Internal
                 {
                     if (hasLock) _lock.Exit(true);
                 }
-                if(dataWritten) _rxTxPair.ForceFlush();
+                if(dataWritten) _netMapRing.ForceFlush();
                 if (_sendQueue.Count > 0) continue;
                 _sendEvent.Wait();
                 _sendEvent.Reset();
@@ -59,19 +66,19 @@ namespace Magma.NetMap.Internal
 
         public bool TryGetNextBuffer(out Memory<byte> buffer)
         {
-            ref var ring = ref RingInfo;
+            ref var ring = ref _netMapRing.RingInfo;
             for (var loop = 0; loop < MAXLOOPTRY; loop++)
             {
-                var slotIndex = GetCursor();
+                var slotIndex = _netMapRing.GetCursor();
                 if (slotIndex == -1)
                 {
                     Thread.SpinWait(SPINCOUNT);
                     continue;
                 }
-                var slot = GetSlot(slotIndex);
+                var slot = _netMapRing.GetSlot(slotIndex);
                 var manager = _bufferPool.GetBuffer(slot.buf_idx);
                 manager.RingId = this;
-                manager.Length = (ushort)_bufferSize;
+                manager.Length = (ushort)_netMapRing.BufferSize;
                 buffer = manager.Memory;
                 return true;
             }
@@ -86,7 +93,7 @@ namespace Magma.NetMap.Internal
                 ExceptionHelper.ThrowInvalidOperation("Invalid buffer used for sendbuffer");
             }
             if (start != 0) ExceptionHelper.ThrowInvalidOperation("Invalid start for buffer");
-            if (manager.RingId != this) ExceptionHelper.ThrowInvalidOperation($"Invalid ring id, expected {_ringId} actual {manager.RingId}");
+            if (manager.RingId != this) ExceptionHelper.ThrowInvalidOperation($"Invalid ring id, expected {_netMapRing.RingInfo.RingId} actual {manager.RingId}");
             var hasLock = false;
             try
             {
@@ -100,6 +107,8 @@ namespace Magma.NetMap.Internal
             _sendEvent.Set();
         }
 
-        internal override void Return(int buffer_index) => throw new NotImplementedException();
+        public void Return(int buffer_index) => throw new NotImplementedException();
+
+        public void Dispose() => _netMapRing.Dispose();
     }
 }
