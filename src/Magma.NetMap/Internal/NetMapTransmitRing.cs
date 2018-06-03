@@ -7,7 +7,7 @@ using static Magma.NetMap.Interop.Netmap;
 
 namespace Magma.NetMap.Internal
 {
-    internal sealed class NetMapTransmitRing : NetMapRing
+    internal sealed class NetMapTransmitRing : NetMapAbstractRing
     {
         private const int SPINCOUNT = 100;
         private const int MAXLOOPTRY = 2;
@@ -27,8 +27,10 @@ namespace Magma.NetMap.Internal
             while (true)
             {
                 var dataWritten = false;
-                lock (_sendQueue)
+                var hasLock = false;
+                try
                 {
+                    _lock.Enter(ref hasLock);
                     while (_sendQueue.TryDequeue(out var queuedItem))
                     {
                         var newHead = RingNext(ring.Head);
@@ -42,6 +44,10 @@ namespace Magma.NetMap.Internal
                         ring.Head = newHead;
                         dataWritten = true;
                     }
+                }
+                finally
+                {
+                    if (hasLock) _lock.Exit(true);
                 }
                 if(dataWritten) _rxTxPair.ForceFlush();
                 if (_sendQueue.Count > 0) continue;
@@ -59,7 +65,7 @@ namespace Magma.NetMap.Internal
                 var slotIndex = GetCursor();
                 if (slotIndex == -1)
                 {
-                    Thread.SpinWait(100);
+                    Thread.SpinWait(SPINCOUNT);
                     continue;
                 }
                 var slot = GetSlot(slotIndex);
@@ -81,11 +87,17 @@ namespace Magma.NetMap.Internal
             }
             if (start != 0) ExceptionHelper.ThrowInvalidOperation("Invalid start for buffer");
             if (manager.RingId != this) ExceptionHelper.ThrowInvalidOperation($"Invalid ring id, expected {_ringId} actual {manager.RingId}");
-            lock (_sendQueue)
+            var hasLock = false;
+            try
             {
+                _lock.Enter(ref hasLock);
                 _sendQueue.Enqueue((manager, (ushort)length));
-                _sendEvent.Set();
             }
+            finally
+            {
+                if (hasLock) _lock.Exit(useMemoryBarrier: true);
+            }
+            _sendEvent.Set();
         }
 
         internal override void Return(int buffer_index) => throw new NotImplementedException();

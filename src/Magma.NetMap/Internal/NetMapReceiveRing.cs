@@ -5,7 +5,7 @@ using Magma.Network.Abstractions;
 
 namespace Magma.NetMap.Internal
 {
-    internal sealed class NetMapReceiveRing<TPacketReceiver> : NetMapRing
+    internal sealed class NetMapReceiveRing<TPacketReceiver> : NetMapAbstractRing
         where TPacketReceiver : IPacketReceiver
     {
         private readonly Thread _worker;

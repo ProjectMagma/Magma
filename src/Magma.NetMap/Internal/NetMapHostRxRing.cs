@@ -10,7 +10,7 @@ using static Magma.NetMap.Interop.Libc;
 
 namespace Magma.NetMap.Internal
 {
-    internal sealed class NetMapHostRxRing:NetMapRing
+    internal sealed class NetMapHostRxRing:NetMapAbstractRing
     {
         private readonly Thread _worker;
         private readonly NetMapTransmitRing _transmitRing;

@@ -15,7 +15,7 @@ namespace Magma.NetMap.Internal
     {
         private NetMapReceiveRing<TPacketReceiver>[] _receiveRings;
         private NetMapTransmitRing[] _transmitRings;
-        private List<NetMapRing> _allRings = new List<NetMapRing>();
+        private List<NetMapAbstractRing> _allRings = new List<NetMapAbstractRing>();
         private RxTxPair[] _rxTxPairs;
         private NetMapHostRxRing _hostRxRing;
         private NetMapTransmitRing _hostTxRing;
