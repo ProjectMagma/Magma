@@ -29,7 +29,7 @@ namespace Magma.NetMap.Internal
                 var dataWritten = false;
                 lock (_sendQueue)
                 {
-                    while (!_sendQueue.TryDequeue(out var queuedItem))
+                    while (_sendQueue.TryDequeue(out var queuedItem))
                     {
                         var newHead = RingNext(ring.Head);
                         ref var slot = ref GetSlot(ring.Head);
