@@ -15,6 +15,7 @@
     <ProjectReference Include="..\Magma.Common\Magma.Common.csproj" />
     <ProjectReference Include="..\Magma.Internet.Ip\Magma.Internet.Ip.csproj" />
     <ProjectReference Include="..\Magma.Link\Magma.Link.csproj" />
+    <ProjectReference Include="..\Magma.Network.Abstractions\Magma.Network.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

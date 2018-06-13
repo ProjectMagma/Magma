@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using Magma.NetMap.Internal;
+using Magma.Network.Abstractions;
+using Magma.Transport.Tcp;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 
 namespace Magma.NetMap
 {
     public class NetMapTransport : ITransport
     {
-        private NetMapPort<NetMapTransportReceiver> _port;
+        private NetMapPort<TcpTransportReceiver<NetMapTransmitRing>> _port;
         private IPEndPoint _endpoint;
         private string _interfaceName;
         private IConnectionDispatcher _connectionDispatcher;
-        private List<NetMapTransportReceiver> _receivers = new List<NetMapTransportReceiver>();
+        private List<TcpTransportReceiver<NetMapTransmitRing>> _receivers = new List<TcpTransportReceiver<NetMapTransmitRing>>();
 
         public NetMapTransport(IPEndPoint ipEndpoint, string interfaceName, IConnectionDispatcher dispatcher)
         {
@@ -25,15 +27,15 @@ namespace Magma.NetMap
 
         public Task BindAsync()
         {
-            _port = new NetMapPort<NetMapTransportReceiver>(_interfaceName, CreateReceiver);
+            _port = new NetMapPort<TcpTransportReceiver<NetMapTransmitRing>>(_interfaceName, CreateReceiver);
             _port.Open();
             Console.WriteLine($"Bind completed and netmap port open");
             return Task.CompletedTask;
         }
 
-        private NetMapTransportReceiver CreateReceiver(NetMapTransmitRing transmitRing)
+        private TcpTransportReceiver<NetMapTransmitRing> CreateReceiver(NetMapTransmitRing transmitRing)
         {
-            var receiver = new NetMapTransportReceiver(_endpoint, transmitRing, _connectionDispatcher);
+            var receiver = new TcpTransportReceiver<NetMapTransmitRing>(_endpoint, transmitRing, _connectionDispatcher);
             _receivers.Add(receiver);
             Console.WriteLine("Creating receiver");
             return receiver;

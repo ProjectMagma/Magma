@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Magma.Link;
 using Magma.Network;
+using Magma.Network.Abstractions;
 using Magma.Network.Header;
 using Magma.Transport.Tcp.Header;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
@@ -16,7 +17,7 @@ using static Magma.Network.IPAddress;
 
 namespace Magma.Transport.Tcp
 {
-    public abstract class TcpConnection : TransportConnection
+    public class TcpConnection<TTransmitter> : TransportConnection where TTransmitter : IPacketTransmitter
     {
         private TcpConnectionState _state = TcpConnectionState.Listen;
         private uint _receiveSequenceNumber;
@@ -36,15 +37,21 @@ namespace Magma.Transport.Tcp
         private CancellationTokenSource _closedToken = new CancellationTokenSource();
         private long _totalBytesWritten;
         private int _maxSegmentSize;
+        private TTransmitter _packetTransmitter;
 
-        public TcpConnection(Ethernet ethHeader, 
-            IPv4 ipHeader, 
-            Network.Header.Tcp tcpHeader, 
-            PipeScheduler readScheduler, 
-            PipeScheduler writeScheduler, 
-            MemoryPool<byte> memoryPool, 
+        public TcpConnection(Ethernet ethHeader, IPv4 ipHeader, Network.Header.Tcp tcpHeader, TTransmitter packetTransmitter, IConnectionDispatcher connectionDispatcher)
+            : this(ethHeader, ipHeader, tcpHeader, packetTransmitter, PipeScheduler.ThreadPool, PipeScheduler.ThreadPool, MemoryPool<byte>.Shared, connectionDispatcher) { }
+
+        public TcpConnection(Ethernet ethHeader,
+            IPv4 ipHeader,
+            Network.Header.Tcp tcpHeader,
+            TTransmitter packetTransmitter,
+            PipeScheduler readScheduler,
+            PipeScheduler writeScheduler,
+            MemoryPool<byte> memoryPool,
             IConnectionDispatcher connectionDispatcher)
         {
+            _packetTransmitter = packetTransmitter;
             _connectionDispatcher = connectionDispatcher;
             _remoteAddress = ipHeader.SourceAddress;
             _localAddress = ipHeader.DestinationAddress;
@@ -69,7 +76,7 @@ namespace Magma.Transport.Tcp
         public override MemoryPool<byte> MemoryPool { get; }
         public override long TotalBytesWritten => _totalBytesWritten;
         public bool PendingAck { get; set; }
-        
+
         public void ProcessPacket(TcpHeaderWithOptions header, ReadOnlySpan<byte> data)
         {
             // If there is backpressure just drop the packet
@@ -79,7 +86,7 @@ namespace Magma.Transport.Tcp
             switch (_state)
             {
                 case TcpConnectionState.Listen:
-                    _maxSegmentSize = header.MaximumSegmentSize <= 50 || header.MaximumSegmentSize > 1460 ? 1460 : header.MaximumSegmentSize; 
+                    _maxSegmentSize = header.MaximumSegmentSize <= 50 || header.MaximumSegmentSize > 1460 ? 1460 : header.MaximumSegmentSize;
                     _sendSequenceNumber = GetRandomSequenceStart();
                     _receiveSequenceNumber = header.Header.SequenceNumber;
                     // We know we checked for syn in the upper layer so we can ignore that for now
@@ -98,13 +105,13 @@ namespace Magma.Transport.Tcp
                     _state = TcpConnectionState.Established;
                     break;
                 case TcpConnectionState.Established:
-                    if(header.Header.FIN)
+                    if (header.Header.FIN)
                     {
                         _receiveSequenceNumber++;
                         _state = TcpConnectionState.Fin_Wait_1;
                         return;
                     }
-                    if(header.Header.RST)
+                    if (header.Header.RST)
                     {
                         //Console.WriteLine("Got RST Should shut down!");
                         return;
@@ -113,7 +120,7 @@ namespace Magma.Transport.Tcp
                     // First lets update our acked squence number;
                     _sendAckSequenceNumber = header.Header.AcknowledgmentNumber;
 
-                    if(_receiveSequenceNumber != header.Header.SequenceNumber)
+                    if (_receiveSequenceNumber != header.Header.SequenceNumber)
                     {
                         // We are just going to drop this and wait for a resend
                         return;
@@ -141,11 +148,11 @@ namespace Magma.Transport.Tcp
 
         private async Task TransmitLoop()
         {
-            while(true)
+            while (true)
             {
                 var readResult = await Output.ReadAsync();
                 var buffer = readResult.Buffer;
-                while(buffer.Length > 0)
+                while (buffer.Length > 0)
                 {
                     var currentSlice = buffer.Slice(0, Math.Min(_maxSegmentSize, buffer.Length));
                     buffer = buffer.Slice(currentSlice.Length);
@@ -164,7 +171,7 @@ namespace Magma.Transport.Tcp
 
         public void SendAckIfRequired()
         {
-            if(PendingAck)
+            if (PendingAck)
             {
                 PendingAck = false;
                 WriteAckPacket();
@@ -303,17 +310,17 @@ namespace Magma.Transport.Tcp
             Unsafe.WriteUnaligned(ref optionPoint, timestamps);
             optionPoint = ref Unsafe.Add(ref optionPoint, Unsafe.SizeOf<TcpOptionTimestamp>());
 
-            var windowScale =new TcpOptionWindowScale(9);
+            var windowScale = new TcpOptionWindowScale(9);
             Unsafe.WriteUnaligned(ref optionPoint, windowScale);
 
             tcpHeader.SetChecksum(span.Slice(span.Length - TcpHeaderWithOptions.SizeOfSynAckHeader), _pseudoPartialSum);
 
             WriteMemory(memory);
         }
-                
-        protected abstract void WriteMemory(Memory<byte> memory);
-        protected abstract bool TryGetMemory(out Memory<byte> memory);
-        protected abstract uint GetRandomSequenceStart();
-        protected abstract uint GetTimestamp();
+
+        private void WriteMemory(Memory<byte> memory) => _packetTransmitter.SendBuffer(memory);
+        private bool TryGetMemory(out Memory<byte> memory) => _packetTransmitter.TryGetNextBuffer(out memory);
+        private uint GetRandomSequenceStart() => _packetTransmitter.RandomSequenceNumber();
+        private uint GetTimestamp() => (uint)DateTime.UtcNow.TimeOfDay.TotalMilliseconds;
     }
 }

@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Magma.NetMap.Interop;
+using Magma.Network.Abstractions;
 using static Magma.NetMap.Interop.Netmap;
 
 namespace Magma.NetMap.Internal
 {
-    internal sealed class NetMapTransmitRing : NetMapRing
+    internal sealed class NetMapTransmitRing : NetMapRing, IPacketTransmitter
     {
         private const int SPINCOUNT = 100;
         private const int MAXLOOPTRY = 2;
@@ -73,7 +75,7 @@ namespace Magma.NetMap.Internal
             return false;
         }
 
-        public void SendBuffer(ReadOnlyMemory<byte> buffer)
+        public Task SendBuffer(ReadOnlyMemory<byte> buffer)
         {
             if (!MemoryMarshal.TryGetMemoryManager(buffer, out NetMapOwnedMemory manager, out var start, out var length))
             {
@@ -86,8 +88,11 @@ namespace Magma.NetMap.Internal
                 _sendQueue.Enqueue((manager, (ushort)length));
                 _sendEvent.Set();
             }
+            return Task.CompletedTask;
         }
 
         internal override void Return(int buffer_index) => throw new NotImplementedException();
+
+        public uint RandomSequenceNumber() => (uint)(new Random().Next());
     }
 }

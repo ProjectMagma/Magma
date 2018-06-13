@@ -1,31 +1,30 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
-using System.Net;
-using System.Runtime.CompilerServices;
 using System.Text;
-using Magma.NetMap.Internal;
 using Magma.Network.Abstractions;
-using Magma.Network.Header;
-using Magma.Transport.Tcp.Header;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 using static Magma.Network.IPAddress;
+using System.Net;
+using System.Runtime.CompilerServices;
+using System.Buffers;
+using Magma.Transport.Tcp.Header;
+using Magma.Network.Header;
 
-namespace Magma.NetMap
+namespace Magma.Transport.Tcp
 {
-    internal class NetMapTransportReceiver : IPacketReceiver
+    public class TcpTransportReceiver<TTransmitter> : IPacketReceiver where TTransmitter : IPacketTransmitter
     {
-        private NetMapTransmitRing _transmitRing;
+        private TTransmitter _transmitRing;
         private IConnectionDispatcher _connectionDispatcher;
         private IPEndPoint _ipEndPoint;
         private V4Address _address;
         private bool _isAny;
         private ushort _port;
-        private Dictionary<(V4Address address, ushort port), NetMapTcpConnection> _connections = new Dictionary<(V4Address address, ushort port), NetMapTcpConnection>();
+        private Dictionary<(V4Address address, ushort port), TcpConnection<TTransmitter>> _connections = new Dictionary<(V4Address address, ushort port), TcpConnection<TTransmitter>>();
         private Random _randomSequenceNumber = new Random();
-        private NetMapTcpConnection _lastConnectionSentTo;
+        private TcpConnection<TTransmitter> _lastConnectionSentTo;
 
-        public NetMapTransportReceiver(IPEndPoint ipEndPoint, NetMapTransmitRing transmitRing, IConnectionDispatcher connectionDispatcher)
+        public TcpTransportReceiver(IPEndPoint ipEndPoint, TTransmitter transmitRing, IConnectionDispatcher connectionDispatcher)
         {
             _ipEndPoint = ipEndPoint;
             _transmitRing = transmitRing;
@@ -36,7 +35,7 @@ namespace Magma.NetMap
             _isAny = _ipEndPoint.Address == IPAddress.Any;
         }
 
-        public NetMapTransmitRing Transmitter => _transmitRing;
+        public TTransmitter Transmitter => _transmitRing;
 
         public void FlushPendingAcks() => _lastConnectionSentTo?.SendAckIfRequired();
 
@@ -72,7 +71,7 @@ namespace Magma.NetMap
                         }
 
                         // So looks like we need to create a connection then
-                        connection = new NetMapTcpConnection(etherHeader, ipHeader, tcp.Header, this, _connectionDispatcher);
+                        connection = new TcpConnection<TTransmitter>(etherHeader, ipHeader, tcp.Header, Transmitter, _connectionDispatcher);
                         _connections[(ipHeader.SourceAddress, tcp.Header.SourcePort)] = connection;
                     }
                     else if (connection != _lastConnectionSentTo)
@@ -89,7 +88,7 @@ namespace Magma.NetMap
                     input.Dispose();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine($"Error processing packet!!! thread will die exception was {ex}");
                 return input;
