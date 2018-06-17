@@ -92,7 +92,7 @@ namespace Magma.Infiniband.Interop
                 {
                     fixed (byte* namePtr = _name)
                     {
-                        return Encoding.UTF8.GetString(namePtr, IBV_SYSFS_NAME_MAX).Trim();
+                        return Marshal.PtrToStringAnsi((IntPtr)namePtr);
                     }
                 }
             }
@@ -103,9 +103,8 @@ namespace Magma.Infiniband.Interop
                 fixed (byte* devNamePtr = _deviceName)
                 {
                     
-                    var name = Marshal.PtrToStringAnsi((IntPtr)namePtr);
                     var devName = Encoding.UTF8.GetString(devNamePtr, IBV_SYSFS_NAME_MAX);
-                    return $"{name} - DevName {devName}";
+                    return $"{Name} - DevName {devName}";
                 }
             }
         }
