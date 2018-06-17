@@ -22,6 +22,11 @@ namespace Magma.Infiniband
             Console.WriteLine("Getting device list");
             var devices = Interop.IbvDevice.ibv_get_device_list(out var numberOfDevices);
             Console.WriteLine($"Number of devices found {numberOfDevices}");
+            for(var i = 0; i < numberOfDevices;i++)
+            {
+                Console.WriteLine("---------- Device -------------");
+                Console.WriteLine($"{devices[0][i].ToString()}");
+            }
             //_mappedRegion = MMap(IntPtr.Zero, (ulong)_buffers * (ulong)_bufferSize, MemoryMappedProtections.PROT_READ | MemoryMappedProtections.PROT_WRITE, MemoryMappedFlags.MAP_PRIVATE | MemoryMappedFlags.MAP_ANONYMOUS, new FileDescriptor(), 0);
         }
 
