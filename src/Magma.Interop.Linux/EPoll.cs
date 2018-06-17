@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Magma.NetMap.Interop
+namespace Magma.Interop.Linux
 {
-    internal static partial class Libc
+    public static partial class Libc
     {
         [DllImport("libc", EntryPoint = "epoll_wait")]
         internal extern static int EPollWait(EPollHandle __epfd, ref EPollEvent __events, int __maxevents, int __timeout);

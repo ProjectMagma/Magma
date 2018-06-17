@@ -2,38 +2,34 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
-using static Magma.NetMap.Interop.Netmap;
 
-namespace Magma.NetMap.Interop
+namespace Magma.Interop.Linux
 {
-    internal static partial class Libc
+    public static partial class Libc
     {
         [DllImport("libc", EntryPoint = "read")]
         internal unsafe static extern int Read(FileDescriptor fileDescriptor, void* buffer, long size);
 
         [DllImport("libc", EntryPoint = "write")]
-        internal unsafe static extern int Write(FileDescriptor fileDescriptor, void* buffer, long size);
+        public unsafe static extern int Write(FileDescriptor fileDescriptor, void* buffer, long size);
 
         [DllImport("libc", EntryPoint = "open")]
-        internal static extern FileDescriptor Open([MarshalAs(UnmanagedType.LPStr)] string fileName, OpenFlags flags);
+        public static extern FileDescriptor Open([MarshalAs(UnmanagedType.LPStr)] string fileName, OpenFlags flags);
 
         [DllImport("libc", EntryPoint = "close")]
-        internal static extern int Close(FileDescriptor fd);
-
+        public static extern int Close(FileDescriptor fd);
+                
         [DllImport("libc", EntryPoint = "ioctl")]
-        internal static extern int IOCtl(FileDescriptor descriptor, IOControlCommand request, ref NetMapRequest data);
+        public unsafe static extern int IOCtl(FileDescriptor descriptor, IOControlCommand request, void* ptr);
 
-        [DllImport("libc", EntryPoint = "ioctl")]
-        internal static extern int IOCtl(FileDescriptor descriptor, IOControlCommand request, IntPtr ptr);
-
-
-        internal struct FileDescriptor
+        [StructLayout(LayoutKind.Sequential)]
+        public struct FileDescriptor
         {
             public int Descriptor;
             public bool IsValid => Descriptor > 0;
         }
 
-        internal enum IOControlCommand : uint
+        public enum IOControlCommand : uint
         {
             NIOCREGIF = 0xC03C6992,
             NIOCTXSYNC = 27028,
@@ -41,7 +37,7 @@ namespace Magma.NetMap.Interop
         }
 
         [Flags]
-        internal enum OpenFlags
+        public enum OpenFlags
         {
             O_RDONLY = 0x0000,      /* open for reading only */
             O_WRONLY = 0x0001,      /* open for writing only */

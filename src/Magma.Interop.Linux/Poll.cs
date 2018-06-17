@@ -1,17 +1,15 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
-namespace Magma.NetMap.Interop
+namespace Magma.Interop.Linux
 {
-    internal static partial class Libc
+    public static partial class Libc
     {
         [DllImport("libc", EntryPoint = "poll")]
-        internal static extern int Poll(ref PollFileDescriptor pollfd, int numberOfFileDescriptors, int timeout);
+        public static extern int Poll(ref PollFileDescriptor pollfd, int numberOfFileDescriptors, int timeout);
 
         [DllImport("libc", EntryPoint = "poll")]
-        internal unsafe static extern int Poll(PollFileDescriptor* pollfd, int numberOfFileDescriptors, int timeout);
+        public unsafe static extern int Poll(PollFileDescriptor* pollfd, int numberOfFileDescriptors, int timeout);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct PollFileDescriptor

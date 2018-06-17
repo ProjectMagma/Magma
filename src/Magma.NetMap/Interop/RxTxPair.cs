@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using static Magma.Interop.Linux.Libc;
 using static Magma.NetMap.Interop.Libc;
 using static Magma.NetMap.Interop.Netmap;
 
@@ -34,7 +35,7 @@ namespace Magma.NetMap.Interop
             if (result < 0) ExceptionHelper.ThrowInvalidOperation("Error on poll");
         }
 
-        public unsafe void ForceFlush() => IOCtl(_txFileDescriptor, IOControlCommand.NIOCTXSYNC, IntPtr.Zero);
+        public unsafe void ForceFlush() => IOCtl(_txFileDescriptor, IOControlCommand.NIOCTXSYNC, null);
 
         public void Dispose()
         {

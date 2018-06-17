@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Magma.Common\Magma.Common.csproj" />
+    <ProjectReference Include="..\Magma.Interop.Linux\Magma.Interop.Linux.csproj" />
     <ProjectReference Include="..\Magma.Link\Magma.Link.csproj" />
     <ProjectReference Include="..\Magma.Network.Abstractions\Magma.Network.Abstractions.csproj" />
     <ProjectReference Include="..\Magma.PCap\Magma.PCap.csproj" />

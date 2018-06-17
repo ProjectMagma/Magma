@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using static Magma.Interop.Linux.Libc;
 using static Magma.NetMap.Interop.Libc;
 
 namespace Magma.NetMap.Interop
@@ -26,7 +27,7 @@ namespace Magma.NetMap.Interop
             {
                 Buffer.MemoryCopy(txtPtr, request.nr_name, textbytes.Length, textbytes.Length);
             }
-            if (IOCtl(fd, IOControlCommand.NIOCREGIF, ref request) != 0) ExceptionHelper.ThrowInvalidOperation("Failed to open an FD for a single ring");
+            if (IOCtl(fd, IOControlCommand.NIOCREGIF, &request) != 0) ExceptionHelper.ThrowInvalidOperation("Failed to open an FD for a single ring");
             returnedRequest = request;
             return fd;
         }

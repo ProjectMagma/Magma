@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Magma.NetMap.Interop
+namespace Magma.Interop.Linux
 {
-    internal static partial class Libc
+    public static partial class Libc
     {
         [DllImport("libc", EntryPoint = "mmap")]
         public static extern IntPtr MMap(IntPtr addr, ulong length, MemoryMappedProtections prot, MemoryMappedFlags flags, FileDescriptor fd, ulong offset);

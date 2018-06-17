@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Magma.NetMap.Interop;
 using Magma.Network.Abstractions;
+using static Magma.Interop.Linux.Libc;
 using static Magma.NetMap.Interop.Libc;
 using static Magma.NetMap.Interop.Netmap;
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
+using static Magma.Interop.Linux.Libc;
 
 namespace Magma.NetMap.Interop
 {
