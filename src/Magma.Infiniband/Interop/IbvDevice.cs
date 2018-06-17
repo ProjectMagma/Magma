@@ -74,6 +74,51 @@ namespace Magma.Infiniband.Interop
             IBV_PORT_ACTIVE_DEFER = 5
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        public unsafe struct ibv_device_attr
+        {
+            fixed byte fw_ver[64];
+            ulong node_guid;
+            ulong sys_image_guid;
+            ulong max_mr_size;
+            ulong page_size_cap;
+            uint vendor_id;
+            uint vendor_part_id;
+            uint hw_ver;
+            int max_qp;
+            int max_qp_wr;
+            uint device_cap_flags;
+            int max_sge;
+            int max_sge_rd;
+            int max_cq;
+            int max_cqe;
+            int max_mr;
+            int max_pd;
+            int max_qp_rd_atom;
+            int max_ee_rd_atom;
+            int max_res_rd_atom;
+            int max_qp_init_rd_atom;
+            int max_ee_init_rd_atom;
+            int atomic_cap;
+	        int max_ee;
+            int max_rdd;
+            int max_mw;
+            int max_raw_ipv6_qp;
+            int max_raw_ethy_qp;
+            int max_mcast_grp;
+            int max_mcast_qp_attach;
+            int max_total_mcast_qp_attach;
+            int max_ah;
+            int max_fmr;
+            int max_map_per_fmr;
+            int max_srq;
+            int max_srq_wr;
+            int max_srq_sge;
+            ushort max_pkeys;
+            byte local_ca_ack_delay;
+            byte phys_port_cnt;
+        }
+
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         public unsafe struct ibv_device
         {

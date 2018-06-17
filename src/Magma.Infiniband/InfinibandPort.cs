@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 using Magma.Infiniband.Interop;
 using static Magma.Infiniband.Interop.IbvContext;
+using static Magma.Infiniband.Interop.IbvDevice;
 using static Magma.Interop.Linux.Libc;
 
 namespace Magma.Infiniband
@@ -15,10 +18,15 @@ namespace Magma.Infiniband
         private int _bufferSize;
         private ibv_context _context;
 
+        //[SuppressUnmanagedCodeSecurity]
+        //[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        //public delegate int query_device(ibv_context* context, );
+
         public unsafe InfinibandPort(int buffers, int bufferSize, string deviceName)
         {
             Console.WriteLine($"Size of context_ops {Unsafe.SizeOf<ibv_context_ops>()}");
             Console.WriteLine($"Size of context {Unsafe.SizeOf<ibv_context>()}");
+            Console.WriteLine($"Size of attr {Unsafe.SizeOf<ibv_device_attr>()}");
             _buffers = buffers;
             _bufferSize = bufferSize;
             Console.WriteLine("Getting device list");
