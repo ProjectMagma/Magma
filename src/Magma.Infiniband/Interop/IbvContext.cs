@@ -9,6 +9,9 @@ namespace Magma.Infiniband.Interop
 {
     internal static class IbvContext
     {
+        [DllImport("libibverbs")]
+        public static extern ibv_context ibv_open_device(ref ibv_device device);
+
         [StructLayout(LayoutKind.Sequential)]
         public unsafe struct ibv_context
         {

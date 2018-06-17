@@ -11,7 +11,7 @@ namespace Magma.Infiniband.Interop
         public unsafe static extern ibv_device** ibv_get_device_list(out int num_devices);
 
         [DllImport("libibverbs")]
-        public unsafe static extern void ibv_free_device_list(ref ibv_device* device_list);
+        public unsafe static extern void ibv_free_device_list(ibv_device** device_list);
 
         private const int IBV_SYSFS_NAME_MAX = 64;
         private const int IBV_SYSFS_PATH_MAX = 256;
@@ -85,6 +85,17 @@ namespace Magma.Infiniband.Interop
             private fixed byte _deviceName[IBV_SYSFS_NAME_MAX];
             private fixed byte _devicePath[IBV_SYSFS_PATH_MAX];
             private fixed byte _ibDevicePath[IBV_SYSFS_PATH_MAX];
+
+            public string Name
+            {
+                get
+                {
+                    fixed (byte* namePtr = _name)
+                    {
+                        return Encoding.UTF8.GetString(namePtr, IBV_SYSFS_NAME_MAX).Trim();
+                    }
+                }
+            }
 
             public override string ToString()
             {
