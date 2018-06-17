@@ -8,10 +8,10 @@ namespace Magma.Infiniband.Interop
     internal static class IbvDevice
     {
         [DllImport("libibverbs")]
-        public unsafe static extern ibv_device** ibv_get_device_list(out int num_devices);
+        public unsafe static extern ibv_device* ibv_get_device_list(out int num_devices);
 
         [DllImport("libibverbs")]
-        public unsafe static extern void ibv_free_device_list(ibv_device** device_list);
+        public unsafe static extern void ibv_free_device_list(ibv_device* device_list);
 
         private const int IBV_SYSFS_NAME_MAX = 64;
         private const int IBV_SYSFS_PATH_MAX = 256;
