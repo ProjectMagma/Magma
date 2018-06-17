@@ -11,18 +11,19 @@ using static Magma.Interop.Linux.Libc;
 
 namespace Magma.Infiniband
 {
-    public class InfinibandPort
+    public unsafe class InfinibandPort
     {
         private IntPtr _mappedRegion;
         private int _buffers;
         private int _bufferSize;
-        private ibv_context _context;
+        private ibv_context* _context;
+        private query_device _queryDevice;
 
-        //[SuppressUnmanagedCodeSecurity]
-        //[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        //public delegate int query_device(ibv_context* context, );
+        [SuppressUnmanagedCodeSecurity]
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate int query_device(ibv_context* context,out ibv_device_attr attributes);
 
-        public unsafe InfinibandPort(int buffers, int bufferSize, string deviceName)
+        public InfinibandPort(int buffers, int bufferSize, string deviceName)
         {
             Console.WriteLine($"Size of context_ops {Unsafe.SizeOf<ibv_context_ops>()}");
             Console.WriteLine($"Size of context {Unsafe.SizeOf<ibv_context>()}");
@@ -30,11 +31,17 @@ namespace Magma.Infiniband
             _buffers = buffers;
             _bufferSize = bufferSize;
             Console.WriteLine("Getting device list");
-            _context = OpenContext(deviceName);           
+            _context = OpenContext(deviceName);
+            _queryDevice = Marshal.GetDelegateForFunctionPointer<query_device>(_context[0].Ops.query_device);
+
+            Console.WriteLine($"Device params-------------");
+            Console.WriteLine(_queryDevice.ToString());
+            
             //_mappedRegion = MMap(IntPtr.Zero, (ulong)_buffers * (ulong)_bufferSize, MemoryMappedProtections.PROT_READ | MemoryMappedProtections.PROT_WRITE, MemoryMappedFlags.MAP_PRIVATE | MemoryMappedFlags.MAP_ANONYMOUS, new FileDescriptor(), 0);
+
         }
 
-        private unsafe Interop.IbvContext.ibv_context OpenContext(string deviceName)
+        private unsafe Interop.IbvContext.ibv_context* OpenContext(string deviceName)
         {
             var devices = Interop.IbvDevice.ibv_get_device_list(out var numberOfDevices);
             try
@@ -47,7 +54,7 @@ namespace Magma.Infiniband
                         Console.WriteLine("Found matching device");
                         var context = ibv_open_device(ref devices[0][i]);
                         Console.WriteLine($"Device opened - {context[0].Device[0].ToString()}");
-                        return context[0];
+                        return context;
                     }
                 }
                 throw new InvalidOperationException("Couldn't find device");

@@ -77,16 +77,16 @@ namespace Magma.Infiniband.Interop
         [StructLayout(LayoutKind.Sequential)]
         public unsafe struct ibv_device_attr
         {
-            fixed byte fw_ver[64];
-            ulong node_guid;
-            ulong sys_image_guid;
-            ulong max_mr_size;
-            ulong page_size_cap;
-            uint vendor_id;
-            uint vendor_part_id;
-            uint hw_ver;
-            int max_qp;
-            int max_qp_wr;
+            public fixed byte fw_ver[64];
+            public ulong node_guid;
+            public ulong sys_image_guid;
+            public ulong max_mr_size;
+            public ulong page_size_cap;
+            public uint vendor_id;
+            public uint vendor_part_id;
+            public uint hw_ver;
+            public int max_qp;
+            public int max_qp_wr;
             uint device_cap_flags;
             int max_sge;
             int max_sge_rd;
@@ -100,7 +100,7 @@ namespace Magma.Infiniband.Interop
             int max_qp_init_rd_atom;
             int max_ee_init_rd_atom;
             int atomic_cap;
-	        int max_ee;
+            int max_ee;
             int max_rdd;
             int max_mw;
             int max_raw_ipv6_qp;
@@ -117,6 +117,16 @@ namespace Magma.Infiniband.Interop
             ushort max_pkeys;
             byte local_ca_ack_delay;
             byte phys_port_cnt;
+
+            public override string ToString()
+            {
+                var deviceInfo = string.Empty;
+                fixed (byte* ptr = fw_ver)
+                {
+                    deviceInfo += Marshal.PtrToStringAnsi((IntPtr)ptr);
+                }
+                return deviceInfo;
+            }
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -147,7 +157,7 @@ namespace Magma.Infiniband.Interop
                 fixed (byte* namePtr = _name)
                 fixed (byte* devNamePtr = _deviceName)
                 {
-                    
+
                     var devName = Encoding.UTF8.GetString(devNamePtr, IBV_SYSFS_NAME_MAX);
                     return $"{Name} - DevName {devName}";
                 }
