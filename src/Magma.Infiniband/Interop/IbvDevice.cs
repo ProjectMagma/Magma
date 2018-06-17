@@ -102,7 +102,8 @@ namespace Magma.Infiniband.Interop
                 fixed (byte* namePtr = _name)
                 fixed (byte* devNamePtr = _deviceName)
                 {
-                    var name = Encoding.UTF8.GetString(namePtr, IBV_SYSFS_NAME_MAX);
+                    
+                    var name = Marshal.PtrToStringAnsi((IntPtr)namePtr, IBV_SYSFS_NAME_MAX);
                     var devName = Encoding.UTF8.GetString(devNamePtr, IBV_SYSFS_NAME_MAX);
                     return $"{name} - DevName {devName}";
                 }
