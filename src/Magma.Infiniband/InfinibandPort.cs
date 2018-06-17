@@ -12,6 +12,7 @@ namespace Magma.Infiniband
         private IntPtr _mappedRegion;
         private int _buffers;
         private int _bufferSize;
+        private ibv_context _context;
 
         public unsafe InfinibandPort(int buffers, int bufferSize, string deviceName)
         {
@@ -20,7 +21,7 @@ namespace Magma.Infiniband
             _buffers = buffers;
             _bufferSize = bufferSize;
             Console.WriteLine("Getting device list");
-                        
+            _context = OpenContext(deviceName);           
             //_mappedRegion = MMap(IntPtr.Zero, (ulong)_buffers * (ulong)_bufferSize, MemoryMappedProtections.PROT_READ | MemoryMappedProtections.PROT_WRITE, MemoryMappedFlags.MAP_PRIVATE | MemoryMappedFlags.MAP_ANONYMOUS, new FileDescriptor(), 0);
         }
 
