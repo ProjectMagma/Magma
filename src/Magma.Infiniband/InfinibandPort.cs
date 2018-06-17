@@ -32,7 +32,7 @@ namespace Magma.Infiniband
             for (var i = 0; i < numberOfDevices; i++)
             {
                 Console.WriteLine($"{devices[0][1].ToString()}");
-                Console.WriteLine($"Device-{devices[0][1].Name}-");
+                //Console.WriteLine($"Device-{devices[0][1].Name}-");
                 if(deviceName == devices[0][i].Name)
                 {
                     Console.WriteLine("Found matching device");
