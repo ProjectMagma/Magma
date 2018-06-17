@@ -120,11 +120,13 @@ namespace Magma.Infiniband.Interop
 
             public override string ToString()
             {
-                var deviceInfo = string.Empty;
+                var deviceInfo = "--- Device Info ---\n";
                 fixed (byte* ptr = fw_ver)
                 {
-                    deviceInfo += Marshal.PtrToStringAnsi((IntPtr)ptr);
+                    deviceInfo += $"FW Version \t{Marshal.PtrToStringAnsi((IntPtr)ptr)}\n";
                 }
+                deviceInfo += $"HW Version \t{hw_ver}\n";
+                deviceInfo += $"Max PKeys \t{max_pkeys}\n";
                 return deviceInfo;
             }
         }
