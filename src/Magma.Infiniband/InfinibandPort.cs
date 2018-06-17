@@ -35,7 +35,8 @@ namespace Magma.Infiniband
             _queryDevice = Marshal.GetDelegateForFunctionPointer<query_device>(_context[0].Ops.query_device);
 
             Console.WriteLine($"Device params-------------");
-            Console.WriteLine(_queryDevice.ToString());
+            _queryDevice(_context, out var attributes);
+            Console.WriteLine(attributes.ToString());
             
             //_mappedRegion = MMap(IntPtr.Zero, (ulong)_buffers * (ulong)_bufferSize, MemoryMappedProtections.PROT_READ | MemoryMappedProtections.PROT_WRITE, MemoryMappedFlags.MAP_PRIVATE | MemoryMappedFlags.MAP_ANONYMOUS, new FileDescriptor(), 0);
 
