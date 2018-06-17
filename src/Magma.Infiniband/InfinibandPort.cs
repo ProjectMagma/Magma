@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Magma.Infiniband.Interop;
 using static Magma.Infiniband.Interop.IbvContext;
 using static Magma.Interop.Linux.Libc;
 
@@ -28,19 +29,25 @@ namespace Magma.Infiniband
         private unsafe Interop.IbvContext.ibv_context OpenContext(string deviceName)
         {
             var devices = Interop.IbvDevice.ibv_get_device_list(out var numberOfDevices);
-            Console.WriteLine($"Number of devices found {numberOfDevices}");
-            for (var i = 0; i < numberOfDevices; i++)
+            try
             {
-                if(deviceName == devices[0][i].Name)
+                Console.WriteLine($"Number of devices found {numberOfDevices}");
+                for (var i = 0; i < numberOfDevices; i++)
                 {
-                    Console.WriteLine("Found matching device");
-                    var context = ibv_open_device(ref devices[0][i]);
-                    Console.WriteLine($"Device opened - {context.Device[0].ToString()}");
-                    return context;
+                    if (deviceName == devices[0][i].Name)
+                    {
+                        Console.WriteLine("Found matching device");
+                        var context = ibv_open_device(ref devices[0][i]);
+                        Console.WriteLine($"Device opened - {context[0].Device[0].ToString()}");
+                        return context[0];
+                    }
                 }
+                throw new InvalidOperationException("Couldn't find device");
             }
-            throw new InvalidOperationException("Couldn't find device");
-            Interop.IbvDevice.ibv_free_device_list(devices);
+            finally
+            {
+                IbvDevice.ibv_free_device_list(devices);
+            }
         }
     }
 }
