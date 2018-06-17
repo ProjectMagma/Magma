@@ -20,7 +20,7 @@ namespace Magma.Infiniband
             _buffers = buffers;
             _bufferSize = bufferSize;
             Console.WriteLine("Getting device list");
-            ref var devices = ref Interop.IbvDevice.ibv_get_device_list(out var numberOfDevices);
+            var devices = Interop.IbvDevice.ibv_get_device_list(out var numberOfDevices);
             Console.WriteLine($"Number of devices found {numberOfDevices}");
             //_mappedRegion = MMap(IntPtr.Zero, (ulong)_buffers * (ulong)_bufferSize, MemoryMappedProtections.PROT_READ | MemoryMappedProtections.PROT_WRITE, MemoryMappedFlags.MAP_PRIVATE | MemoryMappedFlags.MAP_ANONYMOUS, new FileDescriptor(), 0);
         }
