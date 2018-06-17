@@ -127,6 +127,8 @@ namespace Magma.Infiniband.Interop
                 }
                 deviceInfo += $"HW Version \t{hw_ver}\n";
                 deviceInfo += $"Max PKeys \t{max_pkeys}\n";
+                deviceInfo += $"Physical Ports\t{phys_port_cnt}\n";
+                deviceInfo += $"Max completion Queues\t{max_qp}\n";
                 return deviceInfo;
             }
         }
