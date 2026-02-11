@@ -59,7 +59,7 @@ Magma is organized into modular components corresponding to different layers of 
 ### Cross-Platform Support
 - Linux support via NetMap kernel module
 - Windows support via WinTun driver
-- .NET Core 2.1 and .NET Standard 2.0 compatibility
+- .NET 10 compatibility
 
 ### Integration-Ready
 - Works as a custom transport for ASP.NET Core Kestrel
@@ -80,7 +80,7 @@ Magma is designed for scenarios where standard networking libraries are insuffic
 ## Technology Stack
 
 - **Language**: C# with unsafe code for performance-critical sections
-- **Frameworks**: .NET Core 2.1, .NET Standard 2.0
+- **Frameworks**: .NET 10
 - **Key Dependencies**: 
   - Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions
   - System.Memory
@@ -90,7 +90,7 @@ Magma is designed for scenarios where standard networking libraries are insuffic
 ## Getting Started
 
 ### Prerequisites
-- .NET Core 2.1 SDK or higher
+- .NET 10 SDK or higher
 - Linux: NetMap kernel module for high-performance I/O
 - Windows: WinTun driver for tunnel interfaces
 
