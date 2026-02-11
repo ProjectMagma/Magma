@@ -384,10 +384,11 @@ var pseudoPartialSum = Checksum.PartialCalculate(
     ref Unsafe.As<TcpV4PseudoHeader, byte>(ref pseudo),
     Unsafe.SizeOf<TcpV4PseudoHeader>());
 
-// Later, calculate full checksum by adding TCP header + data
+// Later, calculate full checksum for TCP segment (header + data)
+// by adding the pseudo-header partial sum
 var checksum = Checksum.Calculate(
-    ref Unsafe.As<TcpV4PseudoHeader, byte>(ref tcpHeader),
-    length,
+    ref MemoryMarshal.GetReference(tcpSegmentSpan),
+    tcpSegmentSpan.Length,
     pseudoPartialSum);
 ```
 
@@ -707,6 +708,8 @@ Host.CreateDefaultBuilder(args)
 
 public class CustomPacketReceiver : IPacketReceiver
 {
+    // TryConsume returns default (null) when packet is consumed
+    // or returns the input to pass to OS network stack
     public T TryConsume<T>(T input) where T : IMemoryOwner<byte>
     {
         var span = input.Memory.Span;
@@ -718,7 +721,7 @@ public class CustomPacketReceiver : IPacketReceiver
             {
                 // Process IPv4 packet
                 input.Dispose();
-                return default; // Consumed
+                return default; // Consumed - return null
             }
         }
         return input; // Pass to OS
