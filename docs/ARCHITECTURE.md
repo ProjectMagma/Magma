@@ -215,6 +215,9 @@ Handles Network layer (OSI Layer 3) protocols.
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct IPv4
 {
+    // Conceptual structure showing key fields
+    // (Actual source code may have minor naming variations)
+
     // Version (4 bits) + IHL (4 bits)
     private byte _versionAndHeaderLength;
     // DSCP (6 bits) + ECN (2 bits)
@@ -276,6 +279,7 @@ Listen -> Syn_Rcvd -> Established -> Close_Wait -> Last_Ack -> Closed
 - Custom IP address structures (in `Magma.Network` namespace to avoid conflicts with `System.Net.IPAddress`)
   - `V4Address`: 4-byte IPv4 address struct
   - `V6Address`: 16-byte IPv6 address struct
+  - Note: `System.Net.IPAddress` is still used for its static byte order conversion methods (`NetworkToHostOrder`/`HostToNetworkOrder`)
 
 ## Core Design Patterns
 
