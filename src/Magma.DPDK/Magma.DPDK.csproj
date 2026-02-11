@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <Description>DPDK (Data Plane Development Kit) integration for high-performance packet I/O with kernel bypass</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.0-rc1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Magma.Common\Magma.Common.csproj" />
+    <ProjectReference Include="..\Magma.Link\Magma.Link.csproj" />
+    <ProjectReference Include="..\Magma.Network.Abstractions\Magma.Network.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>
