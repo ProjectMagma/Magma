@@ -1,6 +1,6 @@
 # Magma
 
-![](https://aoa.blob.core.windows.net/aspnet/magma.png)
+![Magma logo](https://aoa.blob.core.windows.net/aspnet/magma.png)
 
 **Under the rocks - A high-performance, low-level network stack library for .NET**
 
