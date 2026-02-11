@@ -11,11 +11,11 @@ namespace Magma.AF_XDP.Internal
     /// </summary>
     public class AF_XDPMemoryManager : IDisposable
     {
-        private readonly IntPtr _umemArea;
+        private readonly nint _umemArea;
         private readonly ulong _umemSize;
         private readonly uint _frameSize;
         private readonly uint _frameCount;
-        private IntPtr _umem;
+        private nint _umem;
         private xsk_ring_prod _fillRing;
         private xsk_ring_cons _compRing;
         private bool _disposed;
@@ -28,7 +28,7 @@ namespace Magma.AF_XDP.Internal
 
             // Allocate UMEM area
             _umemArea = Marshal.AllocHGlobal((int)_umemSize);
-            if (_umemArea == IntPtr.Zero)
+            if (_umemArea == 0)
                 throw new OutOfMemoryException("Failed to allocate UMEM area");
 
             // Initialize UMEM with libbpf
@@ -52,14 +52,14 @@ namespace Magma.AF_XDP.Internal
             PopulateFillRing();
         }
 
-        public IntPtr Umem => _umem;
+        public nint Umem => _umem;
         public ref xsk_ring_prod FillRing => ref _fillRing;
         public ref xsk_ring_cons CompRing => ref _compRing;
         public uint FrameSize => _frameSize;
 
-        public IntPtr GetFrameAddress(ulong frameIndex)
+        public nint GetFrameAddress(ulong frameIndex)
         {
-            return IntPtr.Add(_umemArea, (int)(frameIndex * _frameSize));
+            return _umemArea + (nint)(frameIndex * _frameSize);
         }
 
         private unsafe void PopulateFillRing()
@@ -69,7 +69,7 @@ namespace Magma.AF_XDP.Internal
             
             for (uint i = 0; i < reserved; i++)
             {
-                IntPtr addrPtr = xsk_ring_prod__fill_addr(ref _fillRing, idx + i);
+                nint addrPtr = xsk_ring_prod__fill_addr(ref _fillRing, idx + i);
                 *(ulong*)addrPtr.ToPointer() = i * _frameSize;
             }
 
@@ -78,7 +78,7 @@ namespace Magma.AF_XDP.Internal
 
         public unsafe Memory<byte> GetFrameMemory(ulong frameAddr)
         {
-            IntPtr ptr = IntPtr.Add(_umemArea, (int)frameAddr);
+            nint ptr = _umemArea + (nint)frameAddr;
             return new UnmanagedMemoryManager<byte>((byte*)ptr.ToPointer(), (int)_frameSize).Memory;
         }
 
@@ -86,13 +86,13 @@ namespace Magma.AF_XDP.Internal
         {
             if (!_disposed)
             {
-                if (_umem != IntPtr.Zero)
+                if (_umem != 0)
                 {
                     xsk_umem__delete(_umem);
-                    _umem = IntPtr.Zero;
+                    _umem = 0;
                 }
 
-                if (_umemArea != IntPtr.Zero)
+                if (_umemArea != 0)
                 {
                     Marshal.FreeHGlobal(_umemArea);
                 }
