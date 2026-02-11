@@ -8,9 +8,9 @@ namespace Magma.Transport.Tcp.Facts
         public static byte[] HexToByteArray(this string hex)
         {
             hex = string.Join("", hex.Where(c => !char.IsWhiteSpace(c) && c != '-'));
-            var NumberChars = hex.Length;
-            var bytes = new byte[NumberChars / 2];
-            for (var i = 0; i < NumberChars; i += 2)
+            var numberChars = hex.Length;
+            var bytes = new byte[numberChars / 2];
+            for (var i = 0; i < numberChars; i += 2)
             {
                 bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
             }
