@@ -17,23 +17,28 @@ namespace Magma.AF_XDP
     {
         private AF_XDPPort<TcpTransportReceiver<AF_XDPTransmitRing>> _port;
         private IPEndPoint _endpoint;
-        private string _interfaceName;
+        private AF_XDPTransportOptions _options;
         private IConnectionDispatcher _connectionDispatcher;
         private List<TcpTransportReceiver<AF_XDPTransmitRing>> _receivers = new List<TcpTransportReceiver<AF_XDPTransmitRing>>();
 
         public AF_XDPTransport(IPEndPoint ipEndpoint, string interfaceName, IConnectionDispatcher dispatcher)
+            : this(ipEndpoint, new AF_XDPTransportOptions { InterfaceName = interfaceName }, dispatcher)
+        {
+        }
+
+        public AF_XDPTransport(IPEndPoint ipEndpoint, AF_XDPTransportOptions options, IConnectionDispatcher dispatcher)
         {
             _endpoint = ipEndpoint ?? throw new ArgumentNullException(nameof(ipEndpoint));
-            _interfaceName = interfaceName ?? throw new ArgumentNullException(nameof(interfaceName));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
             _connectionDispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
-            Console.WriteLine($"AF_XDP Transport started with IP endpoint {ipEndpoint} on interface {interfaceName}");
+            Console.WriteLine($"AF_XDP Transport started with IP endpoint {ipEndpoint} on interface {options.InterfaceName}");
         }
 
         public Task BindAsync()
         {
-            _port = new AF_XDPPort<TcpTransportReceiver<AF_XDPTransmitRing>>(_interfaceName, CreateReceiver);
+            _port = new AF_XDPPort<TcpTransportReceiver<AF_XDPTransmitRing>>(_options.InterfaceName, CreateReceiver, _options);
             _port.Open();
-            Console.WriteLine($"AF_XDP port opened and bound to {_interfaceName}");
+            Console.WriteLine($"AF_XDP port opened and bound to {_options.InterfaceName}");
             return Task.CompletedTask;
         }
 
