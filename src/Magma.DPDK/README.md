@@ -17,7 +17,7 @@ This library provides P/Invoke bindings to DPDK native libraries, enabling .NET 
 ## Requirements
 
 - Linux operating system (DPDK is Linux-only)
-- DPDK 23.11 or later installed on the system
+- DPDK 23.11 or later installed on the system (tested with 23.11.2)
 - Huge pages configured (or use `--no-huge` option for testing)
 - Root privileges or appropriate capabilities (CAP_NET_ADMIN, CAP_IPC_LOCK)
 

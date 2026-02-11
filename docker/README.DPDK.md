@@ -4,8 +4,7 @@ This directory contains Docker configurations for building and running Magma wit
 
 ## Prerequisites
 
-- Docker 20.10+
-- Docker Compose 1.29+
+- Docker 20.10+ with Compose plugin (v2)
 - Linux host with huge pages configured (see below)
 - DPDK-compatible network interface (optional, for actual packet processing)
 
