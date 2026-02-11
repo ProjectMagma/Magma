@@ -45,27 +45,27 @@ namespace Magma.AF_XDP.Interop
         [StructLayout(LayoutKind.Sequential)]
         public struct xsk_ring_prod
         {
-            public IntPtr cached_prod;
-            public IntPtr cached_cons;
-            public IntPtr mask;
-            public IntPtr size;
-            public IntPtr producer;
-            public IntPtr consumer;
-            public IntPtr ring;
-            public IntPtr flags;
+            public nint cached_prod;
+            public nint cached_cons;
+            public nint mask;
+            public nint size;
+            public nint producer;
+            public nint consumer;
+            public nint ring;
+            public nint flags;
         }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct xsk_ring_cons
         {
-            public IntPtr cached_prod;
-            public IntPtr cached_cons;
-            public IntPtr mask;
-            public IntPtr size;
-            public IntPtr producer;
-            public IntPtr consumer;
-            public IntPtr ring;
-            public IntPtr flags;
+            public nint cached_prod;
+            public nint cached_cons;
+            public nint mask;
+            public nint size;
+            public nint producer;
+            public nint consumer;
+            public nint ring;
+            public nint flags;
         }
 
         // TX descriptor structure
@@ -80,32 +80,32 @@ namespace Magma.AF_XDP.Interop
         // UMEM functions
         [DllImport(LibBpfName, CallingConvention = CallingConvention.Cdecl)]
         public static extern int xsk_umem__create(
-            out IntPtr umem,
-            IntPtr umem_area,
+            out nint umem,
+            nint umem_area,
             ulong size,
             ref xsk_ring_prod fill,
             ref xsk_ring_cons comp,
             ref xsk_umem_config config);
 
         [DllImport(LibBpfName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int xsk_umem__delete(IntPtr umem);
+        public static extern int xsk_umem__delete(nint umem);
 
         // Socket functions
         [DllImport(LibBpfName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern int xsk_socket__create(
-            out IntPtr xsk,
+            out nint xsk,
             string ifname,
             uint queue_id,
-            IntPtr umem,
+            nint umem,
             ref xsk_ring_cons rx,
             ref xsk_ring_prod tx,
             ref xsk_socket_config config);
 
         [DllImport(LibBpfName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int xsk_socket__delete(IntPtr xsk);
+        public static extern int xsk_socket__delete(nint xsk);
 
         [DllImport(LibBpfName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int xsk_socket__fd(IntPtr xsk);
+        public static extern int xsk_socket__fd(nint xsk);
 
         // Ring operations - producer (TX/Fill)
         [DllImport(LibBpfName, CallingConvention = CallingConvention.Cdecl)]
@@ -115,10 +115,10 @@ namespace Magma.AF_XDP.Interop
         public static extern void xsk_ring_prod__submit(ref xsk_ring_prod prod, uint nb);
 
         [DllImport(LibBpfName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr xsk_ring_prod__fill_addr(ref xsk_ring_prod fill, uint idx);
+        public static extern nint xsk_ring_prod__fill_addr(ref xsk_ring_prod fill, uint idx);
 
         [DllImport(LibBpfName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr xsk_ring_prod__tx_desc(ref xsk_ring_prod tx, uint idx);
+        public static extern nint xsk_ring_prod__tx_desc(ref xsk_ring_prod tx, uint idx);
 
         [DllImport(LibBpfName, CallingConvention = CallingConvention.Cdecl)]
         public static extern bool xsk_ring_prod__needs_wakeup(ref xsk_ring_prod prod);
@@ -131,14 +131,14 @@ namespace Magma.AF_XDP.Interop
         public static extern void xsk_ring_cons__release(ref xsk_ring_cons cons, uint nb);
 
         [DllImport(LibBpfName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr xsk_ring_cons__rx_desc(ref xsk_ring_cons rx, uint idx);
+        public static extern nint xsk_ring_cons__rx_desc(ref xsk_ring_cons rx, uint idx);
 
         [DllImport(LibBpfName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr xsk_ring_cons__comp_addr(ref xsk_ring_cons comp, uint idx);
+        public static extern nint xsk_ring_cons__comp_addr(ref xsk_ring_cons comp, uint idx);
 
         // Helper for sendto (for wakeup)
         [DllImport("libc.so.6", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int sendto(int sockfd, IntPtr buf, int len, int flags, IntPtr dest_addr, int addrlen);
+        public static extern int sendto(int sockfd, nint buf, int len, int flags, nint dest_addr, int addrlen);
 
         public const int MSG_DONTWAIT = 0x40;
     }

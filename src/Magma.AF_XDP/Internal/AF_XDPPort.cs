@@ -19,7 +19,7 @@ namespace Magma.AF_XDP.Internal
         private readonly uint _queueId;
         private readonly AF_XDPTransportOptions _options;
         private readonly Func<AF_XDPTransmitRing, TReceiver> _receiverFactory;
-        private IntPtr _xskSocket;
+        private nint _xskSocket;
         private AF_XDPMemoryManager _memoryManager;
         private AF_XDPTransmitRing _transmitRing;
         private TReceiver _receiver;
@@ -122,7 +122,7 @@ namespace Magma.AF_XDP.Internal
                         // Production use requires integrating with IPacketReceiver
                         for (uint i = 0; i < rcvd; i++)
                         {
-                            IntPtr descPtr = xsk_ring_cons__rx_desc(ref _rxRing, idx + i);
+                            nint descPtr = xsk_ring_cons__rx_desc(ref _rxRing, idx + i);
                             xdp_desc* desc = (xdp_desc*)descPtr.ToPointer();
 
                             // Get packet data from UMEM
@@ -166,18 +166,18 @@ namespace Magma.AF_XDP.Internal
                 uint compIdx;
                 if (xsk_ring_cons__peek(ref _memoryManager.CompRing, 1, out compIdx) > 0)
                 {
-                    IntPtr compAddrPtr = xsk_ring_cons__comp_addr(ref _memoryManager.CompRing, compIdx);
+                    nint compAddrPtr = xsk_ring_cons__comp_addr(ref _memoryManager.CompRing, compIdx);
                     ulong frameAddr = *(ulong*)compAddrPtr.ToPointer();
                     xsk_ring_cons__release(ref _memoryManager.CompRing, 1);
 
                     // Add frame back to fill ring
-                    IntPtr fillAddrPtr = xsk_ring_prod__fill_addr(ref _memoryManager.FillRing, idx + i);
+                    nint fillAddrPtr = xsk_ring_prod__fill_addr(ref _memoryManager.FillRing, idx + i);
                     *(ulong*)fillAddrPtr.ToPointer() = frameAddr;
                 }
                 else
                 {
                     // If no completed frames, use next available frame
-                    IntPtr fillAddrPtr = xsk_ring_prod__fill_addr(ref _memoryManager.FillRing, idx + i);
+                    nint fillAddrPtr = xsk_ring_prod__fill_addr(ref _memoryManager.FillRing, idx + i);
                     *(ulong*)fillAddrPtr.ToPointer() = (idx + i) * _memoryManager.FrameSize;
                 }
             }
@@ -200,10 +200,10 @@ namespace Magma.AF_XDP.Internal
                 _transmitRing?.Dispose();
 
                 // Close XDP socket
-                if (_xskSocket != IntPtr.Zero)
+                if (_xskSocket != 0)
                 {
                     xsk_socket__delete(_xskSocket);
-                    _xskSocket = IntPtr.Zero;
+                    _xskSocket = 0;
                     Console.WriteLine("XDP socket deleted");
                 }
 

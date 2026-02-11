@@ -13,7 +13,7 @@ namespace Magma.AF_XDP.Internal
     /// </summary>
     public class AF_XDPTransmitRing : IPacketTransmitter
     {
-        private readonly IntPtr _xskSocket;
+        private readonly nint _xskSocket;
         private readonly int _socketFd;
         private readonly AF_XDPMemoryManager _memoryManager;
         private readonly string _interfaceName;
@@ -24,7 +24,7 @@ namespace Magma.AF_XDP.Internal
         private uint _reservedIdx;
         private bool _hasReservedSlot;
 
-        public AF_XDPTransmitRing(IntPtr xskSocket, AF_XDPMemoryManager memoryManager, ref xsk_ring_prod txRing, string interfaceName)
+        public AF_XDPTransmitRing(nint xskSocket, AF_XDPMemoryManager memoryManager, ref xsk_ring_prod txRing, string interfaceName)
         {
             _xskSocket = xskSocket;
             _memoryManager = memoryManager ?? throw new ArgumentNullException(nameof(memoryManager));
@@ -78,7 +78,7 @@ namespace Magma.AF_XDP.Internal
             }
 
             // Get TX descriptor for the previously reserved slot
-            IntPtr descPtr = xsk_ring_prod__tx_desc(ref _txRing, _reservedIdx);
+            nint descPtr = xsk_ring_prod__tx_desc(ref _txRing, _reservedIdx);
             xdp_desc* desc = (xdp_desc*)descPtr.ToPointer();
 
             // Set descriptor fields
@@ -95,7 +95,7 @@ namespace Magma.AF_XDP.Internal
             // Wake up kernel if needed
             if (xsk_ring_prod__needs_wakeup(ref _txRing))
             {
-                sendto(_socketFd, IntPtr.Zero, 0, MSG_DONTWAIT, IntPtr.Zero, 0);
+                sendto(_socketFd, 0, 0, MSG_DONTWAIT, 0, 0);
             }
 
             return Task.CompletedTask;
