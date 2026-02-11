@@ -1,0 +1,113 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for Magma
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Please provide as much detail as possible to help us understand your proposal.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Describe the problem or limitation you're experiencing.
+      placeholder: I'm trying to implement custom protocol X, but there's no support for...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe your proposed solution or feature.
+      placeholder: Add a new IcmpV6 implementation that supports...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions or workarounds you've considered.
+      placeholder: I considered using raw sockets, but...
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Target Component
+      description: Which component would this feature affect or be added to?
+      options:
+        - Magma.Link (Ethernet/ARP)
+        - Magma.Internet.Ip (IPv4/IPv6)
+        - Magma.Internet.Icmp
+        - Magma.Transport.Tcp
+        - Magma.Transport.Udp
+        - Magma.AF_XDP (Linux)
+        - Magma.NetMap (Linux)
+        - Magma.WinTun (Windows)
+        - Magma.PCap
+        - Magma.Network
+        - Magma.Common
+        - New component
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Critical - blocking my project
+        - High - would significantly improve my workflow
+        - Medium - nice to have
+        - Low - minor improvement
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe your specific use case for this feature.
+      placeholder: I'm building a custom VPN solution that needs to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example Usage
+      description: If applicable, provide example code showing how the feature would be used.
+      placeholder: |
+        var handler = new IcmpV6Handler(...);
+        handler.ProcessPacket(packet);
+      render: csharp
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Links to relevant specifications, documentation, or prior art.
+      placeholder: |
+        - RFC 4443 (ICMPv6)
+        - https://example.com/protocol-spec
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Are you willing to contribute to implementing this feature?
+      options:
+        - label: I am willing to submit a pull request for this feature
+          required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context, screenshots, or information about the feature request.
