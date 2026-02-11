@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "BenchmarkDotNet": {
+        "type": "Direct",
+        "requested": "[0.10.14, )",
+        "resolved": "0.10.14",
+        "contentHash": "pPM8h3fv4NUg9P3Qh5ga+Klmvh3FpJ0tblBHwTcsh0XjSHvwGc4/vRJYM6ix06evf58NQcge5Cyv1PBY83ZCwg==",
+        "dependencies": {
+          "BenchmarkDotNet.Core": "0.10.14"
+        }
+      },
+      "BenchmarkDotNet.Core": {
+        "type": "Transitive",
+        "resolved": "0.10.14",
+        "contentHash": "f2B6ERn4sBCv4VVt699FYtfRfqX0NuMZoG1lXrzNkCKyPRjRWvreqqJ5aRTMf4PnosfUaylQezpi1yoITncCRQ==",
+        "dependencies": {
+          "Microsoft.DotNet.InternalAbstractions": "1.0.0",
+          "Microsoft.DotNet.PlatformAbstractions": "1.1.1",
+          "System.Xml.XPath.XmlDocument": "4.3.0"
+        }
+      },
+      "Microsoft.DotNet.InternalAbstractions": {
+        "type": "Transitive",
+        "resolved": "1.0.0",
+        "contentHash": "AAguUq7YyKk3yDWPoWA8DrLZvURxB/LrDdTn1h5lmPeznkFUpfC3p459w5mQYQE0qpquf/CkSQZ0etiV5vRHFA=="
+      },
+      "Microsoft.DotNet.PlatformAbstractions": {
+        "type": "Transitive",
+        "resolved": "1.1.1",
+        "contentHash": "m+IIxUg8Ev+g34H7CIcuILm3ZWWJNclsgYqc/j5n/QCKhcvRAeAn0byDI7zCqlDUwn6byXYrJxuZpuZh/5C/6g=="
+      },
+      "System.Xml.XPath.XmlDocument": {
+        "type": "Transitive",
+        "resolved": "4.3.0",
+        "contentHash": "A/uxsWi/Ifzkmd4ArTLISMbfFs6XpRPsXZonrIqyTY70xi8t+mDtvSM5Os0RqyRDobjMBwIDHDL4NOIbkDwf7A=="
+      },
+      "magma.common": {
+        "type": "Project"
+      }
+    }
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions": {
+        "type": "Direct",
+        "requested": "[2.1.0-rc1-final, )",
+        "resolved": "2.1.0-rc1-final",
+        "contentHash": "OJ53lhivBAjVmNMWiwB8hiXZ6IW8xKlhkWAG8gHTWruCaH4ofqIK1HjVcFgsf1Olu4/sc2jGGBmMWMSoTb5e1A==",
+        "dependencies": {
+          "Microsoft.AspNetCore.Connections.Abstractions": "2.1.0-rc1-final"
+        }
+      },
+      "System.Runtime.CompilerServices.Unsafe": {
+        "type": "Direct",
+        "requested": "[4.5.0-rc1, )",
+        "resolved": "4.5.0-rc1",
+        "contentHash": "OwKsQab6XaJDGKexQ9/fX3oLbwG5Hio4nHX2niFyZz1VWOzobEKx52x9IKVS42lDfjO8fEd2dtM/nuguM+1SCg=="
+      },
+      "Microsoft.AspNetCore.Connections.Abstractions": {
+        "type": "Transitive",
+        "resolved": "2.1.0-rc1-final",
+        "contentHash": "1eE+Hml8yITBaNO+5P2f5G8FIN/lX+FOfdw2SrgNLfSlg0inlmSKHqwDz6OzrsK2Pqu4RHWd/v9P6FLfLiaeQA==",
+        "dependencies": {
+          "Microsoft.AspNetCore.Http.Features": "2.1.0-rc1-final"
+        }
+      },
+      "Microsoft.AspNetCore.Hosting.Abstractions": {
+        "type": "Transitive",
+        "resolved": "2.1.0-rc1-final",
+        "contentHash": "ZS9+q2D4gDRy9egkX5iOAztWYtOcmMbuPpGh3Vh2ayDgZ0qnOF4n/BYN+kZgCWE+KtLeunAwmXspNj7aHXJYgw==",
+        "dependencies": {
+          "Microsoft.AspNetCore.Hosting.Server.Abstractions": "2.1.0-rc1-final",
+          "Microsoft.AspNetCore.Http.Abstractions": "2.1.0-rc1-final",
+          "Microsoft.Extensions.Hosting.Abstractions": "2.1.0-rc1-final"
+        }
+      },
+      "Microsoft.AspNetCore.Hosting.Server.Abstractions": {
+        "type": "Transitive",
+        "resolved": "2.1.0-rc1-final",
+        "contentHash": "9zEHPWJduVTLanNVRuptCB2zrhY1D7/n6vgdPypmRtq3eR51fgfYyDsalZXQeFNOsKdVaD4PuSEP3DiLed8bYg==",
+        "dependencies": {
+          "Microsoft.AspNetCore.Http.Features": "2.1.0-rc1-final",
+          "Microsoft.Extensions.Configuration.Abstractions": "2.1.0-rc1-final"
+        }
+      },
+      "Microsoft.AspNetCore.Http.Abstractions": {
+        "type": "Transitive",
+        "resolved": "2.1.0-rc1-final",
+        "contentHash": "k8rteCcVexd8yh5DLi4Vo4UU3vyQpHP43d13jalWixImsHSgvDjkjuOUE8MK9oTlHd9utSsl8Vyeh1v2vABVvg==",
+        "dependencies": {
+          "Microsoft.AspNetCore.Http.Features": "2.1.0-rc1-final"
+        }
+      },
+      "Microsoft.AspNetCore.Http.Features": {
+        "type": "Transitive",
+        "resolved": "2.1.0-rc1-final",
+        "contentHash": "BwPSAufLsQjTyeGhm//f+GXhV9s68dJRPGIPy0tH5vPgRiTxMxTOqhi3ReJOR9fYnLkf1zxf/dLEly4INk1+dg==",
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "2.1.0-rc1-final"
+        }
+      },
+      "Microsoft.Extensions.Configuration.Abstractions": {
+        "type": "Transitive",
+        "resolved": "2.1.0-rc1-final",
+        "contentHash": "U0Q+2iXLHmLrYNl0afYa/Co0J8E/q5E81n3InSa8D8w25OiqOU5ETaOT4/ridVtHTNTcGao34LtMWTnOl/Ly+A==",
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "2.1.0-rc1-final"
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions": {
+        "type": "Transitive",
+        "resolved": "2.1.0-rc1-final",
+        "contentHash": "WDSDj1JvNlBYfGyU+4TwDrN7LhJX15RmTnTeH5nVOvDOpju17vqx39yChgXeEAwm9kVwCXrRvs5RQWGVLd1cuw=="
+      },
+      "Microsoft.Extensions.FileProviders.Abstractions": {
+        "type": "Transitive",
+        "resolved": "2.1.0-rc1-final",
+        "contentHash": "o4C2e7UUiwAUtNrF+itJKBKNSVGXEE4i3tCtkK2oLk1/CJ88hnEHU+A299NKpUloMbsXH4Z+29lPUbNsKHoeTw==",
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "2.1.0-rc1-final"
+        }
+      },
+      "Microsoft.Extensions.Hosting.Abstractions": {
+        "type": "Transitive",
+        "resolved": "2.1.0-rc1-final",
+        "contentHash": "G+UwVxCWW8p6aEQy5iPt1gt4H4L+LbXyOGVXMZwOVE03KJpg6IxBFd7VkgEsnVhXsjuGdCV0m/76MnJuTMvs+w==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "2.1.0-rc1-final",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "2.1.0-rc1-final",
+          "Microsoft.Extensions.FileProviders.Abstractions": "2.1.0-rc1-final",
+          "Microsoft.Extensions.Logging.Abstractions": "2.1.0-rc1-final"
+        }
+      },
+      "Microsoft.Extensions.Logging.Abstractions": {
+        "type": "Transitive",
+        "resolved": "2.1.0-rc1-final",
+        "contentHash": "wbv9lUGJPJ+nKMyHWBiImSI99n70nynYW+lKQhUa8fJTr3G2sNUaN12uXh3+riNwnNX+YJldhdo38v8s6N8ZSA=="
+      },
+      "Microsoft.Extensions.Options": {
+        "type": "Transitive",
+        "resolved": "2.1.0-rc1-final",
+        "contentHash": "uRkR6l93U/2FVlijdHfdb8NafesLr46dB1RkHtgt8p+lVPy6MspXxvbftEPKFSlT9uT0wWlGw8FEyZSQsex23w==",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "2.1.0-rc1-final",
+          "Microsoft.Extensions.Primitives": "2.1.0-rc1-final"
+        }
+      },
+      "Microsoft.Extensions.Primitives": {
+        "type": "Transitive",
+        "resolved": "2.1.0-rc1-final",
+        "contentHash": "UR92OPDCSSBckjDELE1ZOzioml4jrMTYo2LmP3d+HhY56GeS6gwVwTNTxMb3VL1KXKzkYzdbQSo3xVwN6z9Ogg=="
+      },
+      "magma.common": {
+        "type": "Project"
+      },
+      "magma.internet.ip": {
+        "type": "Project",
+        "dependencies": {
+          "Magma.Common": "[1.0.0, )"
+        }
+      },
+      "magma.link": {
+        "type": "Project"
+      },
+      "magma.network.abstractions": {
+        "type": "Project"
+      },
+      "magma.pcap": {
+        "type": "Project"
+      },
+      "magma.transport.tcp": {
+        "type": "Project",
+        "dependencies": {
+          "Magma.Common": "[1.0.0, )",
+          "Magma.Internet.Ip": "[1.0.0, )",
+          "Magma.Link": "[1.0.0, )",
+          "Magma.Network.Abstractions": "[1.0.0, )",
+          "Microsoft.AspNetCore.Hosting.Abstractions": "[2.1.0-rc1-final, )",
+          "Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions": "[2.1.0-rc1-final, )",
+          "Microsoft.Extensions.Options": "[2.1.0-rc1-final, )"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions": {
+        "type": "Transitive",
+        "resolved": "2.1.0-rc1-final",
+        "contentHash": "OJ53lhivBAjVmNMWiwB8hiXZ6IW8xKlhkWAG8gHTWruCaH4ofqIK1HjVcFgsf1Olu4/sc2jGGBmMWMSoTb5e1A=="
+      },
+      "magma.common": {
+        "type": "Project"
+      },
+      "magma.internet.ip": {
+        "type": "Project",
+        "dependencies": {
+          "Magma.Common": "[1.0.0, )"
+        }
+      },
+      "magma.link": {
+        "type": "Project"
+      },
+      "magma.netmap": {
+        "type": "Project",
+        "dependencies": {
+          "Magma.Common": "[1.0.0, )",
+          "Magma.Link": "[1.0.0, )",
+          "Magma.Network.Abstractions": "[1.0.0, )",
+          "Magma.PCap": "[1.0.0, )",
+          "Magma.Transport.Tcp": "[1.0.0, )",
+          "Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions": "[2.1.0-rc1-final, )"
+        }
+      },
+      "magma.network.abstractions": {
+        "type": "Project"
+      },
+      "magma.pcap": {
+        "type": "Project"
+      },
+      "magma.transport.tcp": {
+        "type": "Project",
+        "dependencies": {
+          "Magma.Common": "[1.0.0, )",
+          "Magma.Internet.Ip": "[1.0.0, )",
+          "Magma.Link": "[1.0.0, )",
+          "Magma.Network.Abstractions": "[1.0.0, )",
+          "Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions": "[2.1.0-rc1-final, )"
+        }
+      }
+    }
+  }
+}

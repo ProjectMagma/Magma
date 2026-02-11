@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "magma.common": {
+        "type": "Project"
+      },
+      "magma.internet.ip": {
+        "type": "Project",
+        "dependencies": {
+          "Magma.Common": "[1.0.0, )"
+        }
+      },
+      "magma.link": {
+        "type": "Project"
+      },
+      "magma.network.abstractions": {
+        "type": "Project"
+      }
+    }
+  }
+}
