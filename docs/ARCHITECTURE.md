@@ -239,7 +239,7 @@ Handles Transport layer (OSI Layer 4) protocols.
 
 - `TcpConnection<TTransmitter>`: Stateful TCP connection
 - `TcpTransportReceiver<TTransmitter>`: TCP packet receiver and connection manager
-- `TcpHeader`: TCP header (20+ bytes with options)
+- `Tcp`: TCP header struct (20+ bytes with options)
 - `TcpHeaderWithOptions`: Parsed TCP header with options
 - `TcpFlags`: TCP flag bits (SYN, ACK, FIN, RST, PSH, URG)
 
@@ -295,8 +295,8 @@ public struct ProtocolHeader
     // Properties with endianness conversion
     public ushort Field2
     {
-        get => (ushort)IPAddress.NetworkToHostOrder((short)_field2);
-        set => _field2 = (ushort)IPAddress.HostToNetworkOrder((short)value);
+        get => (ushort)System.Net.IPAddress.NetworkToHostOrder((short)_field2);
+        set => _field2 = (ushort)System.Net.IPAddress.HostToNetworkOrder((short)value);
     }
 
     // TryConsume pattern for parsing
