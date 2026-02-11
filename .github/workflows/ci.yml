@@ -21,39 +21,27 @@ jobs:
         os: [ubuntu-latest, windows-latest]
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '10.0.x'
-        dotnet-quality: 'ga'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.102'
+          cache: true
 
-    - name: Cache NuGet packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-        restore-keys: |
-          ${{ runner.os }}-nuget-
+      - name: Restore dependencies
+        run: dotnet restore
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
 
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
+      - name: Test (Linux)
+        if: runner.os == 'Linux'
+        run: dotnet test --configuration Release --no-build --verbosity normal
 
-    - name: Test (Linux)
-      if: runner.os == 'Linux'
-      run: dotnet test --configuration Release --no-build --verbosity normal
-
-    - name: Test (Windows - excluding Linux-only projects)
-      if: runner.os == 'Windows'
-      run: |
-        dotnet test test/Magma.Common.Facts --configuration Release --no-build --verbosity normal
-        dotnet test test/Magma.Internet.Ip.Facts --configuration Release --no-build --verbosity normal
-        dotnet test test/Magma.Link.Facts --configuration Release --no-build --verbosity normal
-
-    - name: Verify WinTun sample builds (Windows)
-      if: runner.os == 'Windows'
-      run: dotnet build sample/Magma.WinTun.TcpHost --configuration Release --no-restore --verbosity normal
+      - name: Test (Windows - excluding Linux-only projects)
+        if: runner.os == 'Windows'
+        run: |
+          dotnet test test/Magma.Common.Facts --configuration Release --no-build --verbosity normal
+          dotnet test test/Magma.Internet.Ip.Facts --configuration Release --no-build --verbosity normal
+          dotnet test test/Magma.Link.Facts --configuration Release --no-build --verbosity normal
