@@ -250,8 +250,9 @@ Handles Transport layer (OSI Layer 4) protocols.
 **TCP Connection State Machine:**
 
 ```
-Listen → Syn_Rcvd → Established → Close_Wait → Last_Ack → Closed
-                    ↓
+Listen -> Syn_Rcvd -> Established -> Close_Wait -> Last_Ack -> Closed
+                    |
+                    v
                   Time_Wait
 ```
 
@@ -272,9 +273,9 @@ Listen → Syn_Rcvd → Established → Close_Wait → Last_Ack → Closed
   - Optimized with unsafe code for 64-bit words
   - Supports partial checksum for TCP/UDP pseudo-headers
 
-- `IPAddress`: IPv4/IPv6 address structures
-  - `V4Address`: 4-byte IPv4 address
-  - `V6Address`: 16-byte IPv6 address
+- Custom IP address structures (in `Magma.Network` namespace to avoid conflicts with `System.Net.IPAddress`)
+  - `V4Address`: 4-byte IPv4 address struct
+  - `V6Address`: 16-byte IPv6 address struct
 
 ## Core Design Patterns
 
@@ -622,8 +623,8 @@ Magma minimizes memory allocations and copies through:
 1. **Receive Path**:
    - Platform integration owns buffer initially
    - `TryConsume` takes ownership via `IMemoryOwner<byte>`
-   - Consumed packets → `Dispose()` (return to pool)
-   - Unconsumed packets → return to caller (OS network stack)
+   - Consumed packets -> `Dispose()` (return to pool)
+   - Unconsumed packets -> return to caller (OS network stack)
 
 2. **Transmit Path**:
    - Application requests buffer via `TryGetNextBuffer`
@@ -789,7 +790,7 @@ foreach (var b in span)
 **AF_XDP / NetMap Benefits:**
 
 - Bypass kernel network stack entirely
-- Reduce context switches (kernel ↔ userspace)
+- Reduce context switches (kernel <-> userspace)
 - Memory-mapped packet buffers (zero-copy)
 - Batch processing of multiple packets
 - Direct hardware queue access
@@ -803,7 +804,7 @@ foreach (var b in span)
 
 **Critical Paths:**
 
-1. Packet parsing (Ethernet → IP → TCP)
+1. Packet parsing (Ethernet -> IP -> TCP)
 2. Checksum calculation
 3. Connection lookup
 4. Buffer allocation/deallocation
@@ -826,7 +827,7 @@ Typical performance characteristics (varies by hardware):
 | TCP header parse | ~20 ns | N/A |
 | Checksum (1500 bytes) | ~100 ns | ~12 GB/s |
 | Connection lookup | ~50 ns | N/A |
-| End-to-end (receive → dispatch) | ~500 ns | ~2M pps |
+| End-to-end (receive to dispatch) | ~500 ns | ~2M pps |
 
 *Measured on Intel Xeon, 3.0 GHz, single core*
 
