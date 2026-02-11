@@ -10,7 +10,7 @@ namespace Magma.Internet.Ip.Facts
 {
     public class IPFacts
     {
-        private static readonly string _ipHeader = "45 00 00 34 1f a2 40 00 80 06 bf b4 ac 12 e1 a1 ac 12 e1 a6";
+        private static readonly string _ipHeader = "45 00 00 34 1f a2 40 00 2d 06 12 b5 ac 12 e1 a1 ac 12 e1 a6";
         private static readonly V4Address _sourceAddress = new V4Address(172, 18, 225, 161);
         private static readonly V4Address _destAddress = new V4Address(172, 18, 225, 166);
 
