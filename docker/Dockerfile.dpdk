@@ -1,0 +1,63 @@
+# Dockerfile for building Magma with DPDK support
+# Based on Ubuntu 24.04 with DPDK 23.11+
+
+FROM ubuntu:24.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DPDK_VERSION=23.11.2
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    wget \
+    curl \
+    git \
+    python3 \
+    python3-pip \
+    python3-pyelftools \
+    meson \
+    ninja-build \
+    pkg-config \
+    libnuma-dev \
+    libpcap-dev \
+    linux-headers-generic \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download and build DPDK
+WORKDIR /tmp
+RUN wget https://fast.dpdk.org/rel/dpdk-${DPDK_VERSION}.tar.xz && \
+    tar xf dpdk-${DPDK_VERSION}.tar.xz && \
+    cd dpdk-${DPDK_VERSION} && \
+    meson setup build && \
+    cd build && \
+    ninja && \
+    ninja install && \
+    ldconfig && \
+    cd /tmp && \
+    rm -rf dpdk-${DPDK_VERSION} dpdk-${DPDK_VERSION}.tar.xz
+
+# Install .NET SDK 10.0
+RUN wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh && \
+    chmod +x dotnet-install.sh && \
+    ./dotnet-install.sh --channel 10.0 --install-dir /usr/share/dotnet && \
+    ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet && \
+    rm dotnet-install.sh
+
+# Set up huge pages (2GB)
+RUN mkdir -p /dev/hugepages && \
+    echo "vm.nr_hugepages = 1024" >> /etc/sysctl.conf
+
+# Create working directory
+WORKDIR /app
+
+# Copy the source code
+COPY . .
+
+# Restore and build
+RUN dotnet restore && \
+    dotnet build -c Release
+
+# Set entrypoint
+CMD ["/bin/bash"]

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  magma-dpdk:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dpdk
+    image: magma-dpdk:latest
+    container_name: magma-dpdk
+    privileged: true  # Required for DPDK to access hardware
+    volumes:
+      - /dev/hugepages:/dev/hugepages  # Share huge pages with host
+      - ..:/app  # Mount source code
+    devices:
+      - /dev/vfio/vfio  # VFIO device for DPDK (if using VFIO driver)
+    cap_add:
+      - IPC_LOCK  # Required for huge pages
+      - NET_ADMIN  # Required for network configuration
+    network_mode: host  # Use host network for direct hardware access
+    command: /bin/bash
+    tty: true
+    stdin_open: true

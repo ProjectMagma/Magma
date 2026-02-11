@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <Description>DPDK (Data Plane Development Kit) integration for maximum performance packet I/O</Description>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="!$([MSBuild]::IsOSPlatform('Linux'))">
+    <IsLinux>false</IsLinux>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <IsLinux>true</IsLinux>
+  </PropertyGroup>
+
+  <Target Name="ErrorIfNotLinux" BeforeTargets="BeforeBuild" Condition="'$(IsLinux)' != 'true'">
+    <Error Text="Magma.DPDK can only be built on Linux. DPDK is a Linux-only framework." />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.0-rc1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Magma.Common\Magma.Common.csproj" />
+    <ProjectReference Include="..\Magma.Network.Abstractions\Magma.Network.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>
