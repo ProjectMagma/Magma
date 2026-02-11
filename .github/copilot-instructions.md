@@ -18,7 +18,6 @@ In addition to the rules enforced by `.editorconfig`, you SHOULD:
 
 - Prefer file-scoped namespace declarations and single-line using directives.
 - Ensure that the final return statement of a method is on its own line.
-- Use pattern matching and switch expressions wherever possible.
 - Use `nameof` instead of string literals when referring to member names.
 - Always use `is null` or `is not null` instead of `== null` or `!= null`.
 - Trust the C# null annotations and don't add null checks when the type system says a value cannot be null.
@@ -31,152 +30,137 @@ In addition to the rules enforced by `.editorconfig`, you SHOULD:
 - Do not finish work with any tests commented out or disabled that were not previously commented out or disabled.
 - When writing tests, do not emit "Act", "Arrange" or "Assert" comments.
 - For markdown (`.md`) files, ensure there is no trailing whitespace at the end of any line.
-- When adding XML documentation to APIs, follow the guidelines at [`docs.prompt.md`](/.github/prompts/docs.prompt.md).
+You MUST follow all code-formatting and naming conventions defined in [`.EditorConfig`](/.EditorConfig).
 
 ---
 
-# Building & Testing in dotnet/runtime
+# About Magma
 
-## ⚠️ MANDATORY: Run Baseline Build First
+Magma is a high-performance, low-level network stack library for .NET. It provides direct packet-level access at the Link, Internet, and Transport layers, enabling zero-copy network I/O through kernel-bypass transports (AF_XDP, NetMap) and TUN/TAP interfaces (WinTun).
 
-**You MUST complete a baseline build BEFORE making any code changes.** Skipping this causes "missing testhost" and "shared framework" errors that waste time.
+## Project Structure
 
-### Step 1: Identify Your Component
-
-Based on file paths you will modify:
-
-| Files Changed | Component |
-|---------------|-----------|
-| `src/coreclr/` | CoreCLR |
-| `src/mono/` | Mono |
-| `src/libraries/` (no Browser/WASM or WASI targets) | Libraries |
-| `src/libraries/` with Browser/WASM or WASI targets in the affected `.csproj` | WASM/WASI Libraries |
-| `src/native/corehost/`, `src/installer/` | Host |
-| `src/tools` | Tools |
-| `src/native/managed` | Tools |
-| `src/tasks` | Build Tasks |
-| `src/tests` | Runtime Tests |
-
-**WASM/WASI Library Detection:** A change under `src/libraries/` is WASM/WASI-relevant if the library's `.csproj` has explicit Browser/WASM or WASI targets (`TargetFrameworks`, `TARGET_BROWSER`, `TARGET_WASI` constants, or `Condition` attributes referencing `browser`/`wasi`), **and** the changed file is not excluded from those targets via `Condition` on `<ItemGroup>` or `<Compile>`.
-
-### Step 2: Run the Baseline Build (from repo root)
-
-**First, checkout the `main` branch** to establish a known-good baseline, then run the appropriate build command:
-
-| Component | Command |
+| Directory | Purpose |
 |-----------|---------|
-| **CoreCLR** | `./build.sh clr+libs+host` |
-| **Mono** | `./build.sh mono+libs` |
-| **Libraries** | `./build.sh clr+libs -rc release` |
-| **WASM Libraries** | `./build.sh mono+libs -os browser` |
-| **Host** | `./build.sh clr+libs+host -rc release -lc release` |
-| **Tools** | `./build.sh clr+libs -rc release` |
-| **Build Tasks** | `./build.sh clr+libs -rc release` |
-| **Runtime Tests** | `./build.sh clr+libs -lc release -rc checked` |
-
-For System.Private.CoreLib changes, use `-rc checked` instead of `-rc release` for asserts.
-
-⏱️ **This build can take up to 40 minutes.** Do not cancel unless no output for 5+ minutes.
-
-### Step 3: Configure Environment
-
-```bash
-export PATH="$(pwd)/.dotnet:$PATH"
-dotnet --version  # Should match sdk.version in global.json
-```
-
-**Only proceed with changes after the baseline build succeeds.** If it fails, report the failure and stop. After the baseline build, switch back to your working branch before making changes.
+| `src/Magma.AF_XDP/` | Linux AF_XDP socket transport (kernel 4.18+) |
+| `src/Magma.NetMap/` | NetMap kernel-bypass transport (Linux) |
+| `src/Magma.WinTun/` | WinTun TUN interface (Windows) |
+| `src/Magma.PCap/` | Packet capture (PCAP file writer) |
+| `src/Magma.Link/` | Data link layer (Ethernet, ARP, MAC addresses) |
+| `src/Magma.Internet.Ip/` | IPv4/IPv6 packet parsing and construction |
+| `src/Magma.Internet.Icmp/` | ICMP protocol support |
+| `src/Magma.Transport.Tcp/` | TCP protocol implementation |
+| `src/Magma.Transport.Udp/` | UDP protocol implementation |
+| `src/Magma.Network/` | Core packet processing with delegate-based chaining |
+| `src/Magma.Network.Abstractions/` | `IPacketTransmitter` and `IPacketReceiver` interfaces |
+| `src/Magma.Common/` | Shared utilities (checksum, IP address structs) |
+| `test/` | xUnit test projects (use `.Facts` suffix) |
+| `samples/` and `sample/` | Sample applications |
+| `benchmarks/` | Performance benchmarks |
 
 ---
 
-## Component-Specific Workflows
+# Building & Testing
 
-After completing the baseline build above (the baseline build MUST be completed before running tests), use the appropriate workflow for your changes.
-All commands must complete with exit code 0, and all tests must pass with zero failures.
+## Prerequisites
 
-### Libraries (Most Common)
+- .NET SDK 10.0.102+ (see `global.json`)
 
-**Build and test a specific library:**
+## Build
+
 ```bash
-cd src/libraries/<LibraryName>
 dotnet build
-dotnet build /t:test ./tests/<TestProject>.csproj
 ```
 
-Test projects are typically at: `tests/<LibraryName>.Tests.csproj` or `tests/<LibraryName>.Tests/<LibraryName>.Tests.csproj`, or under `tests/FunctionalTests/`, `tests/UnitTests/`, etc. Use `find tests -name '*.Tests.csproj'` to discover them.
+## Test
 
-**Test all libraries:** `./build.sh libs.tests -test -rc release`
-
-**System.Private.CoreLib:** Rebuild with `./build.sh clr.corelib+clr.nativecorelib+libs.pretest -rc checked`
-
-Before completing, ensure ALL tests for affected libraries pass.
-
-### CoreCLR
-
-**Test:** `cd src/tests && ./build.sh && ./run.sh`
-
-### Mono
-
-**Test:**
 ```bash
-./build.sh clr.host
-cd src/tests
-./build.sh mono debug /p:LibrariesConfiguration=debug
-./run.sh
+dotnet test
 ```
 
-### WASM Libraries
-
-**Build:** `./build.sh libs -os browser`
-
-**Test:** `./build.sh libs.tests -test -os browser`
-
-### Host
-
-**Build:** `./build.sh host -rc release -lc release`
-
-**Test:** `./build.sh host.tests -rc release -lc release -test`
-
-### Tools
-
-**Build:** `./build.sh tools+tools.ilasm`
-
-**Test:** `./build.sh tools+tools.ilasm+tools.illinktests+tools.cdactests -test`
-
-### Build Tasks
-
-**Build:** `./build.sh tasks`
-
-### Runtime Tests
-
-**Build:**
+To run a specific test project:
 ```bash
-./build.sh clr+libs -lc release -rc checked
-./src/tests/build.sh checked
-./src/tests/run.sh checked
+dotnet test test/Magma.Common.Facts
+dotnet test test/Magma.Internet.Ip.Facts
+dotnet test test/Magma.Link.Facts
+dotnet test test/Magma.NetMap.Facts
 ```
+
+When running tests, check test run counts or look at test logs to ensure they actually ran.
 
 ---
 
-## Troubleshooting
+# Code Conventions
 
-| Error | Solution |
-|-------|----------|
-| "shared framework must be built" | Run baseline build: `./build.sh clr+libs -rc release` |
-| "testhost" missing / FileNotFoundException | Run baseline build first (Step 2 above) |
-| Build timeout | Wait up to 40 min; only fail if no output for 5 min |
-| "Target does not exist" | Avoid specifying a target framework; the build will auto-select `$(NetCoreAppCurrent)` |
+In addition to the rules enforced by `.EditorConfig`, you SHOULD:
 
-**When reporting failures:** Include logs from `artifacts/log/` and console output for diagnostics.
+## General Style
 
-**Windows:** Use `build.cmd` instead of `build.sh`. Set PATH: `set PATH=%CD%\.dotnet;%PATH%`
+- Use `var` in all cases (enforced at error level).
+- Prefer file-scoped namespace declarations.
+- Use explicit `using` directives (implicit usings are disabled).
+- Do not use `this.` prefix (enforced at error level).
+- Prefer language keywords over framework type names (e.g. `string` not `String`).
+- Prefer expression-bodied members where applicable.
+- Do not use throw expressions.
+- Ensure that the final return statement of a method is on its own line.
+- Use pattern matching and switch expressions wherever possible.
+- Use `nameof` instead of string literals when referring to member names.
+- Prefer `?.` for null propagation (e.g. `scope?.Dispose()`).
+- Prefer `??` coalesce expressions over ternary null checks.
+- Prefer `out var` for inline variable declarations.
+- Use `ObjectDisposedException.ThrowIf` where applicable.
 
----
+## Nullable Reference Types
 
-## Reference
+- Nullable is **disabled** globally (`Directory.Build.props`). Do not enable it in individual projects without discussion.
+- Use explicit null checks where needed.
 
-- [Build Libraries](/docs/workflow/building/libraries/README.md) · [Test Libraries](/docs/workflow/testing/libraries/testing.md)
-- [Build CoreCLR](/docs/workflow/building/coreclr/README.md) · [Test CoreCLR](/docs/workflow/testing/coreclr/testing.md)
-- [Build Mono](/docs/workflow/building/mono/README.md) · [Test Mono](/docs/workflow/testing/mono/testing.md)
-- [WASM Build](/docs/workflow/building/libraries/webassembly-instructions.md) · [WASM Test](/docs/workflow/testing/libraries/testing-wasm.md)
-- [Host Tests](/docs/workflow/testing/host/testing.md)
+## Unsafe Code & Performance Patterns
+
+This codebase makes extensive use of unsafe code for zero-copy packet processing. Follow these patterns:
+
+- Use `[StructLayout(LayoutKind.Sequential, Pack = 1)]` for all packet header structs to ensure binary compatibility.
+- Use `Unsafe.As<byte, T>(ref MemoryMarshal.GetReference(span))` for type-punning packet headers from byte spans.
+- Use `Unsafe.SizeOf<T>()` for header size calculations (not `sizeof` or `Marshal.SizeOf`).
+- Use `Span<T>`, `Memory<T>`, and `IMemoryOwner<byte>` for buffer management.
+- Prefer `ref` parameters to avoid unnecessary copies of structs.
+- Use `System.Net.IPAddress.NetworkToHostOrder()` for endianness conversion.
+
+## Packet Header Pattern
+
+All protocol headers follow a consistent `TryConsume` pattern:
+
+```csharp
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct MyProtocolHeader
+{
+    // Fields in wire order...
+
+    public static bool TryConsume(ReadOnlySpan<byte> input, out MyProtocolHeader header, out ReadOnlySpan<byte> data)
+    {
+        if (input.Length >= Unsafe.SizeOf<MyProtocolHeader>())
+        {
+            header = Unsafe.As<byte, MyProtocolHeader>(ref MemoryMarshal.GetReference(input));
+            data = input.Slice(Unsafe.SizeOf<MyProtocolHeader>());
+            return true;
+        }
+        header = default;
+        data = default;
+        return false;
+    }
+}
+```
+
+## Testing Conventions
+
+- Test projects use the `.Facts` suffix (e.g. `Magma.Common.Facts`), not `.Tests`.
+- When adding new unit tests, strongly prefer adding them to existing test files rather than creating new ones.
+- Do not emit "Act", "Arrange" or "Assert" comments in tests.
+- Do not add regression comments citing GitHub issue or PR numbers unless explicitly asked.
+- Do not finish work with any tests commented out or disabled that were not previously so.
+
+## Other
+
+- For markdown (`.md`) files, ensure there is no trailing whitespace at the end of any line.
+- If you add new code files, ensure they are included in the build (check `.csproj` if other files in that folder are explicitly listed).
