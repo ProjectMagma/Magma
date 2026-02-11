@@ -205,16 +205,6 @@ Magma provides multiple integration options for different platforms and performa
 | Development/Testing | AF_XDP or NetMap | WinTun |
 | VPN/Tunnel apps | AF_XDP | WinTun |
 
-## Choosing the Right Integration
-
-| Use Case | Linux Recommendation | Windows Recommendation |
-|----------|---------------------|------------------------|
-| Modern production | AF_XDP | WinTun |
-| Legacy systems | NetMap | WinTun |
-| Maximum performance | DPDK | WinTun |
-| Development/Testing | AF_XDP or NetMap | WinTun |
-| VPN/Tunnel apps | AF_XDP | WinTun |
-
 For detailed setup instructions and migration guides, see the [Integration Guide](docs/INTEGRATION_GUIDE.md).
 
 ## Project Goals
