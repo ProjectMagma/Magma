@@ -21,6 +21,8 @@ namespace Magma.AF_XDP.Internal
         private xsk_ring_prod _txRing;
         private bool _disposed;
         private ulong _currentFrameAddr;
+        private uint _reservedIdx;
+        private bool _hasReservedSlot;
 
         public AF_XDPTransmitRing(IntPtr xskSocket, AF_XDPMemoryManager memoryManager, ref xsk_ring_prod txRing, string interfaceName)
         {
@@ -36,6 +38,13 @@ namespace Magma.AF_XDP.Internal
             if (_disposed)
                 throw new ObjectDisposedException(nameof(AF_XDPTransmitRing));
 
+            // If already have a reserved slot, clean it up first
+            if (_hasReservedSlot)
+            {
+                buffer = default;
+                return false;
+            }
+
             // Reserve a slot in the TX ring
             uint idx;
             uint reserved = xsk_ring_prod__reserve(ref _txRing, 1, out idx);
@@ -46,15 +55,11 @@ namespace Magma.AF_XDP.Internal
                 return false;
             }
 
-            // Get TX descriptor for this slot
-            IntPtr descPtr = xsk_ring_prod__tx_desc(ref _txRing, idx);
-            if (descPtr == IntPtr.Zero)
-            {
-                buffer = default;
-                return false;
-            }
+            _reservedIdx = idx;
+            _hasReservedSlot = true;
 
-            // Allocate a frame from UMEM (simplified - in production would need frame pool management)
+            // Allocate a frame from UMEM (using ring index as simple allocator)
+            // TODO: In production, implement proper frame pool management
             _currentFrameAddr = idx * _memoryManager.FrameSize;
             
             // Get memory for this frame
@@ -67,17 +72,13 @@ namespace Magma.AF_XDP.Internal
             if (_disposed)
                 throw new ObjectDisposedException(nameof(AF_XDPTransmitRing));
 
-            // Reserve a slot in the TX ring
-            uint idx;
-            uint reserved = xsk_ring_prod__reserve(ref _txRing, 1, out idx);
-            
-            if (reserved == 0)
+            if (!_hasReservedSlot)
             {
-                throw new InvalidOperationException("Failed to reserve TX ring slot");
+                throw new InvalidOperationException("No TX ring slot reserved. Call TryGetNextBuffer first.");
             }
 
-            // Get TX descriptor for this slot
-            IntPtr descPtr = xsk_ring_prod__tx_desc(ref _txRing, idx);
+            // Get TX descriptor for the previously reserved slot
+            IntPtr descPtr = xsk_ring_prod__tx_desc(ref _txRing, _reservedIdx);
             xdp_desc* desc = (xdp_desc*)descPtr.ToPointer();
 
             // Set descriptor fields
@@ -87,6 +88,9 @@ namespace Magma.AF_XDP.Internal
 
             // Submit the packet
             xsk_ring_prod__submit(ref _txRing, 1);
+
+            // Mark slot as no longer reserved
+            _hasReservedSlot = false;
 
             // Wake up kernel if needed
             if (xsk_ring_prod__needs_wakeup(ref _txRing))

@@ -137,7 +137,7 @@ namespace Magma.AF_XDP.Interop
         public static extern IntPtr xsk_ring_cons__comp_addr(ref xsk_ring_cons comp, uint idx);
 
         // Helper for sendto (for wakeup)
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("libc.so.6", CallingConvention = CallingConvention.Cdecl)]
         public static extern int sendto(int sockfd, IntPtr buf, int len, int flags, IntPtr dest_addr, int addrlen);
 
         public const int MSG_DONTWAIT = 0x40;

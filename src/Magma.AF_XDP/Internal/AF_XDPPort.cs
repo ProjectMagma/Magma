@@ -118,6 +118,8 @@ namespace Magma.AF_XDP.Internal
                     if (rcvd > 0)
                     {
                         // Process received packets
+                        // NOTE: This is a simplified implementation for demonstration
+                        // Production use requires integrating with IPacketReceiver
                         for (uint i = 0; i < rcvd; i++)
                         {
                             IntPtr descPtr = xsk_ring_cons__rx_desc(ref _rxRing, idx + i);
@@ -126,8 +128,8 @@ namespace Magma.AF_XDP.Internal
                             // Get packet data from UMEM
                             Memory<byte> packet = _memoryManager.GetFrameMemory(desc->addr).Slice(0, (int)desc->len);
 
-                            // Pass to receiver (simplified - would need proper memory management)
-                            // _receiver.TryConsume would handle the packet
+                            // TODO: Pass to receiver with proper memory ownership
+                            // _receiver.TryConsume(ownedMemory) would handle the packet
                         }
 
                         // Release RX descriptors
