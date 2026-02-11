@@ -16,9 +16,9 @@ namespace Magma.AF_XDP
     public class AF_XDPTransport : ITransport
     {
         private AF_XDPPort<TcpTransportReceiver<AF_XDPTransmitRing>> _port;
-        private IPEndPoint _endpoint;
-        private AF_XDPTransportOptions _options;
-        private IConnectionDispatcher _connectionDispatcher;
+        private readonly IPEndPoint _endpoint;
+        private readonly AF_XDPTransportOptions _options;
+        private readonly IConnectionDispatcher _connectionDispatcher;
         private readonly List<TcpTransportReceiver<AF_XDPTransmitRing>> _receivers = new List<TcpTransportReceiver<AF_XDPTransmitRing>>();
 
         public AF_XDPTransport(IPEndPoint ipEndpoint, string interfaceName, IConnectionDispatcher dispatcher)
