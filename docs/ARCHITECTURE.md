@@ -619,7 +619,7 @@ Magma minimizes memory allocations and copies through:
 
 ### Memory Ownership Rules
 
-1. **Receive Path**: 
+1. **Receive Path**:
    - Platform integration owns buffer initially
    - `TryConsume` takes ownership via `IMemoryOwner<byte>`
    - Consumed packets → `Dispose()` (return to pool)
