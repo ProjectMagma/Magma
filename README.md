@@ -219,7 +219,7 @@ Magma aims to:
 
 ## Contributing
 
-We welcome contributions! Please see [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for guidelines.
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on how to contribute to this project. All contributors are expected to follow our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## License
 
