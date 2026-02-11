@@ -226,8 +226,8 @@ public struct IPv4
     private byte _ttl;
     private ProtocolNumber _protocol;
     private ushort _checksum;
-    private V4Address _sourceIPAdress;
-    private V4Address _destinationIPAdress;
+    private V4Address _sourceIPAddress;
+    private V4Address _destinationIPAddress;
 }
 ```
 
