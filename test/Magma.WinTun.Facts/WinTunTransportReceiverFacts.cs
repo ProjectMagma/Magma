@@ -25,7 +25,7 @@ namespace Magma.WinTun.Facts
         public void TryConsumeThrowsNotImplementedException()
         {
             var receiver = new WinTunTransportReceiver();
-            var memory = MemoryPool<byte>.Shared.Rent(100);
+            using var memory = MemoryPool<byte>.Shared.Rent(100);
             
             Assert.Throws<NotImplementedException>(() => receiver.TryConsume(memory));
         }
