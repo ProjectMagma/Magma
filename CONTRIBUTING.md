@@ -12,6 +12,7 @@ Thank you for your interest in contributing to Magma! We welcome contributions f
 - [Code Style and Conventions](#code-style-and-conventions)
 - [Making Changes](#making-changes)
 - [Submitting a Pull Request](#submitting-a-pull-request)
+- [Release Process](#release-process)
 - [Reporting Issues](#reporting-issues)
 - [Project Structure](#project-structure)
 - [Additional Resources](#additional-resources)
@@ -277,6 +278,42 @@ git push origin feature/your-feature-name
 - Update documentation as needed
 - Ensure CI checks pass
 - Be responsive to feedback
+
+## Release Process
+
+Magma follows [Semantic Versioning](https://semver.org/) (SemVer) for version numbering:
+
+- **Major** (X.Y.Z → (X+1).0.0): Breaking changes that are not backward compatible
+- **Minor** (X.Y.Z → X.(Y+1).0): New features that are backward compatible
+- **Patch** (X.Y.Z → X.Y.(Z+1)): Bug fixes that are backward compatible
+
+### Creating a Release
+
+Releases are created from the `main` branch and follow this process:
+
+1. **Prepare the release**:
+   - Ensure all tests pass
+   - Update version numbers in `version.props`
+   - Update documentation (README.md, CHANGELOG.md if present)
+   - Create release notes summarizing changes
+
+2. **Tag the release**:
+   - Create an annotated git tag (e.g., `v1.2.3`)
+   - Push the tag to GitHub
+
+3. **Publish artifacts**:
+   - CI/CD pipeline builds and publishes NuGet packages
+   - GitHub release is created with release notes attached
+
+### Branch Strategy
+
+- **main**: Stable release branch; all commits should be production-ready
+- **Feature branches**: Created from `main` for development:
+  - `feature/description` - New features
+  - `fix/description` - Bug fixes
+  - `docs/description` - Documentation changes
+  - `refactor/description` - Code refactoring
+  - `perf/description` - Performance improvements
 
 ## Reporting Issues
 
