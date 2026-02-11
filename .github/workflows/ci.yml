@@ -13,20 +13,22 @@ env:
 jobs:
   build-and-test:
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
         dotnet-quality: 'ga'
-    
+
     - name: Cache NuGet packages
       uses: actions/cache@v4
       with:
@@ -34,24 +36,24 @@ jobs:
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
         restore-keys: |
           ${{ runner.os }}-nuget-
-    
+
     - name: Restore dependencies
       run: dotnet restore
-    
+
     - name: Build
       run: dotnet build --configuration Release --no-restore
-    
+
     - name: Test (Linux)
       if: runner.os == 'Linux'
       run: dotnet test --configuration Release --no-build --verbosity normal
-    
+
     - name: Test (Windows - excluding Linux-only projects)
       if: runner.os == 'Windows'
       run: |
         dotnet test test/Magma.Common.Facts --configuration Release --no-build --verbosity normal
         dotnet test test/Magma.Internet.Ip.Facts --configuration Release --no-build --verbosity normal
         dotnet test test/Magma.Link.Facts --configuration Release --no-build --verbosity normal
-    
+
     - name: Verify WinTun sample builds (Windows)
       if: runner.os == 'Windows'
       run: dotnet build sample/Magma.WinTun.TcpHost --configuration Release --no-restore --verbosity normal
