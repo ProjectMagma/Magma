@@ -340,9 +340,9 @@ var ipv4 = Unsafe.As<byte, IPv4>(ref MemoryMarshal.GetReference(span));
 ```
 
 This is safe because:
-- Structs use `Pack = 1` to match network byte order
+- Structs use `Pack = 1` to ensure tightly packed layout matching wire format (no padding between fields)
 - Input is always validated before type-punning
-- Endianness conversion is explicit where needed
+- Network byte order (endianness) is handled via explicit conversion where needed
 
 ### 3. Memory Pooling Pattern
 
@@ -385,7 +385,10 @@ var pseudoPartialSum = Checksum.PartialCalculate(
     Unsafe.SizeOf<TcpV4PseudoHeader>());
 
 // Later, calculate full checksum by adding TCP header + data
-var checksum = Checksum.Calculate(ref tcpHeader, length, pseudoPartialSum);
+var checksum = Checksum.Calculate(
+    ref Unsafe.As<TcpV4PseudoHeader, byte>(ref tcpHeader),
+    length,
+    pseudoPartialSum);
 ```
 
 ## Packet Processing Flow
@@ -667,20 +670,19 @@ Applications can use Magma at different levels:
 **Low-Level (Direct Packet Access):**
 
 ```csharp
-var transport = new AF_XDPTransport("eth0");
-await foreach (var packet in transport.ReceivePacketsAsync())
-{
-    // Process raw packet bytes
-    ProcessPacket(packet.Memory.Span);
-    packet.Dispose();
-}
+// Conceptual example - actual implementation uses internal ring APIs
+// Applications typically interact at the transport or receiver level
+// For direct packet access, implement IPacketReceiver and integrate
+// with a platform transport (AF_XDP, NetMap, WinTun)
 ```
 
 **Mid-Level (Protocol Layers):**
 
 ```csharp
-var receiver = new TcpTransportReceiver<AF_XDPTransport>(
-    endpoint, transport, dispatcher);
+// Obtain an IPacketTransmitter from your transport (e.g., AF_XDPTransmitRing)
+// Transports typically create receivers internally during BindAsync()
+var receiver = new TcpTransportReceiver<AF_XDPTransmitRing>(
+    endpoint, transmitRing, dispatcher);
 // TCP packets automatically routed to connections
 ```
 
@@ -700,12 +702,30 @@ Host.CreateDefaultBuilder(args)
 **Custom Packet Processing:**
 
 ```csharp
-var receiver = PacketReceiver.CreateDefault();
-receiver.IPv4Consumer = (in Ethernet eth, ReadOnlySpan<byte> data) =>
+// Note: PacketReceiver is an internal implementation detail
+// For custom packet processing, implement IPacketReceiver directly:
+
+public class CustomPacketReceiver : IPacketReceiver
 {
-    // Custom IPv4 processing
-    return true;  // Consumed
-};
+    public T TryConsume<T>(T input) where T : IMemoryOwner<byte>
+    {
+        var span = input.Memory.Span;
+        // Parse and process custom packets
+        if (Ethernet.TryConsume(span, out var eth, out var data))
+        {
+            // Custom IPv4 processing
+            if (eth.Ethertype == EtherType.IPv4)
+            {
+                // Process IPv4 packet
+                input.Dispose();
+                return default; // Consumed
+            }
+        }
+        return input; // Pass to OS
+    }
+
+    public void FlushPendingAcks() { }
+}
 ```
 
 **Custom Protocol Implementation:**
