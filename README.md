@@ -1,5 +1,7 @@
 # Magma
 
+[![CI](https://github.com/ProjectMagma/Magma/actions/workflows/ci.yml/badge.svg)](https://github.com/ProjectMagma/Magma/actions/workflows/ci.yml)
+
 ![Magma logo](https://aoa.blob.core.windows.net/aspnet/magma.png)
 
 **Under the rocks - A high-performance, low-level network stack library for .NET**
