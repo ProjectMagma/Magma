@@ -28,6 +28,7 @@ jobs:
         with:
           dotnet-version: '10.0.102'
           cache: true
+          cache-dependency-path: '**/packages.lock.json'
 
       - name: Restore dependencies
         run: dotnet restore
