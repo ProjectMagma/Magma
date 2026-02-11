@@ -40,7 +40,8 @@ Magma is organized into modular components corresponding to different layers of 
 ### Platform Integration
 
 - **Magma.NetMap** - Integration with NetMap for high-performance packet I/O on Linux
-- **Magma.WinTun** - Windows TUN/TAP interface for VPN and tunnel applications
+- **Magma.AF_XDP** - Modern Linux kernel-native XDP socket support (4.18+) for zero-copy packet processing
+- **Magma.WinTun** - Windows TUN/TAP interface for VPN and tunnel applications using WireGuard's WinTun driver
 - **Magma.PCap** - Packet capture support for network monitoring
 
 ## Key Features
@@ -57,8 +58,11 @@ Magma is organized into modular components corresponding to different layers of 
 - Extensible delegate pattern for packet processing chains
 
 ### Cross-Platform Support
-- Linux support via NetMap kernel module
-- Windows support via WinTun driver
+- **Linux**: Multiple high-performance options
+  - NetMap kernel module (legacy support)
+  - AF_XDP (XDP sockets) - Modern kernel-native approach (recommended for Linux 4.18+)
+  - DPDK support ready (for extreme performance requirements)
+- **Windows**: WinTun driver from WireGuard project (actively maintained)
 - .NET 10 compatibility
 
 ### Integration-Ready
@@ -85,14 +89,19 @@ Magma is designed for scenarios where standard networking libraries are insuffic
   - Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions
   - System.Memory
   - System.Runtime.CompilerServices.Unsafe
-- **Platform APIs**: NetMap (Linux), WinTun (Windows)
+- **Platform APIs**: 
+  - Linux: NetMap (legacy), AF_XDP/XDP sockets (modern), DPDK support
+  - Windows: WinTun driver (WireGuard project)
 
 ## Getting Started
 
 ### Prerequisites
 - .NET 10 SDK or higher
-- Linux: NetMap kernel module for high-performance I/O
-- Windows: WinTun driver for tunnel interfaces
+- **Linux Options** (choose based on your requirements):
+  - **AF_XDP** (recommended): Linux kernel 4.18+ with XDP support enabled
+  - **NetMap**: NetMap kernel module (legacy option, requires building from source)
+  - **DPDK**: DPDK libraries and drivers (for maximum performance)
+- **Windows**: WinTun driver from WireGuard project (https://www.wintun.net/)
 
 ### Building the Project
 
@@ -113,6 +122,100 @@ Explore the `sample/` directory for working examples:
 - **Magma.NetMap.TcpHost** - TCP server using NetMap
 - **PlaintextApp** - Network monitoring with NetMap
 - **Magma.WinTun.TcpHost** - TCP server using WinTun on Windows
+
+## Platform Integration Options
+
+Magma provides multiple integration options for different platforms and performance requirements:
+
+### Linux High-Performance Packet I/O
+
+#### AF_XDP (Recommended for Modern Linux)
+**AF_XDP (Address Family XDP)** is the modern, kernel-native approach for high-performance packet processing in Linux:
+
+- **Advantages**:
+  - Part of mainline Linux kernel (since 4.18)
+  - No external kernel modules required
+  - Zero-copy packet processing with XDP sockets
+  - Leverages eBPF/XDP for programmable packet filtering
+  - Better security and stability than out-of-tree modules
+  - Active development and support from the Linux community
+
+- **Requirements**:
+  - Linux kernel 4.18 or newer
+  - libbpf library
+  - XDP-capable network driver
+
+- **Use Cases**: Production environments requiring high performance with modern Linux kernels
+
+#### NetMap (Legacy Support)
+**NetMap** is a framework for high-speed packet I/O that requires a custom kernel module:
+
+- **Advantages**:
+  - Mature and well-tested
+  - Very high performance
+  - Rich set of features
+
+- **Disadvantages**:
+  - Requires building and loading out-of-tree kernel module
+  - Maintenance overhead
+  - May have compatibility issues with newer kernels
+
+- **Use Cases**: Legacy systems or specific scenarios where NetMap is already deployed
+
+#### DPDK (Maximum Performance)
+**DPDK (Data Plane Development Kit)** offers the highest performance by completely bypassing the kernel:
+
+- **Advantages**:
+  - Industry-standard for extreme performance
+  - Extensive driver support
+  - Rich ecosystem of tools and libraries
+
+- **Requirements**:
+  - DPDK-compatible NICs
+  - Dedicated CPU cores
+  - Huge pages configuration
+
+- **Use Cases**: Network appliances, NFV, software routers requiring maximum throughput
+
+### Windows Tunnel Interfaces
+
+#### WinTun (Modern Driver)
+**WinTun** is maintained by the WireGuard project and is the modern approach for virtual network adapters on Windows:
+
+- **Advantages**:
+  - Actively maintained by WireGuard team
+  - Modern, lightweight driver (< 50KB)
+  - Excellent performance
+  - Wide compatibility (Windows 7+)
+  - Signed driver from Microsoft
+
+- **Requirements**:
+  - WinTun driver from https://www.wintun.net/
+  - Windows 7 or newer
+
+- **Use Cases**: VPN applications, network tunnels, custom network stacks on Windows
+
+## Choosing the Right Integration
+
+| Use Case | Linux Recommendation | Windows Recommendation |
+|----------|---------------------|------------------------|
+| Modern production | AF_XDP | WinTun |
+| Legacy systems | NetMap | WinTun |
+| Maximum performance | DPDK | WinTun |
+| Development/Testing | AF_XDP or NetMap | WinTun |
+| VPN/Tunnel apps | AF_XDP | WinTun |
+
+## Choosing the Right Integration
+
+| Use Case | Linux Recommendation | Windows Recommendation |
+|----------|---------------------|------------------------|
+| Modern production | AF_XDP | WinTun |
+| Legacy systems | NetMap | WinTun |
+| Maximum performance | DPDK | WinTun |
+| Development/Testing | AF_XDP or NetMap | WinTun |
+| VPN/Tunnel apps | AF_XDP | WinTun |
+
+For detailed setup instructions and migration guides, see the [Integration Guide](docs/INTEGRATION_GUIDE.md).
 
 ## Project Goals
 
