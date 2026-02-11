@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "System.Memory": {
+        "type": "Direct",
+        "requested": "[4.5.0-rc1, )",
+        "resolved": "4.5.0-rc1",
+        "contentHash": "dAwx/m2GUX2G5kTOXfqgCN+3gkvwlWMjiE8vLAjbvHnircdcHfSHHBs57KM7c/FYJt+3tMLyCuL9Dxi+MEfx/w=="
+      },
+      "System.Runtime.CompilerServices.Unsafe": {
+        "type": "Direct",
+        "requested": "[4.5.0-rc1, )",
+        "resolved": "4.5.0-rc1",
+        "contentHash": "OwKsQab6XaJDGKexQ9/fX3oLbwG5Hio4nHX2niFyZz1VWOzobEKx52x9IKVS42lDfjO8fEd2dtM/nuguM+1SCg=="
+      },
+      "magma.common": {
+        "type": "Project"
+      }
+    }
+  }
+}
