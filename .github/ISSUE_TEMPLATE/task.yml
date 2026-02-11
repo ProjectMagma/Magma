@@ -1,0 +1,124 @@
+name: Task
+description: Create a task for project work (documentation, refactoring, testing, etc.)
+title: "[Task]: "
+labels: ["task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for tasks that don't fit into bug reports or feature requests, such as documentation updates, refactoring, testing improvements, or project maintenance.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: A clear description of the task to be completed.
+      placeholder: Update documentation for AF_XDP setup on Ubuntu 24.04...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Task Category
+      description: What type of task is this?
+      options:
+        - Documentation
+        - Testing
+        - Refactoring
+        - Performance optimization
+        - Build/CI improvements
+        - Dependency updates
+        - Code cleanup
+        - Security
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Related Component
+      description: Which component does this task relate to?
+      options:
+        - Magma.Link (Ethernet/ARP)
+        - Magma.Internet.Ip (IPv4/IPv6)
+        - Magma.Internet.Icmp
+        - Magma.Transport.Tcp
+        - Magma.Transport.Udp
+        - Magma.AF_XDP (Linux)
+        - Magma.NetMap (Linux)
+        - Magma.WinTun (Windows)
+        - Magma.PCap
+        - Magma.Network
+        - Magma.Common
+        - Documentation
+        - Build/CI
+        - Multiple components
+        - Other
+
+  - type: textarea
+    id: subtasks
+    attributes:
+      label: Sub-tasks
+      description: List specific sub-tasks or steps to complete this task (use markdown checkboxes).
+      placeholder: |
+        - [ ] Update README.md with new setup instructions
+        - [ ] Add code examples to documentation
+        - [ ] Update inline documentation
+      value: |
+        - [ ]
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Define what "done" means for this task.
+      placeholder: |
+        - Documentation is updated and builds successfully
+        - Code examples compile and run
+        - No broken links in documentation
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How urgent is this task?
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: List any dependencies or blockers for this task.
+      placeholder: |
+        - Depends on #123
+        - Blocked by feature implementation in #456
+
+  - type: textarea
+    id: phase
+    attributes:
+      label: Project Phase
+      description: Which project phase or milestone does this task belong to?
+      placeholder: Phase 0 (Foundation), Phase 1, etc.
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Are you willing to work on this task?
+      options:
+        - label: I am willing to work on this task
+          required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other information relevant to this task.

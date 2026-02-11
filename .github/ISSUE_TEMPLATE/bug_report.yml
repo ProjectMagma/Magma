@@ -1,0 +1,137 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in Magma
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug! Please fill out the information below to help us understand and fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of the bug.
+      placeholder: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the bug.
+      placeholder: |
+        1. Create a network interface with...
+        2. Send a packet using...
+        3. Observe the error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: The packet should be sent successfully...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: An exception was thrown...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which component is affected by this bug?
+      options:
+        - Magma.Link (Ethernet/ARP)
+        - Magma.Internet.Ip (IPv4/IPv6)
+        - Magma.Internet.Icmp
+        - Magma.Transport.Tcp
+        - Magma.Transport.Udp
+        - Magma.AF_XDP (Linux)
+        - Magma.NetMap (Linux)
+        - Magma.WinTun (Windows)
+        - Magma.PCap
+        - Magma.Network
+        - Magma.Common
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: What operating system are you using?
+      options:
+        - Windows
+        - Linux
+        - macOS
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS Version
+      description: What version of the operating system?
+      placeholder: "e.g., Ubuntu 22.04, Windows 11, macOS 14"
+    validations:
+      required: true
+
+  - type: input
+    id: dotnet-version
+    attributes:
+      label: .NET Version
+      description: What version of .NET are you using?
+      placeholder: "e.g., .NET 10.0.102"
+    validations:
+      required: true
+
+  - type: input
+    id: magma-version
+    attributes:
+      label: Magma Version
+      description: What version of Magma are you using?
+      placeholder: "e.g., 1.0.0 or commit hash"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and Stack Traces
+      description: Paste any relevant logs, error messages, or stack traces.
+      placeholder: |
+        Exception details:
+        System.InvalidOperationException: ...
+      render: text
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code Sample
+      description: If applicable, provide a minimal code sample that reproduces the issue.
+      placeholder: |
+        var interface = new NetworkInterface(...);
+        interface.SendPacket(...);
+      render: csharp
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other information that might be relevant (network configuration, hardware details, etc.).
+      placeholder: Using Intel X710 NIC with AF_XDP...
