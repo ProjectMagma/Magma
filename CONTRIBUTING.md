@@ -26,7 +26,7 @@ This project adheres to a Code of Conduct that we expect all contributors to fol
 
 Before you begin, ensure you have the following installed:
 
-- **.NET SDK 10.0.102** or higher (as specified in `global.json`)
+- **.NET SDK 10.0.102** (or a newer 10.0.1xx patch, as specified in `global.json`)
 - **Git** for version control
 - A code editor or IDE with C# support (Visual Studio 2022, VS Code with C# extension, or JetBrains Rider recommended)
 
@@ -128,7 +128,7 @@ The project uses `.EditorConfig` to enforce code style rules. Key conventions in
 
 - **Indentation**: 4 spaces (2 spaces for JSON/YAML)
 - **Charset**: UTF-8
-- **Line endings**: LF for Unix files (.sh), CRLF for Windows
+- **Line endings**: LF enforced for shell scripts (`*.sh`) via `.EditorConfig`; other files use Git/editor defaults
 - **Insert final newline**: Yes
 
 ### C# Coding Standards
@@ -146,7 +146,7 @@ The project uses `.EditorConfig` to enforce code style rules. Key conventions in
 #### Null Handling
 - **Nullable reference types are DISABLED** globally. Do not enable them in individual projects.
 - Always use explicit null checks where needed
-- **Always use `is null` or `is not null`** instead of `== null` or `!= null`
+- **Prefer `is null` or `is not null`** over `== null` or `!= null` for consistency
 - **Prefer `?.`** for null propagation (e.g., `scope?.Dispose()`)
 - **Prefer `??`** coalesce expressions over ternary null checks
 - **Use `ObjectDisposedException.ThrowIf`** where applicable
@@ -324,7 +324,8 @@ Magma/
 │   ├── Magma.Network.Abstractions/  # Core interfaces
 │   └── Magma.Common/          # Shared utilities
 ├── test/                      # xUnit test projects (*.Facts)
-├── samples/                   # Sample applications
+├── samples/                   # Primary sample applications
+├── sample/                    # Legacy/experimental sample applications
 ├── benchmarks/                # Performance benchmarks
 ├── docs/                      # Documentation
 └── .EditorConfig              # Code style rules
