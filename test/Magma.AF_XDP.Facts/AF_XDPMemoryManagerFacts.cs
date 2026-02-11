@@ -11,8 +11,9 @@ namespace Magma.AF_XDP.Facts
         {
             uint frameCount = 4096;
             uint frameSize = 2048;
+            ulong expectedTotalSize = (ulong)frameCount * frameSize;
 
-            Assert.Equal((ulong)frameCount * frameSize, (ulong)frameCount * frameSize);
+            Assert.Equal(8388608UL, expectedTotalSize);
         }
 
         [Fact]
