@@ -8,7 +8,7 @@ namespace Magma.DPDK.Interop
     /// </summary>
     public static class Mbuf
     {
-        private const string LibDpdk = "librte_mbuf.so";
+        private const string LibDpdk = "rte_mbuf";
 
         /// <summary>
         /// Mbuf structure (simplified view for P/Invoke).

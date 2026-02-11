@@ -8,7 +8,7 @@ namespace Magma.DPDK.Interop
     /// </summary>
     public static class EAL
     {
-        private const string LibDpdk = "librte_eal.so";
+        private const string LibDpdk = "rte_eal";
 
         /// <summary>
         /// Initialize the Environment Abstraction Layer (EAL).

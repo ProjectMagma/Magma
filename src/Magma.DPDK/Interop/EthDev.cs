@@ -8,7 +8,7 @@ namespace Magma.DPDK.Interop
     /// </summary>
     public static class EthDev
     {
-        private const string LibDpdk = "librte_ethdev.so";
+        private const string LibDpdk = "rte_ethdev";
 
         /// <summary>
         /// Ethernet device configuration structure.
