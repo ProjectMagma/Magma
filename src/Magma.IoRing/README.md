@@ -23,7 +23,7 @@ IoRing offers several advantages for high-performance networking on Windows:
 ## Requirements
 
 - Windows 11 (Build 22000+) or Windows Server 2022+
-- .NET 8.0 or later
+- .NET 10.0 or later
 - Administrator privileges (for raw socket creation)
 
 ## Comparison with Other Transports

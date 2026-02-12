@@ -92,7 +92,7 @@ The receiver will use `IPacketReceiver.TryConsume<T>()` pattern for processing r
 
 **Minimum:**
 - Windows 11 (Build 22000) or Windows Server 2022
-- .NET 8.0+ (for C# 12 and Span improvements)
+- .NET 10.0+ (for C# 13 and latest Span improvements)
 
 **Recommended:**
 - Windows 11 23H2+ (improved IoRing performance)
