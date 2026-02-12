@@ -44,6 +44,7 @@ Magma is organized into modular components corresponding to different layers of 
 - **Magma.NetMap** - Integration with NetMap for high-performance packet I/O on Linux
 - **Magma.AF_XDP** - Modern Linux kernel-native XDP socket support (4.18+) for zero-copy packet processing
 - **Magma.WinTun** - Windows TUN/TAP interface for VPN and tunnel applications using WireGuard's WinTun driver
+- **Magma.IoRing** - Windows 11+ IoRing API integration for high-performance networking (Planned - see [implementation plan](src/Magma.IoRing/IMPLEMENTATION_PLAN.md))
 - **Magma.PCap** - Packet capture support for network monitoring
 
 ## Key Features
@@ -64,7 +65,9 @@ Magma is organized into modular components corresponding to different layers of 
   - NetMap kernel module (legacy support)
   - AF_XDP (XDP sockets) - Modern kernel-native approach (recommended for Linux 4.18+)
   - DPDK support ready (for extreme performance requirements)
-- **Windows**: WinTun driver from WireGuard project (actively maintained)
+- **Windows**: Multiple options for high-performance networking
+  - WinTun driver from WireGuard project (actively maintained)
+  - IoRing API for Windows 11+ (planned - high-performance native Windows transport)
 - .NET 10 compatibility
 
 ### Integration-Ready

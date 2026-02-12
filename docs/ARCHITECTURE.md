@@ -76,6 +76,10 @@ Magma is designed as a modular, layered network stack that provides direct acces
 │    └────────────────┴──────────────────┴────────────────┘     │
 │                                                                │
 │    ┌────────────────────────────────────────────────────┐     │
+│    │ Magma.IoRing (Windows 11+ - Planned)              │     │
+│    └────────────────────────────────────────────────────┘     │
+│                                                                │
+│    ┌────────────────────────────────────────────────────┐     │
 │    │ Magma.PCap (Packet Capture)                       │     │
 │    └────────────────────────────────────────────────────┘     │
 └────────────────────────────────────────────────────────────────┘
@@ -110,6 +114,12 @@ Platform integrations provide the bridge between Magma and the underlying OS ker
   - TUN/TAP virtual network interface
   - Maintained by the WireGuard project
   - Used for VPN and tunnel applications
+
+- **Magma.IoRing**: Windows 11+ integration using IoRing API (Planned)
+  - High-performance asynchronous I/O via ring buffers
+  - Requires Windows 11 Build 22000+ or Windows Server 2022+
+  - Native Windows API, no third-party drivers needed
+  - See [src/Magma.IoRing/IMPLEMENTATION_PLAN.md](../src/Magma.IoRing/IMPLEMENTATION_PLAN.md) for details
 
 - **Magma.PCap**: Packet capture support
   - PCAP file format writer
